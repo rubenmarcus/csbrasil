@@ -1,0 +1,8 @@
+# pacote de áudio NÃO vai pro git (licenciamento dos memes) — ver README
+audio/*
+!audio/cs/
+!audio/cs/LEIA-ME.txt
+!audio/manifest.example.json
+audio-pack.zip
+.DS_Store
+node_modules/

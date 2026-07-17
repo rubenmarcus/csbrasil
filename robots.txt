@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /audio/
+Disallow: /vendor/
+
+Sitemap: https://csbrasil.online/sitemap.xml

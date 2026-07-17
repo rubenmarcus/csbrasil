@@ -1,0 +1,35 @@
+# CS BRASIL: Treta Suprema
+
+> Jogo FPS gratuito de navegador (desktop): arena de sniper estilo CS 1.6
+> (`awp_map`) em uma Brasília fictícia e satírica, com os times Petistas ×
+> Bolsonaristas, 8 personagens originais, bots, rounds e placar. Sátira
+> política sem gore e sem pessoas reais. Não é afiliado à Valve.
+
+## Como jogar
+
+- Abra o site num navegador de desktop (Chrome/Edge/Firefox). Sem instalação.
+- Escolha nick, time (Petistas ou Bolsonaristas) e personagem.
+- WASD move, mouse mira, botão esquerdo atira, botão direito abre a luneta
+  da AWP, Ctrl agacha (mira mais estável), Shift corre, Espaço pula, R
+  recarrega, 1/2/3 troca AWP/pistola/faca, Z/X/C comandos de voz, Tab placar.
+- Regras: 4×4 com respawn, rounds de 1:39; mais abates leva o round; 3
+  rounds vencem a partida. Multikills têm anúncios estilo Unreal Tournament.
+
+## Perguntas frequentes
+
+- É gratuito? Sim, 100%, roda no navegador.
+- Precisa instalar? Não — é um site estático.
+- Funciona no celular? Desktop é recomendado (mouse + teclado).
+- É um jogo oficial da Valve/Counter-Strike? Não. Paródia independente.
+- Os personagens são pessoas reais? Não — arquétipos fictícios e satíricos.
+
+## Tecnologia
+
+- Three.js (WebGL), sem build, assets 100% procedurais (texturas em canvas,
+  modelos low-poly em código, SFX sintetizados + pacote de áudio opcional).
+- Código aberto (MIT) exceto a pasta de áudio.
+
+## Links
+
+- Site: https://csbrasil.online/
+- Código: https://github.com/SEU-USUARIO/cs-brasil

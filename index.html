@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS BRASIL: Treta Suprema — FPS grátis de navegador estilo CS 1.6</title>
+<meta name="description" content="Jogo FPS gratuito de navegador: arena de sniper estilo awp_map do CS 1.6 numa Brasília fictícia e satírica. Petistas × Bolsonaristas, 8 personagens originais, bots, rounds, placar e rádio de voz. Sem instalação — jogue no desktop.">
+<meta name="keywords" content="cs brasil, jogo de tiro navegador, fps browser grátis, awp, cs 1.6 brasileiro, jogo satira politica, treta suprema, jogo web three.js">
+<meta name="author" content="CS BRASIL contributors">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0c0e11">
+<link rel="canonical" href="https://csbrasil.online/">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CS BRASIL: Treta Suprema">
+<meta property="og:title" content="CS BRASIL: Treta Suprema — FPS grátis de navegador">
+<meta property="og:description" content="Arena de sniper estilo CS 1.6 numa Brasília fictícia: Petistas × Bolsonaristas, AWP, bots, rounds e muita treta. Jogue grátis no navegador.">
+<meta property="og:url" content="https://csbrasil.online/">
+<meta property="og:image" content="https://csbrasil.online/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CS BRASIL: Treta Suprema — FPS grátis de navegador">
+<meta name="twitter:description" content="Arena de sniper estilo CS 1.6 numa Brasília fictícia. Petistas × Bolsonaristas. Jogue grátis no navegador.">
+<meta name="twitter:image" content="https://csbrasil.online/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "CS BRASIL: Treta Suprema",
+  "alternateName": "CS BRASIL",
+  "url": "https://csbrasil.online/",
+  "image": "https://csbrasil.online/og-image.png",
+  "description": "FPS de navegador gratuito e satírico: arena de sniper estilo CS 1.6 (awp_map) em uma Brasília fictícia, com Petistas × Bolsonaristas, 8 personagens originais, bots, rounds e placar.",
+  "genre": ["Shooter", "FPS", "Comédia", "Sátira"],
+  "gamePlatform": ["Web Browser", "Desktop"],
+  "applicationCategory": "Game",
+  "operatingSystem": "Qualquer (navegador desktop)",
+  "playMode": "SinglePlayer",
+  "inLanguage": "pt-BR",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" },
+  "author": { "@type": "Organization", "name": "CS BRASIL contributors" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "O que é CS BRASIL: Treta Suprema?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Um jogo FPS gratuito que roda no navegador: arena de sniper estilo awp_map do CS 1.6 ambientada numa Brasília fictícia e satírica, com os times Petistas e Bolsonaristas, 8 personagens originais, bots, sistema de rounds e placar." } },
+    { "@type": "Question", "name": "Preciso instalar ou pagar algo?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Não. O jogo é 100% gratuito e roda direto no navegador de desktop (Chrome, Edge ou Firefox), sem download nem instalação." } },
+    { "@type": "Question", "name": "Quais são os controles?",
+      "acceptedAnswer": { "@type": "Answer", "text": "WASD move, mouse mira, clique esquerdo atira, clique direito abre a luneta da AWP, Ctrl agacha (melhora a mira), Shift corre, Espaço pula, R recarrega, teclas 1/2/3 trocam AWP/pistola/faca, Z/X/C abrem os comandos de voz e Tab mostra o placar." } },
+    { "@type": "Question", "name": "Quais são os times e personagens?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Dois times fictícios e satíricos: Petistas (Esquerdomacho, Líder do Sindicato, Líder do MST, Doutora do SUS) e Bolsonaristas (Caminhoneiro, Influencer de Dubai, Cantor Sertanejo, Tia Zilá). Todos são arquétipos originais, sem pessoas reais." } },
+    { "@type": "Question", "name": "É um jogo oficial da Valve ou do Counter-Strike?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Não. É uma paródia independente feita por fãs, sem qualquer afiliação com a Valve. Counter-Strike é marca da Valve Corporation." } },
+    { "@type": "Question", "name": "Funciona no celular?",
+      "acceptedAnswer": { "@type": "Answer", "text": "O jogo foi feito para desktop com mouse e teclado. Em telas de toque um aviso recomenda jogar no computador." } }
+  ]
+}
+</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='8' height='16' fill='%23e03232'/><rect x='8' width='8' height='16' fill='%231faa4d'/></svg>">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+</head>
+<body>
+<h1 class="sr-only">CS BRASIL: Treta Suprema — jogo FPS gratuito de navegador, arena de sniper estilo CS 1.6 com Petistas × Bolsonaristas</h1>
+
+<!-- Mobile fallback -->
+<div id="mobile-warning" class="screen hidden">
+  <div class="panel center-panel">
+    <h1>CS BRASIL: TRETA SUPREMA</h1>
+    <p class="big">🖱️⌨️ Este jogo foi feito para <b>desktop</b> (mouse + teclado).</p>
+    <p>Jogar num PC ou notebook é <b>recomendado</b>. No celular a treta não flui.</p>
+    <button id="mobile-ok" class="btn">ENTENDI</button>
+  </div>
+</div>
+
+<!-- Main menu -->
+<div id="main-menu" class="screen">
+  <div class="scanlines"></div>
+  <canvas id="logo-canvas" width="900" height="360"></canvas>
+  <div class="menu-buttons">
+    <input id="nick-input" maxlength="14" placeholder="SEU NICK (ex: Zé do AWP)" autocomplete="off">
+    <button id="btn-jogar" class="btn btn-big">JOGAR</button>
+    <button id="btn-howto" class="btn">COMO JOGAR</button>
+    <button id="btn-settings" class="btn">CONFIGURAÇÕES</button>
+  </div>
+  <p class="footnote">Sátira política fictícia. Nenhum político real foi consultado (ou poupado).</p>
+  <section class="faq-seo" aria-label="Perguntas frequentes">
+    <h2>Perguntas frequentes</h2>
+    <details><summary>O que é CS BRASIL: Treta Suprema?</summary>
+      <p>Um FPS gratuito de navegador: arena de sniper estilo awp_map do CS 1.6 numa Brasília fictícia, com Petistas × Bolsonaristas, 8 personagens originais, bots e rounds.</p></details>
+    <details><summary>Preciso instalar ou pagar?</summary>
+      <p>Não. É 100% gratuito e roda no navegador de desktop, sem instalação.</p></details>
+    <details><summary>Quais os controles?</summary>
+      <p>WASD, mouse, clique esquerdo atira, direito abre a luneta, Ctrl agacha, 1/2/3 troca de arma, Z/X/C voz, Tab placar.</p></details>
+    <details><summary>É oficial da Valve?</summary>
+      <p>Não — paródia independente, sem afiliação. Counter-Strike é marca da Valve.</p></details>
+  </section>
+</div>
+
+<!-- Team selection -->
+<div id="team-select" class="screen hidden">
+  <h2 class="screen-title">ESCOLHA SEU LADO DA TRETA</h2>
+  <div class="team-row">
+    <button id="btn-team-p" class="team-card team-p">
+      <span class="team-name">PETISTAS</span>
+      <span class="team-slogan">"A treta se faz na praça!"</span>
+      <span class="team-desc">Esquerdomacho · Líder do Sindicato · Líder do MST · Doutora do SUS</span>
+    </button>
+    <button id="btn-team-b" class="team-card team-b">
+      <span class="team-name">BOLSONARISTAS</span>
+      <span class="team-slogan">"A treta se faz na rodovia!"</span>
+      <span class="team-desc">Caminhoneiro · Influencer de Dubai · Cantor Sertanejo · Tia Zilá</span>
+    </button>
+  </div>
+  <button id="team-back" class="btn btn-back">◀ VOLTAR</button>
+</div>
+
+<!-- Character selection (CS 1.6 style: list + live 3D preview) -->
+<div id="char-select" class="screen hidden">
+  <h2 class="screen-title">ESCOLHA SEU PERSONAGEM</h2>
+  <div class="char-wrap">
+    <div id="char-list" class="char-list"></div>
+    <div class="char-preview-box">
+      <canvas id="char-preview" width="340" height="340"></canvas>
+      <div id="char-info">
+        <div id="char-info-name">—</div>
+        <div id="char-info-blurb">—</div>
+      </div>
+      <button id="char-confirm" class="btn btn-big">USAR PERSONAGEM</button>
+    </div>
+  </div>
+  <button id="char-back" class="btn btn-back">◀ VOLTAR</button>
+</div>
+
+<!-- Settings -->
+<div id="settings-panel" class="screen hidden">
+  <div class="panel center-panel">
+    <h2>CONFIGURAÇÕES</h2>
+    <label class="set-row">Sensibilidade do mouse
+      <input id="set-sens" type="range" min="0.2" max="3" step="0.1" value="1">
+      <span id="set-sens-val">1.0</span>
+    </label>
+    <label class="set-row">Volume
+      <input id="set-vol" type="range" min="0" max="1" step="0.05" value="0.7">
+      <span id="set-vol-val">70%</span>
+    </label>
+    <label class="set-row">Qualidade gráfica
+      <select id="set-quality">
+        <option value="low">Batata (rápido)</option>
+        <option value="med" selected>Média</option>
+        <option value="high">Padrão ouro</option>
+      </select>
+    </label>
+    <button id="settings-back" class="btn">SALVAR &amp; VOLTAR</button>
+  </div>
+</div>
+
+<!-- How to play -->
+<div id="howto-panel" class="screen hidden">
+  <div class="panel center-panel">
+    <h2>COMO JOGAR</h2>
+    <div class="howto-grid">
+      <span>W A S D</span><span>Mover</span>
+      <span>MOUSE</span><span>Mirar</span>
+      <span>SHIFT</span><span>Correr</span>
+      <span>CTRL</span><span>Agachar (mira mais estável)</span>
+      <span>ESPAÇO</span><span>Pular</span>
+      <span>CLIQUE ESQ.</span><span>Atirar</span>
+      <span>CLIQUE DIR.</span><span>Mira telescópica (AWP)</span>
+      <span>R</span><span>Recarregar</span>
+      <span>1 / 2 / 3</span><span>AWP / Pistola / Faca</span>
+      <span>Z / X / C</span><span>Comandos de voz (rádio)</span>
+      <span>TAB</span><span>Placar</span>
+      <span>ESC</span><span>Pausar</span>
+    </div>
+    <p>Modo mata-mata com respawn: cada round dura 1:39, o time com mais abates leva o round. Vence quem ganhar 3 rounds.</p>
+    <button id="howto-back" class="btn">VOLTAR</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <canvas id="radar" width="150" height="150"></canvas>
+  <div id="radio-log"></div>
+  <div id="radio-menu" class="hidden"></div>
+  <div id="crosshair"><i></i><i></i><i></i><i></i><b></b></div>
+  <div id="hitmarker"><i></i><i></i><i></i><i></i></div>
+  <div id="scope-overlay">
+    <div class="scope-circle"></div>
+    <div class="scope-line h"></div>
+    <div class="scope-line v"></div>
+  </div>
+  <div id="damage-vignette"></div>
+  <div id="mk-banner"></div>
+  <div id="hud-top">
+    <div id="score-p" class="team-score ts-p">PET <b>0</b></div>
+    <div id="hud-mid">
+      <div id="round-time">1:39</div>
+      <div id="rounds-row"><span id="rounds-p">0</span> ROUNDS <span id="rounds-b">0</span></div>
+    </div>
+    <div id="score-b" class="team-score ts-b">BOL <b>0</b></div>
+  </div>
+  <div id="killfeed"></div>
+  <div id="hud-bottom-left">
+    <div id="hp-row"><span id="hp-cross">✚</span><span id="hp-num">100</span></div>
+    <div id="hp-bar"><div id="hp-fill"></div></div>
+  </div>
+  <div id="hud-bottom-right">
+    <div id="weapon-name">AWP "DELIBERADOR"</div>
+    <div id="ammo"><span id="ammo-mag">5</span><span class="ammo-sep">|</span><span id="ammo-reserve">25</span></div>
+    <div id="reload-note" class="hidden">RECARREGANDO…</div>
+  </div>
+  <div id="round-banner" class="hidden"><div id="banner-title"></div><div id="banner-sub"></div></div>
+  <div id="respawn-overlay" class="hidden">
+    <div class="rip">💀 ELIMINADO 💀</div>
+    <div>Respawn em <span id="respawn-count">3</span>s…</div>
+    <div class="rip-sub">A treta continua sem você. Por enquanto.</div>
+  </div>
+  <div id="scoreboard" class="hidden">
+    <h3>CS BRASIL — PLACAR</h3>
+    <table><thead><tr><th>JOGADOR</th><th>PERSONAGEM</th><th>ABATES</th><th>MORTES</th></tr></thead>
+    <tbody id="sb-body"></tbody></table>
+  </div>
+</div>
+
+<!-- Pause -->
+<div id="pause-menu" class="screen hidden">
+  <div class="panel center-panel">
+    <h2>PAUSA NA TRETA</h2>
+    <button id="btn-resume" class="btn btn-big">CONTINUAR</button>
+    <button id="btn-pause-settings" class="btn">CONFIGURAÇÕES</button>
+    <button id="btn-quit" class="btn">SAIR PRO MENU</button>
+  </div>
+</div>
+
+<!-- Match end -->
+<div id="match-end" class="screen hidden">
+  <div class="panel center-panel">
+    <h1 id="match-title">PETISTAS VENCERAM!</h1>
+    <p id="match-sub" class="big"></p>
+    <div id="match-stats"></div>
+    <button id="btn-again" class="btn btn-big">REVANCHE</button>
+    <button id="btn-menu" class="btn">MENU PRINCIPAL</button>
+  </div>
+</div>
+
+<div id="game-container"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
