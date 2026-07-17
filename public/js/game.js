@@ -1,6 +1,6 @@
 // Core game: FPS controller, weapons, bots, rounds, HUD.
 import * as THREE from 'three';
-import { buildWorld } from './map.js';
+import { MAPS, resolveMapId } from './maps.js';
 import { buildCharacter, poseCharacter, byId, CHARACTERS } from './characters.js';
 
 export const WEAPONS = {
@@ -8,7 +8,7 @@ export const WEAPONS = {
   pistol: { name: 'PT-38 "APITO"', short: 'PT-38', dmg: 34, mag: 12, reserve: 48, rate: 0.24, reload: 1.6, spreadHip: 0.02, recoil: 0.014, scope: false },
   knife:  { name: 'FACA "CONVERSA FIADA"', short: 'FACA', dmg: 55, rate: 0.55, range: 2.4, reload: 0, recoil: 0.02, scope: false },
 };
-const ROUND_TIME = 99, ROUNDS_TO_WIN = 3, RESPAWN_DELAY = 2.5;
+const ROUND_TIME = 99, ROUNDS_TO_WIN = 3, RESPAWN_DELAY = 2.5, PICKUP_RESPAWN = 8;
 const BOT_SPEED = 3.3, BOT_EYE = 1.5;
 const TEAM_LABEL = { P: 'PETISTAS', B: 'BOLSONARISTAS' };
 const RADIO = {
@@ -20,7 +20,7 @@ const MK_TIERS = { 2: 'doublekill', 3: 'triplekill', 4: 'multikill', 5: 'megakil
 const MK_LABELS = { doublekill: 'DOUBLE KILL', triplekill: 'TRIPLE KILL', multikill: 'MULTI KILL', megakill: 'MEGA KILL', killingspree: 'KILLING SPREE', godlike: 'GODLIKE' };
 
 export class Game {
-  constructor({ renderer, textures, sfx, settings, playerCharId, playerTeam, nickname, testMode = false, onQuit, onMatchEnd }) {
+  constructor({ renderer, textures, sfx, settings, playerCharId, playerTeam, nickname, mapId, testMode = false, onQuit, onMatchEnd }) {
     this.renderer = renderer;
     this.sfx = sfx;
     this.settings = settings;
@@ -37,7 +37,7 @@ export class Game {
     this.camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.08, 400);
     this.camera.rotation.order = 'YXZ';
     this.scene.add(this.camera);
-    this.world = buildWorld(this.scene, textures);
+    this.world = MAPS[resolveMapId(mapId)].build(this.scene, textures);
     this.flashTex = textures.flash;
 
     // teams & rosters
@@ -68,7 +68,7 @@ export class Game {
         isPlayer: false, name: def.name, def, team,
         mesh: c, pos: new THREE.Vector3(), yaw: 0, hp: 100, alive: true,
         respawnAt: 0, kills: 0, deaths: 0,
-        target: null, reactAt: 0, nextShotAt: 0, skill: 0.85 + Math.random() * 0.35,
+        target: null, reactAt: 0, nextShotAt: 0, skill: 0.85 + Math.random() * 0.35, weapon: 'awp',
         path: null, pathIdx: 0, repathAt: 0, roamIdx: 0, phase: 0, think: Math.random() * 0.2,
         deadT: 0, strafeT: Math.random() * 10, revealedAt: -99,
       };
@@ -762,6 +762,43 @@ export class Game {
     this.vm.root.position.set(0, bobY - this.vm.reloadDip * 0.18 - p.crouchF * 0.02, this.vm.kick * 0.09);
     this.vm.root.rotation.x = this.vm.kick * 0.12 + this.vm.reloadDip * 0.9;
   }
+  // fy_pool_day ground weapons: anyone who runs over one grabs it (CS-1.6 style).
+  // The gun vanishes and respawns after PICKUP_RESPAWN. No-op on maps without
+  // pickups (e.g. awp_map). Called once per frame from update().
+  _updatePickups() {
+    const list = this.world.pickups;
+    if (!list) return;
+    for (const pk of list) {
+      // respawn a taken weapon
+      if (pk.mesh && !pk.mesh.visible && this.time >= pk.readyAt) pk.mesh.visible = true;
+      if (this.time < pk.readyAt) continue;        // still taken
+      // player grab
+      const p = this.player;
+      if (p.alive) {
+        const dx = pk.x - p.pos.x, dz = pk.z - p.pos.z;
+        if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, p, true); continue; }
+      }
+      // bot grab
+      for (const b of this.bots) {
+        if (!b.alive) continue;
+        const dx = pk.x - b.pos.x, dz = pk.z - b.pos.z;
+        if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, b, false); break; }
+      }
+    }
+  }
+  _grabPickup(pk, who, isPlayer) {
+    const w = pk.weapon;                           // 'awp' or 'pistol'
+    if (isPlayer) {
+      who.ammo[w].mag = WEAPONS[w].mag;
+      who.ammo[w].res = WEAPONS[w].reserve;
+      this._switchWeapon(w);                       // equips (updates vm + label); no-op if already held
+      this.sfx.reloadEnd();
+    } else {
+      who.weapon = w;                              // bot grabs it
+    }
+    if (pk.mesh) pk.mesh.visible = false;           // taken off the ground
+    pk.readyAt = this.time + PICKUP_RESPAWN;        // respawns later
+  }
   _respawnPlayer() {
     const p = this.player;
     const s = this.world.spawns[p.team][(Math.random() * 4) | 0];
@@ -986,6 +1023,7 @@ export class Game {
     }
     this._updatePlayer(dt);
     for (const b of this.bots) this._updateBot(b, dt);
+    this._updatePickups();
     this._updateFx(dt);
     this._updateHud();
     this._updateRadar();
