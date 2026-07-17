@@ -50,7 +50,7 @@
   - tests: unitários por arma; integração de inventário e HUD.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:weapons`
 
-- [ ] **Entregar partida 4×4 completa** (test-type: both)
+- [~] **Entregar partida 4×4 completa** (test-type: both)
   - blocked-by: inventário com pistola e faca
   - summary: instanciar sete bots, portar IA/waypoints, spawns, pontuação,
     rounds, scoreboard, killfeed e condição de vitória.
