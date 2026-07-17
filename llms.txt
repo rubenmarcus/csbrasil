@@ -32,4 +32,4 @@
 ## Links
 
 - Site: https://csbrasil.online/
-- Código: https://github.com/SEU-USUARIO/cs-brasil
+- Código: https://github.com/rubenmarcus/csbrasil

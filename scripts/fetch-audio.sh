@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 
 # URL do zip do pacote. Configure pela env AUDIO_PACK_URL ou edite aqui
 # (ex.: asset de GitHub Release, ou URL privada de R2/S3 para deploys).
-URL="${AUDIO_PACK_URL:-https://github.com/SEU-USUARIO/cs-brasil/releases/download/audio-pack-v1/audio-pack.zip}"
+URL="${AUDIO_PACK_URL:-https://github.com/rubenmarcus/csbrasil/releases/download/audio-pack-v1/audio-pack.zip}"
 
 if [ -f audio/manifest.json ]; then
   echo "audio/ já configurado — nada a fazer."
