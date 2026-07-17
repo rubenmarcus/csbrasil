@@ -19,6 +19,7 @@
   "dependencies": {
     "@astrojs/vercel": "^11.0.3",
     "@resvg/resvg-js": "^2.6.2",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@supabase/supabase-js": "^2.110.7",
     "astro": "^7.1.1",
     "dejavu-fonts-ttf": "^2.37.3",
