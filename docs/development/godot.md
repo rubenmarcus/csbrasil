@@ -31,6 +31,23 @@ O editor Godot precisa permanecer aberto para completion e debugging no VS
 Code. O LSP usa a porta padrão 6005 e o DAP usa 6006; a configuração de debug
 do VS Code conecta ao DAP pelo arquivo `.vscode/launch.json`.
 
+## Slice jogável atual
+
+O cliente Godot inicia em uma arena procedural mínima. Clique na área do jogo
+para iniciar a sessão de input e use:
+
+- `W`, `A`, `S`, `D`: caminhar e strafe;
+- `Shift`: correr;
+- `Ctrl`: agachar;
+- `Espaço`: saltar;
+- mouse: controlar a câmera;
+- `Esc`: liberar o mouse com segurança.
+
+O movimento é dividido entre `MovementConfig` (contratos numéricos),
+`MovementMotor` (regras puras) e a scene `Player`, baseada em
+`CharacterBody3D`. A scene `MinimalArena` cria piso, limites, obstáculo e
+degrau em runtime, sem assets gráficos importados.
+
 ## Linha de comando
 
 ```bash
@@ -38,6 +55,7 @@ scripts/godot.sh --version
 scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors
 scripts/export-godot-web.sh
 npm run test:web:smoke
+npm run test:web:movement
 ```
 
 Os smoke tests sobem o cliente Godot em `8177` e o cliente legado em `8176`,
@@ -49,4 +67,3 @@ por essa automação.
 - `godot/.godot/`: cache/imports locais da engine, ignorados pelo Git.
 - `build/web/`: exportação Web, ignorada pelo Git.
 - `test-results/`: evidências de falha do Playwright, ignoradas pelo Git.
-

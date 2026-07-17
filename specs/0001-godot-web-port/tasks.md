@@ -14,7 +14,7 @@
     navegadores suportados.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:smoke`
 
-- [ ] **Entregar movimento FPS em arena procedural mínima** (test-type: both)
+- [x] **Entregar movimento FPS em arena procedural mínima** (test-type: both)
   - blocked-by: primeiro boot Web paralelo
   - summary: gerar piso/obstáculos e portar câmera, pointer lock, caminhada,
     strafe, corrida, agachamento, salto, gravidade e colisão.
@@ -25,7 +25,7 @@
     forma segura.
   - tests: unitários para cálculo de movimento; integração com
     `CharacterBody3D`; smoke test Web de input.
-  - verification: `godot --headless --path godot --script res://tests/test_runner.gd -- movement && npm run test:web:movement`
+  - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:movement`
 
 - [ ] **Entregar duelo com AWP, morte e respawn** (test-type: both)
   - blocked-by: movimento FPS em arena procedural mínima
