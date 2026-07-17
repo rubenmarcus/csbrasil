@@ -1,7 +1,8 @@
 // OAuth (Google/GitHub/LinkedIn/X) + avatar de perfil.
 // supabase-js é carregado via CDN lazy SOMENTE quando /api/config existe
 // (única dependência externa do jogo — ver CONTRIBUTING).
-const CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
+// ATENÇÃO: o import precisa ser URL literal com @vite-ignore (o Vite reescreve
+// variáveis pra caminho local e quebra em produção).
 
 export class Auth {
   constructor() { this.sb = null; this.user = null; this.session = null; this.ok = false; this.onChange = null; }
@@ -11,7 +12,7 @@ export class Auth {
     try { const r = await fetch('/api/config'); if (r.ok) cfg = await r.json(); } catch {}
     if (!cfg) return false;
     try {
-      const { createClient } = await import(/* webpackIgnore: true */ CDN);
+      const { createClient } = await import(/* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
       this.sb = createClient(cfg.url, cfg.anonKey);
       const { data: { session } } = await this.sb.auth.getSession();
       this.session = session; this.user = session?.user ?? null;

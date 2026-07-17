@@ -64,9 +64,9 @@ export function badgeSvg(p: any, avatarUri: string | null): string {
 </svg>`;
 }
 
-export const GET: APIRoute = async ({ params, request }) => {
+export const GET: APIRoute = async (ctx) => {
   try {
-    return await handle(params, request);
+    return await handle(ctx);
   } catch (e: any) {
     return new Response(JSON.stringify({ error: String(e?.message || e), stack: String(e?.stack || '').slice(0, 600) }),
       { status: 500, headers: { 'content-type': 'application/json' } });
