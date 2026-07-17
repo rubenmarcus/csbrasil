@@ -25,9 +25,10 @@ são bem-vindas, desde que revisadas e testadas por você.
 ```bash
 git clone https://github.com/rubenmarcus/csbrasil.git
 cd csbrasil
-bash scripts/fetch-audio.sh   # baixa o pacote de áudio (não versionado)
-python3 -m http.server 8123   # ou: npx serve .
-# abra http://localhost:8123
+npm install
+npm run fetch-audio      # baixa o pacote de áudio (não versionado)
+npm run dev              # site completo (Astro) — jogo em /game/
+# ou só o jogo, sem dependências: cd public/game && python3 -m http.server 8123
 ```
 
 Sem o pacote de áudio o jogo funciona com sons sintetizados (fallback).
@@ -42,11 +43,14 @@ Sem o pacote de áudio o jogo funciona com sons sintetizados (fallback).
 - Arquivos de áudio/imagens grandes **não vão pro git** — o diretório `audio/`
   é ignorado; novos sons entram no pacote via `audio/manifest.example.json`.
 
-**Código**
-- Vanilla JS com ES modules, **sem framework e sem build** — decisão de
-  projeto (o jogo deve rodar arrastando a pasta pra qualquer host estático).
-- Three.js é vendored em `vendor/` — não adicione CDNs nem `npm install` de
-  runtime sem antes abrir uma issue e discutir.
+**Código — duas zonas**
+- **Jogo (`public/game/`)**: vanilla JS com ES modules, **sem framework e sem
+  build** — decisão de projeto (o jogo deve rodar arrastando a pasta pra
+  qualquer host estático). Three.js vendored em `public/game/vendor/` — não
+  adicione CDNs nem deps de runtime no jogo sem abrir issue antes.
+- **Site (raiz, Astro)**: landing, páginas de conteúdo e API routes. Aqui
+  framework é bem-vindo — mas mantenha páginas leves e o jogo intocado.
+- **Segredos**: nunca commite `service_role` keys nem `.env` — envs só na Vercel.
 - Mantenha o estilo do código ao redor (nomes, comentários em pt-BR, padrões).
 - PRs pequenos e focados: uma feature ou um fix por PR.
 

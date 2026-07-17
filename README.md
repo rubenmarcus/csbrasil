@@ -3,8 +3,9 @@
 [![built with Kimi K3](https://img.shields.io/badge/built%20with-Kimi%20K3-6b5bff?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PGNpcmNsZSBjeD0iOCIgY3k9IjgiIHI9IjciIGZpbGw9IiNmZmYiLz48L3N2Zz4=)](https://www.kimi.com/)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![deploy](https://img.shields.io/badge/deploy-vercel-black?logo=vercel)](https://vercel.com)
+[![astro](https://img.shields.io/badge/site-astro-ff5d01?logo=astro)](https://astro.build)
 
-![CS BRASIL: Treta Suprema — arena de sniper estilo CS 1.6 numa Brasília fictícia](og-image.png)
+![CS BRASIL: Treta Suprema — arena de sniper estilo CS 1.6 numa Brasília fictícia](public/og-image.png)
 
 FPS de navegador em Three.js: arena de sniper estilo CS 1.6 (`awp_map`) em uma Brasília
 fictícia e satírica. Personagens 100% fictícios, sem gore — só arquétipos exagerados.
@@ -12,18 +13,37 @@ fictícia e satírica. Personagens 100% fictícios, sem gore — só arquétipos
 > 📝 Este jogo foi gerado do zero por IA (Kimi K3) a partir de um único prompt —
 > [leia o prompt original em PROMPT.md](PROMPT.md).
 
+## Arquitetura
+
+Monorepo com duas zonas:
+
+- **Jogo** (`public/game/`) — vanilla JS + Three.js vendored, **zero build**:
+  roda sozinho com qualquer servidor estático. Nunca vira framework.
+- **Site** (raiz, [Astro](https://astro.build)) — landing `/`, `/personagens`,
+  `/como-jogar` (SEO/AEO real) + **API routes SSR** (`/api/*`) pro ranking
+  global: a `service_role` key do Supabase fica no servidor, nunca no browser.
+
 ## Rodar localmente
 
-Precisa de um servidor estático (módulos ES não abrem via `file://`):
+Só o jogo (zero dependências):
+
+```bash
+cd public/game
+python3 -m http.server 8123
+# abra http://localhost:8123
+```
+
+Site completo (landing + jogo em `/game/` + API):
 
 ```bash
 git clone https://github.com/rubenmarcus/csbrasil.git
 cd csbrasil
-bash scripts/fetch-audio.sh   # pacote de áudio (opcional — sem ele roda com sons sintetizados)
-python3 -m http.server 8123   # ou: npx serve .
+npm install
+npm run fetch-audio   # pacote de áudio (opcional — sem ele roda com sons sintetizados)
+npm run dev           # dev server Astro
+npm run build         # gera dist/ (client + server)
+npm run preview       # serve dist/client estaticamente
 ```
-
-Abra `http://localhost:8123` no Chrome/Edge/Firefox **de desktop**.
 
 ## Controles
 
@@ -45,9 +65,9 @@ Abra `http://localhost:8123` no Chrome/Edge/Firefox **de desktop**.
 **Regras:** 4×4 com respawn (2,5s). Round de 1:39; o time com mais abates leva o round;
 vence quem levar 3 rounds. AWP mata com 1 tiro; headshot tem som próprio. Multikills
 disparam anúncios estilo Unreal Tournament. Defina seu **nick** no menu principal
-(fica salvo).
+(fica salvo, com stats locais na tela RANKING).
 
-## Áudios (pasta `audio/`)
+## Áudios (pasta `public/game/audio/`)
 
 O jogo carrega `audio/manifest.json`:
 
@@ -64,7 +84,7 @@ audio/
 ```
 
 - **Kill/death:** ao matar, toca fala aleatória do time do matador (throttle de 3,5s).
-- **Rádio (Z/X/C + 1-3):** toca fala aleatória do seu time e mostra a linha no HUD.
+- **Rádio (Z/X/V + 1-3):** toca fala aleatória do seu time e mostra a linha no HUD.
 - **Fim de round:** toca a faixa `round/` do time vencedor.
 - **Multikill do jogador:** `doublekill` (2), `triplekill` (3), `multikill` (4),
   `megakill` (5), `godlike` (6+); 5 kills sem morrer = `killingspree`;
@@ -84,71 +104,64 @@ bash scripts/fetch-audio.sh
 ```
 
 - **Contribuidores**: rodam o script (ou montam a própria pasta seguindo
-  `audio/manifest.example.json`). Sem os arquivos, o jogo usa sons sintetizados.
-- **Criar/atualizar o pacote**: `cd audio && zip -r ../audio-pack.zip . -x '*.DS_Store'`
+  `manifest.example.json`). Sem os arquivos, o jogo usa sons sintetizados.
+- **Criar/atualizar o pacote**: `cd public/game/audio && zip -r ../../../../audio-pack.zip . -x '*.DS_Store'`
 
 ### Sobre sons "reais" do CS 1.6
 
-Um som de AWP estilo CS 1.6 já está configurado (`audio/game/awp-cs-1-6.mp3`,
-registrado na chave `"cs"."awp"` do manifest — usado por jogador e bots).
+Um som de AWP estilo CS 1.6 já está configurado (`audio/game/awp-cs-1-6.mp3`).
 Os samples originais do CS 1.6 são **propriedade da Valve** e não são distribuídos com
 este jogo. Se você possui o jogo legalmente, pode usar seus próprios arquivos: copie de
-`cstrike/sound/` para `audio/cs/` e registre no manifest, chave `"cs"`:
+`cstrike/sound/` para `audio/cs/` e registre no manifest, chave `"cs"`.
 
-```json
-"cs": {
-  "awp": ["audio/cs/awp1.wav"],
-  "pistol": ["audio/cs/usp1.wav"],
-  "reload": ["audio/cs/awp_zoom.wav"],
-  "roundstart": ["audio/cs/item_pickup.wav"],
-  "footsteps": ["audio/cs/pl_step1.wav", "audio/cs/pl_step2.wav"]
-}
-```
+## Ranking global (Supabase)
+
+- **Fase 1 (atual):** nick + link social e stats no `localStorage` (tela RANKING no jogo).
+- **Fase 2:** schema pronto em `supabase/schema.sql` (players com token UUID, RPC
+  `register_player`/`submit_match`, RLS, rate limit, view `leaderboard`).
+  Os endpoints SSR `GET /api/leaderboard` e `POST /api/submit-match` já estão no
+  site — sobem quando as envs `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
+  (só no servidor!) forem configuradas no projeto da Vercel.
+- **Fase 3 (futuro):** Supabase Auth (magic link / OAuth) substitui o token local.
 
 ## SEO / AEO
 
-O site já sai pronto para indexação (não usa biblioteca — AEO em site estático
-é feito com dados estruturados, não com JS):
-
-- `index.html`: title/description, canonical, Open Graph + Twitter card
-  (`og-image.png` 1200×630), `theme-color`, `h1` oculto para crawlers.
-- **JSON-LD**: `VideoGame` + `FAQPage` (é o que alimenta answer engines).
-- `robots.txt` (libera tudo, bloqueia `/audio/` e `/vendor/`), `sitemap.xml`,
-  `llms.txt` (resumo do jogo para crawlers de LLM).
-- Se o domínio final for outro: ajuste `https://csbrasil.online/` em
-  `index.html`, `robots.txt`, `sitemap.xml` e `llms.txt`, e cadastre o site
-  no Google Search Console + Bing Webmaster Tools.
+Landing Astro com meta/OG/canonical + JSON-LD `VideoGame`, FAQ visível,
+`robots.txt`, `sitemap.xml` e `llms.txt` em `public/`. O jogo (`/game/`) tem
+seu próprio head otimizado + JSON-LD `FAQPage`.
 
 ## Estrutura
 
 ```
-index.html          telas (menu, times, personagens 3D, HUD, pausa, fim de jogo)
-style.css           identidade visual retro CS 1.6
-js/main.js          boot, telas, logo (canvas), settings, nick, preview 3D, loop
-js/game.js          FPS controller, armas, bots, rounds, radar, rádio, multikill
-js/map.js           arena, props brasileiros, colisores, waypoints, skyline
-js/characters.js    8 arquétipos: meshes low-poly procedurais
-js/textures.js      texturas procedurais em canvas (concreto, pichações, pôsteres…)
-js/audio.js         SFX sintetizados + player de samples (manifest)
-audio/              falas e anúncios (não versionado — ver Pacote de áudio)
-vendor/three.module.js   Three.js r160 (MIT) — vendored, sem CDN
-scripts/fetch-audio.sh   baixa o pacote de áudio
-vercel.json         build estático + cache
+astro.config.mjs    Astro 7 + adapter Vercel (SSR endpoints)
+vercel.json         build (fetch-audio + astro build) + cache headers
+src/
+  layouts/Layout.astro   shell (nav, footer, CSS global)
+  pages/index.astro      landing (hero, FAQ, JSON-LD)
+  pages/personagens.astro
+  pages/como-jogar.astro
+  pages/api/leaderboard.ts    GET ranking (service key no servidor)
+  pages/api/submit-match.ts   POST partida (rate limit por IP + RPC)
+  lib/supabase.ts        client admin (envs SUPABASE_URL/SERVICE_ROLE_KEY)
+public/
+  game/               O JOGO (vanilla, zero build — ver public/game/js/)
+  og-image.png robots.txt sitemap.xml llms.txt
+scripts/fetch-audio.sh   baixa o pacote de áudio pra public/game/audio/
+supabase/schema.sql      schema do ranking (Fase 2)
 ```
 
 ## Trocar placeholders por assets reais
 
-- **Modelos:** personagens são montados em `js/characters.js` (`buildCharacter`).
-  Para GLTF, carregue o modelo em `mkBot` (`js/game.js`) no lugar de
-  `buildCharacter(def)` e adapte `poseCharacter` (ou use seu AnimationMixer).
-- **Texturas:** tudo sai de `initTextures()` em `js/textures.js` — troque qualquer
-  chave por `new THREE.TextureLoader().load(url)` mantendo o nome.
+- **Modelos:** personagens são montados em `public/game/js/characters.js`
+  (`buildCharacter`). Para GLTF, carregue o modelo em `mkBot`
+  (`public/game/js/game.js`) e adapte `poseCharacter`.
+- **Texturas:** tudo sai de `initTextures()` em `public/game/js/textures.js`.
 - **Sons:** veja a seção Áudios acima.
-- **Mapa:** colisores são AABBs declarados junto de cada mesh em `js/map.js`.
+- **Mapa:** colisores são AABBs declarados junto de cada mesh em `public/game/js/map.js`.
 
 ## Licenças / créditos
 
-- Three.js r160 — licença MIT (© Three.js authors), arquivo em `vendor/`.
+- Three.js r160 — licença MIT (© Three.js authors), arquivo em `public/game/vendor/`.
 - Código, texturas, personagens e logo: originais, gerados proceduralmente.
 - Áudios em `audio/`: conteúdo fornecido pelo usuário (memes); verifique direitos
   antes de publicar comercialmente. Sons de CS 1.6 **não inclusos** (Valve).

@@ -1,0 +1,54 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = 'FPS gratuito de navegador estilo CS 1.6: arena de sniper satírica Petistas × Bolsonaristas numa Brasília fictícia.' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{title}</title>
+<meta name="description" content={description}>
+<link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)}>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CS BRASIL: Treta Suprema">
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+<meta property="og:image" content="https://csbrasil.online/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='8' height='16' fill='%23e03232'/><rect x='8' width='8' height='16' fill='%231faa4d'/></svg>">
+<style is:global>
+:root{--red:#e03232;--green:#1faa4d;--yellow:#ffd23f;--dark:#0c0e11;--cs:#b8d94a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--dark);color:#f2ead8;font-family:Tahoma,Verdana,sans-serif;line-height:1.55}
+a{color:var(--cs)}
+header{display:flex;align-items:center;gap:18px;padding:14px 22px;background:rgba(20,18,12,.95);border-bottom:1px solid #3a3325;position:sticky;top:0;z-index:10}
+.logo{font-family:"Arial Black",Impact,sans-serif;letter-spacing:2px;font-size:18px;color:var(--yellow);text-decoration:none}
+nav{display:flex;gap:16px;flex-wrap:wrap}
+nav a{color:#c9bfa4;text-decoration:none;font-size:13px;letter-spacing:1px}
+nav a:hover{color:#fff}
+.btn-play{margin-left:auto;background:var(--yellow);color:#221e14!important;font-weight:bold;padding:8px 20px;border-radius:5px}
+main{max-width:900px;margin:0 auto;padding:36px 20px 60px}
+h1{font-family:"Arial Black",Impact,sans-serif;letter-spacing:3px;color:var(--yellow);font-size:30px;margin-bottom:14px}
+h2{color:var(--yellow);letter-spacing:2px;font-size:19px;margin:28px 0 10px}
+p,li{color:#c9bfa4;font-size:15px}
+footer{border-top:1px solid #3a3325;padding:18px 22px;text-align:center;color:#8a8064;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="/">CS BRASIL</a>
+  <nav>
+    <a href="/personagens">PERSONAGENS</a>
+    <a href="/como-jogar">COMO JOGAR</a>
+    <a href="https://github.com/rubenmarcus/csbrasil">GITHUB</a>
+  </nav>
+  <a class="btn-play" href="/game/">▶ JOGAR</a>
+</header>
+<main><slot /></main>
+<footer>Sátira política fictícia, sem lado e sem ódio — celebração da cultura brasileira 🇧🇷 · código MIT · feito com Kimi K3</footer>
+</body>
+</html>

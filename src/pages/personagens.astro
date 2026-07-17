@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro';
+const petistas = [
+  { name: 'Esquerdomacho', desc: 'Barba, tote bag e 47 bottons. Mira acadêmica: analisa a treta antes de atirar.' },
+  { name: 'Líder do Sindicato', desc: 'Boné vermelho, colete de assembleia e megafone. Convoca greve de fogo a cada round.' },
+  { name: 'Líder do MST', desc: 'Do campo pra arena. Bandeira na mochila, bota no barro e tiro certeiro de enxada.' },
+  { name: 'Doutora do SUS', desc: 'Jaleco, estetoscópio e plantão de 24h. Receita tiro certeiro, na veia.' },
+];
+const bolsonaristas = [
+  { name: 'Caminhoneiro', desc: 'Camisa do Brasil, luva de estrada e 40h de BR na semana. Freia pra ninguém.' },
+  { name: 'Influencer de Dubai', desc: 'Óculos dourado, stories em 3 fusos e mira patrocinada. Atira, posta, engaja.' },
+  { name: 'Cantor Sertanejo', desc: 'Chapéu de cowboy, fivela de ouro e violão nas costas. Moda de viola em dose dupla.' },
+  { name: 'Tia Zilá', desc: '60 anos, 300 grupos de mensagem e um quadro de pistas nas costas. Ela SABE de tudo.' },
+];
+---
+<Layout title="Personagens — CS BRASIL: Treta Suprema">
+  <h1>PERSONAGENS</h1>
+  <p>Oito arquétipos 100% fictícios e satíricos — nenhuma pessoa real foi consultada (ou poupada). Cada um tem silhueta, acessórios e estilo próprios, modelados em low-poly procedural.</p>
+
+  <h2 style="color:#ff8080">PETISTAS — "A treta se faz na praça!"</h2>
+  <ul>{petistas.map(c => <li style="margin:8px 0"><strong style="color:#f2ead8">{c.name}</strong> — {c.desc}</li>)}</ul>
+
+  <h2 style="color:#9dff9d">BOLSONARISTAS — "A treta se faz na rodovia!"</h2>
+  <ul>{bolsonaristas.map(c => <li style="margin:8px 0"><strong style="color:#f2ead8">{c.name}</strong> — {c.desc}</li>)}</ul>
+
+  <p style="margin-top:22px">Escolha o seu no jogo: <a href="/game/">▶ JOGAR</a></p>
+</Layout>

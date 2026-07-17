@@ -1,0 +1,40 @@
+---
+import Layout from '../layouts/Layout.astro';
+const rows = [
+  ['W A S D', 'Mover'], ['MOUSE', 'Mirar'], ['SHIFT', 'Correr'],
+  ['CTRL ou C', 'Agachar (mira mais estável)'], ['ESPAÇO', 'Pular'],
+  ['CLIQUE ESQ.', 'Atirar'], ['CLIQUE DIR.', 'Luneta da AWP'],
+  ['R', 'Recarregar'], ['1 / 2 / 3', 'AWP / Pistola / Faca'],
+  ['Z / X / V', 'Comandos de voz (rádio)'], ['TAB', 'Placar'], ['ESC', 'Pausar'],
+];
+---
+<Layout title="Como jogar — CS BRASIL: Treta Suprema">
+  <h1>COMO JOGAR</h1>
+  <p>Abra o <a href="/game/">jogo</a> num navegador de desktop, defina seu nick, escolha time e personagem, e clique em JOGAR.</p>
+
+  <h2>Controles</h2>
+  <table style="border-collapse:collapse;width:100%;max-width:520px">
+    {rows.map(([k, a]) => (
+      <tr>
+        <td style="color:var(--yellow);padding:5px 14px 5px 0;font-family:Consolas,monospace;white-space:nowrap">{k}</td>
+        <td style="color:#c9bfa4;padding:5px 0">{a}</td>
+      </tr>
+    ))}
+  </table>
+
+  <h2>Regras</h2>
+  <ul>
+    <li>Partidas 4×4 (você + 3 bots aliados × 4 bots inimigos), com respawn de 2,5s.</li>
+    <li>Cada round dura 1:39. O time com mais abates leva o round; 3 rounds vencem a partida.</li>
+    <li>AWP mata com 1 tiro; headshot tem som e marca próprios. Multikills disparam anúncios estilo Unreal Tournament.</li>
+    <li>Agachar (Ctrl ou C) deixa a mira mais estável — essencial pra AWP sem luneta.</li>
+    <li>Seus stats ficam salvos no navegador (tela RANKING no menu). Ranking global em breve.</li>
+  </ul>
+
+  <h2>Dicas</h2>
+  <ul>
+    <li>A AWP sem luneta é imprecisa: atire parado e agachado, ou use a luneta (botão direito).</li>
+    <li>O radar mostra aliados sempre e inimigos por 1,6s quando atiram.</li>
+    <li>A urna quebrada no centro é a melhor cobertura do mid.</li>
+  </ul>
+</Layout>

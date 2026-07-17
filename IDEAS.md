@@ -52,8 +52,9 @@ A base já está pronta: `skill`, `reactAt`, `nextShotAt` e dano dos bots em
   props em GLB com o Blender MCP (pipeline assistida por IA) e carregar no
   lugar dos bonecos de caixas, mantendo a mesma API (`buildCharacter`).
 - 🟡 **PWA offline** — service worker cacheando o jogo inteiro.
-- 🟡 **Site Astro ao redor do jogo** — páginas indexáveis (/personagens,
-  /como-jogar, /patch-notes) com o jogo embutido em `/jogar` (SEO real).
+- ✅ ~~**Site Astro ao redor do jogo**~~ — FEITO: landing `/`, `/personagens`,
+  `/como-jogar` e API routes `/api/*` (SSR) pro ranking. Próximos passos:
+  ligar o Supabase e a página de ranking/mapa públicos.
 - 🔴 **Port Unity/Godot** — cliente separado pra builds mobile/desktop,
   compartilhando assets e conceitos (o web continua sendo o principal).
 - 🔴 **Mobile** — controles touch (joysticks virtuais, aim assist).

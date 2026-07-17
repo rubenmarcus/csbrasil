@@ -1,0 +1,26 @@
+{
+  "name": "csbrasil",
+  "version": "1.0.0",
+  "description": "CS BRASIL: Treta Suprema — FPS de navegador estilo CS 1.6 (site Astro + jogo vanilla)",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "python3 -m http.server 4321 -d dist/client",
+    "fetch-audio": "bash scripts/fetch-audio.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rubenmarcus/csbrasil.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rubenmarcus/csbrasil/issues"
+  },
+  "homepage": "https://github.com/rubenmarcus/csbrasil#readme",
+  "dependencies": {
+    "@astrojs/vercel": "^11.0.3",
+    "@supabase/supabase-js": "^2.110.7",
+    "astro": "^7.1.1"
+  },
+  "private": true,
+  "type": "module"
+}
