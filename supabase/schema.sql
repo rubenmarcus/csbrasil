@@ -37,8 +37,10 @@ alter table public.players enable row level security;
 alter table public.stats   enable row level security;
 
 -- Leitura pública (o ranking é público).
+drop policy if exists "players: leitura pública" on public.players;
 create policy "players: leitura pública" on public.players
   for select using (true);
+drop policy if exists "stats: leitura pública" on public.stats;
 create policy "stats: leitura pública" on public.stats
   for select using (true);
 
@@ -128,6 +130,7 @@ create table if not exists public.presence (
 );
 
 alter table public.presence enable row level security;
+drop policy if exists "presence: leitura pública" on public.presence;
 create policy "presence: leitura pública" on public.presence
   for select using (true);
 
@@ -168,5 +171,6 @@ create table if not exists public.city_daily (
 );
 
 alter table public.city_daily enable row level security;
+drop policy if exists "city_daily: leitura pública" on public.city_daily;
 create policy "city_daily: leitura pública" on public.city_daily
   for select using (true);
