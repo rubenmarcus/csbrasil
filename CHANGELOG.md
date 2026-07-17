@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.1] — 2026-07-18
+### Adicionado
+- Placar geral no `/mapa`: total de jogadores, partidas e kills + barra de
+  proporção % petistas × % bolsonaristas
+
 ## [1.7.0] — 2026-07-18
 ### Adicionado
 - **Personagem como avatar**: sem foto/X, a badge usa o personagem escolhido no
