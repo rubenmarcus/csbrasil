@@ -120,6 +120,7 @@ export class Game {
       matchEnd: $('match-end'), matchTitle: $('match-title'), matchSub: $('match-sub'), matchStats: $('match-stats'),
       pause: $('pause-menu'), radar: $('radar'),
       radioMenu: $('radio-menu'), radioLog: $('radio-log'), mkBanner: $('mk-banner'),
+      lockHint: $('lock-hint'),
     };
   }
 
@@ -195,7 +196,12 @@ export class Game {
     };
     this._md = e => {
       if (this.radioOpen) { this.radioOpen = null; this._radioUi(); }
-      if (!this._acceptInput()) return;
+      if (!this._acceptInput()) {
+        // pointer lock não engatou (ou caiu)? qualquer clique tenta de novo
+        if (!this.testMode && !this.paused && (this.state === 'live' || this.state === 'countdown') && !document.pointerLockElement)
+          this._requestLock();
+        return;
+      }
       if (e.button === 0) this._tryShoot();
       if (e.button === 2) this._scope(true);
     };
@@ -223,6 +229,9 @@ export class Game {
     window.addEventListener('blur', this._blur);
   }
 
+  _requestLock() {
+    try { this.renderer.domElement.requestPointerLock()?.catch?.(() => {}); } catch {}
+  }
   _acceptInput() {
     if (this.paused || this.state !== 'live' && this.state !== 'countdown') return false;
     return this.testMode || !!document.pointerLockElement;
@@ -357,7 +366,7 @@ export class Game {
   }
   resume() {
     this.setPaused(false);
-    if (!this.testMode) this.renderer.domElement.requestPointerLock();
+    if (!this.testMode) this._requestLock();
   }
   applySettings() { this.sfx.setVolume(this.settings.vol); this._applyQuality(); }
   _applyQuality() {
@@ -928,6 +937,11 @@ export class Game {
     this._updateFx(dt);
     this._updateHud();
     this._updateRadar();
+    // hint de pointer lock: visível só quando o jogo está ativo mas sem lock
+    if (this.el.lockHint)
+      this.el.lockHint.classList.toggle('hidden',
+        this.testMode || this.paused || !!document.pointerLockElement ||
+        (this.state !== 'live' && this.state !== 'countdown'));
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -952,6 +966,7 @@ export class Game {
     this.el.respawn.classList.add('hidden');
     this.el.reloadNote.classList.add('hidden');
     this.el.banner.classList.add('hidden');
+    this.el.lockHint.classList.add('hidden');
     this.el.scoreboard.classList.add('hidden');
     this.el.vignette.style.opacity = 0;
     this.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); });
