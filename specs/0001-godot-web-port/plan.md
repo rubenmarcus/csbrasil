@@ -31,6 +31,8 @@ os contratos de movimento por testes headless e smoke test Web.
 
 ### 3. Slice de combate completo
 
+Status: concluído e verificado em 2026-07-17.
+
 Adicionar um bot, saúde, AWP, hitscan, oclusão, scope, munição, recarga, morte e
 respawn. Separar dados de armas em Resources. Este slice estabelece os limites
 entre ator, arma, dano, efeitos e UI.

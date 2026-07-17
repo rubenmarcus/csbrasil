@@ -41,12 +41,20 @@ para iniciar a sessão de input e use:
 - `Ctrl`: agachar;
 - `Espaço`: saltar;
 - mouse: controlar a câmera;
+- clique esquerdo: disparar a AWP depois de capturar o mouse;
+- clique direito: ativar/desativar a mira telescópica;
+- `R`: recarregar;
 - `Esc`: liberar o mouse com segurança.
 
 O movimento é dividido entre `MovementConfig` (contratos numéricos),
 `MovementMotor` (regras puras) e a scene `Player`, baseada em
 `CharacterBody3D`. A scene `MinimalArena` cria piso, limites, obstáculo e
 degrau em runtime, sem assets gráficos importados.
+
+O slice de combate adiciona um bot procedural, componentes de saúde, AWP
+configurada por `WeaponDefinition`, estado independente de munição/recarga e
+hitscan com oclusão e hitbox de cabeça. Jogador e bot morrem e reaparecem após
+2,5 segundos.
 
 ## Linha de comando
 
@@ -56,6 +64,7 @@ scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://
 scripts/export-godot-web.sh
 npm run test:web:smoke
 npm run test:web:movement
+npm run test:web:combat
 ```
 
 Os smoke tests sobem o cliente Godot em `8177` e o cliente legado em `8176`,

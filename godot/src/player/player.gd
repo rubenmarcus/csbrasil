@@ -2,6 +2,12 @@ class_name PlayerController
 extends CharacterBody3D
 
 signal input_capture_changed(captured: bool)
+signal health_changed(current: int)
+signal weapon_state_changed(ammo: int, reserve: int)
+signal shot_fired(result: Dictionary)
+signal scope_changed(active: bool)
+signal died
+signal respawned
 
 const MovementConfigScript := preload("res://src/player/movement_config.gd")
 const MovementMotorScript := preload("res://src/player/movement_motor.gd")
@@ -12,12 +18,17 @@ const MovementMotorScript := preload("res://src/player/movement_motor.gd")
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var camera: Camera3D = $CameraPivot/Camera3D
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
+@onready var health: HealthComponent = $Health
+@onready var weapon: HitscanWeapon = $CameraPivot/Camera3D/AWP
 
 var crouch_fraction: float = 0.0
 var scoped: bool = false
 var input_session_active: bool = false
+var respawn_delay: float = 2.5
+var respawn_remaining: float = 0.0
 var _pitch: float = 0.0
 var _motor: RefCounted
+var _spawn_position: Vector3
 
 
 func _ready() -> void:
@@ -25,13 +36,24 @@ func _ready() -> void:
 	# The scene resource is shared; each actor must own its mutable crouch shape.
 	collision_shape.shape = collision_shape.shape.duplicate()
 	camera.fov = movement_config.base_fov
+	_spawn_position = global_position
+	health.damaged.connect(_on_health_damaged)
+	health.died.connect(_on_health_died)
+	weapon.ammo_changed.connect(_on_ammo_changed)
 
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var already_active := input_session_active
 		capture_pointer()
+		if already_active:
+			_fire_weapon()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		set_scoped(not scoped)
 	elif event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed:
 		release_pointer()
+	elif event is InputEventKey and event.keycode == KEY_R and event.pressed:
+		weapon.reload()
 	elif event is InputEventMouseMotion and _is_pointer_captured() and accepts_input:
 		rotate_view(event.relative)
 
@@ -42,6 +64,11 @@ func _notification(what: int) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not health.is_alive():
+		respawn_remaining = maxf(0.0, respawn_remaining - delta)
+		if respawn_remaining <= 0.0:
+			respawn()
+		return
 	if not accepts_input or (OS.has_feature("web") and not input_session_active):
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -74,6 +101,30 @@ func rotate_view(relative_motion: Vector2) -> void:
 	camera_pivot.rotation.x = _pitch
 
 
+func take_damage(amount: int, source: Node = null, headshot: bool = false) -> bool:
+	return health.take_damage(amount, source, headshot)
+
+
+func set_scoped(active: bool) -> void:
+	if active and not weapon.definition.supports_scope:
+		return
+	scoped = active
+	weapon.scoped = active
+	scope_changed.emit(scoped)
+
+
+func respawn() -> void:
+	health.reset()
+	global_position = _spawn_position
+	velocity = Vector3.ZERO
+	accepts_input = true
+	visible = true
+	collision_shape.disabled = false
+	set_scoped(false)
+	health_changed.emit(health.current_health)
+	respawned.emit()
+
+
 func capture_pointer() -> void:
 	if not accepts_input:
 		return
@@ -94,6 +145,35 @@ func release_pointer() -> void:
 
 func _is_pointer_captured() -> bool:
 	return Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+
+
+func _fire_weapon() -> void:
+	var result := weapon.fire(camera.global_position, -camera.global_transform.basis.z, self)
+	if result.fired:
+		_pitch = clampf(
+			_pitch - float(weapon.definition.recoil),
+			movement_config.minimum_pitch,
+			movement_config.maximum_pitch
+		)
+		camera_pivot.rotation.x = _pitch
+	shot_fired.emit(result)
+
+
+func _on_health_damaged(_amount: int, current: int, _source: Node, _headshot: bool) -> void:
+	health_changed.emit(current)
+
+
+func _on_health_died(_source: Node, _headshot: bool) -> void:
+	respawn_remaining = respawn_delay
+	accepts_input = false
+	release_pointer()
+	set_scoped(false)
+	collision_shape.set_deferred("disabled", true)
+	died.emit()
+
+
+func _on_ammo_changed(ammo: int, reserve: int) -> void:
+	weapon_state_changed.emit(ammo, reserve)
 
 
 func _prepare_step_up(horizontal_motion: Vector3, grounded: bool) -> void:

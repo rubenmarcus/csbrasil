@@ -65,6 +65,9 @@
     "speed": 3.3,
     "eye_height": 1.5,
     "think_interval": 0.16,
+    "shot_damage_to_player": 42,
+    "shot_interval_minimum": 2.1,
+    "shot_interval_maximum": 3.5,
     "skill_minimum": 0.85,
     "skill_maximum": 1.2
   }
