@@ -15,6 +15,21 @@ python3 -m http.server 8123
 
 Abra `http://localhost:8123` no Chrome/Edge/Firefox **de desktop**.
 
+## Publicar (Vercel)
+
+O `vercel.json` já está configurado: no build ele roda `scripts/fetch-audio.sh`,
+que baixa o pacote de áudio da Release `audio-pack-v1` do GitHub.
+
+1. Em vercel.com → **Add New → Project → Import** `rubenmarcus/csbrasil`.
+2. Framework Preset: **Other** (não há framework; o `vercel.json` cuida do resto).
+3. Deploy. A cada push na `main` a Vercel rebuilda e publica.
+4. **Domínio** (quando comprar csbrasil.online): Settings → Domains → adicionar
+   e apontar o DNS (CNAME para `cname.vercel-dns.com`). Depois ajuste a URL
+   canônica em `index.html`, `robots.txt`, `sitemap.xml` e `llms.txt`.
+
+Sem variáveis de ambiente obrigatórias (o `AUDIO_PACK_URL` tem default público;
+se um dia o pacote ficar privado, cadastre a env no projeto).
+
 ## Publicar no kimi.page
 
 O kimi.page é o domínio de publicação do recurso **Kimi Websites** (kimi.com/websites):
