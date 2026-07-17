@@ -35,7 +35,20 @@ create table if not exists public.stats (
 );
 
 alter table public.players enable row level security;
-alter table public.stats   enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- AUTO-CURA de bancos antigos: create table if not exists NÃO adiciona
+-- colunas em tabelas já existentes. Estes ALTERs são idempotentes e trazem
+-- qualquer versão anterior do schema pra forma atual.
+-- ---------------------------------------------------------------------------
+alter table public.players add column if not exists avatar_url text;
+alter table public.players add column if not exists auth_user uuid;
+alter table public.players add column if not exists hidden boolean not null default false;
+alter table public.stats add column if not exists rounds int not null default 0;
+alter table public.stats add column if not exists matches_p int not null default 0;
+alter table public.stats add column if not exists matches_b int not null default 0;
+alter table public.stats add column if not exists play_seconds bigint not null default 0;
+alter table public.city_daily add column if not exists rounds int not null default 0;alter table public.stats   enable row level security;
 
 -- Leitura pública (o ranking é público).
 drop policy if exists "players: leitura pública" on public.players;
