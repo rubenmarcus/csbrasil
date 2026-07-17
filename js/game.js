@@ -20,12 +20,13 @@ const MK_TIERS = { 2: 'doublekill', 3: 'triplekill', 4: 'multikill', 5: 'megakil
 const MK_LABELS = { doublekill: 'DOUBLE KILL', triplekill: 'TRIPLE KILL', multikill: 'MULTI KILL', megakill: 'MEGA KILL', killingspree: 'KILLING SPREE', godlike: 'GODLIKE' };
 
 export class Game {
-  constructor({ renderer, textures, sfx, settings, playerCharId, playerTeam, nickname, testMode = false, onQuit }) {
+  constructor({ renderer, textures, sfx, settings, playerCharId, playerTeam, nickname, testMode = false, onQuit, onMatchEnd }) {
     this.renderer = renderer;
     this.sfx = sfx;
     this.settings = settings;
     this.testMode = testMode;
     this.onQuit = onQuit;
+    this.onMatchEnd = onMatchEnd;
     this.state = 'boot';
     this.paused = false;
     this.time = 0;
@@ -52,7 +53,7 @@ export class Game {
       yaw: 0, pitch: 0, hp: 100, alive: true, respawnAt: 0, crouchF: 0,
       weapon: 'awp', scoped: false, reloadUntil: 0, nextShotAt: 0, drawUntil: 0,
       ammo: { awp: { mag: WEAPONS.awp.mag, res: WEAPONS.awp.reserve }, pistol: { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve } },
-      kills: 0, deaths: 0, grounded: true, stepPhase: 0, revealedAt: -99,
+      kills: 0, deaths: 0, headshots: 0, grounded: true, stepPhase: 0, revealedAt: -99,
     };
     this.combatants.push(this.player);
 
@@ -332,6 +333,14 @@ export class Game {
     this.el.matchEnd.classList.remove('hidden');
     if (document.pointerLockElement) document.exitPointerLock();
     try { window.va?.('event', { name: 'match_end', data: { winner, roundsP: this.roundsWon.P, roundsB: this.roundsWon.B } }); } catch {}
+    try {
+      this.onMatchEnd?.({
+        won: mine, team: this.playerTeam, character: this.playerDef.id,
+        kills: this.player.kills, deaths: this.player.deaths,
+        headshots: this.player.headshots || 0, bestStreak: this.mk.best || 0,
+        roundsP: this.roundsWon.P, roundsB: this.roundsWon.B,
+      });
+    } catch {}
     mine ? this.sfx.matchWin() : this.sfx.roundLose();
   }
 
@@ -485,10 +494,11 @@ export class Game {
       this.sfx.voice(attacker.team);   // killer's side celebrates (meme audio)
       if (attacker.isPlayer) {
         this.sfx.killConfirm();
-        if (head) this.sfx.general('headshot');
+        if (head) { this.sfx.general('headshot'); attacker.headshots++; }
         const mk = this.mk;
         if (this.time < mk.until) mk.count++; else mk.count = 1;
         mk.until = this.time + 4.5; mk.life++;
+        mk.best = Math.max(mk.best || 0, mk.count);
         const kind = mk.count >= 6 ? 'godlike' : (MK_TIERS[mk.count] || (mk.life === 5 ? 'killingspree' : null));
         if (kind) { this._mkBanner(MK_LABELS[kind]); this.sfx.general(kind); }
       }

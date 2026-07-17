@@ -90,7 +90,9 @@
   <canvas id="logo-canvas" width="900" height="360"></canvas>
   <div class="menu-buttons">
     <input id="nick-input" maxlength="14" placeholder="SEU NICK (ex: Zé do AWP)" autocomplete="off">
+    <input id="social-input" maxlength="60" placeholder="LINK SOCIAL (opcional, ex: x.com/ze)" autocomplete="off">
     <button id="btn-jogar" class="btn btn-big">JOGAR</button>
+    <button id="btn-ranking" class="btn">RANKING</button>
     <button id="btn-howto" class="btn">COMO JOGAR</button>
     <button id="btn-settings" class="btn">CONFIGURAÇÕES</button>
   </div>
@@ -152,6 +154,17 @@
       </select>
     </label>
     <button id="settings-back" class="btn">SALVAR &amp; VOLTAR</button>
+  </div>
+</div>
+
+<!-- Ranking (local por enquanto; global via Supabase no futuro) -->
+<div id="ranking-panel" class="screen hidden">
+  <div class="panel center-panel">
+    <h2>RANKING</h2>
+    <div id="rank-local" class="rank-stats"></div>
+    <p class="rank-note">🌐 Ranking global com Supabase em breve (ver IDEAS.md).<br>
+    Seus stats ficam salvos neste navegador — com o mesmo nick, eles sobem pro ranking global no futuro.</p>
+    <button id="ranking-back" class="btn">VOLTAR</button>
   </div>
 </div>
 

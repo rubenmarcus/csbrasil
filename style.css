@@ -35,11 +35,15 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 .btn-big:hover{background:var(--yellow);color:#221e14}
 .btn-back{position:absolute;top:26px;left:26px;font-size:13px;padding:9px 20px}
 .menu-buttons{display:flex;flex-direction:column;gap:14px;align-items:center;z-index:1}
-#nick-input{font-family:Consolas,monospace;font-size:18px;letter-spacing:1px;text-align:center;
+#nick-input,#social-input{font-family:Consolas,monospace;font-size:18px;letter-spacing:1px;text-align:center;
   background:#10130c;border:2px solid #4a5a2a;border-radius:4px;color:var(--cs);
   padding:10px 18px;width:340px;outline:none}
-#nick-input:focus{border-color:var(--cs);box-shadow:0 0 14px rgba(184,217,74,.3)}
-#nick-input::placeholder{color:#5a6b3a}
+#social-input{font-size:13px;padding:8px 18px}
+#nick-input:focus,#social-input:focus{border-color:var(--cs);box-shadow:0 0 14px rgba(184,217,74,.3)}
+#nick-input::placeholder,#social-input::placeholder{color:#5a6b3a}
+.rank-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 26px;font-family:Consolas,monospace;font-size:14px;color:#c9bfa4}
+.rank-stats b{color:var(--yellow);font-size:26px;display:block;text-align:center}
+.rank-note{font-size:12px;font-family:Arial,sans-serif;color:#8a8064;line-height:1.5}
 
 /* ---------- team select ---------- */
 .team-row{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}

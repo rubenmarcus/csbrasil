@@ -12,6 +12,7 @@ const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med' },
   JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 const saveSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 const NICK_KEY = 'awpbr_nick';
+const SOCIAL_KEY = 'awpbr_social';
 
 /* ---------------- renderer ---------------- */
 const container = document.getElementById('game-container');
@@ -33,7 +34,7 @@ buildWorld(menuScene, textures);
 const menuCam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 400);
 
 /* ---------------- screens ---------------- */
-const screens = ['mobile-warning', 'main-menu', 'team-select', 'char-select', 'settings-panel', 'howto-panel', 'pause-menu', 'match-end'];
+const screens = ['mobile-warning', 'main-menu', 'team-select', 'char-select', 'settings-panel', 'howto-panel', 'ranking-panel', 'pause-menu', 'match-end'];
 function show(id) {
   for (const s of screens) document.getElementById(s).classList.toggle('hidden', s !== id);
   if (!id) for (const s of screens) document.getElementById(s).classList.add('hidden');
@@ -93,6 +94,7 @@ async function startGame(team, charId) {
     renderer, textures, sfx, settings,
     playerCharId: charId, playerTeam: team,
     nickname: $('nick-input').value, testMode,
+    onMatchEnd: recordMatchStats,
   });
   window.__game = game;
   game.start();
@@ -107,6 +109,8 @@ function quitToMenu() {
 
 /* ---------------- menu wiring ---------------- */
 $('btn-jogar').onclick = () => { sfx.uiClick(); show('team-select'); };
+$('btn-ranking').onclick = () => { sfx.uiClick(); showRanking(); };
+$('ranking-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
 $('btn-howto').onclick = () => { sfx.uiClick(); show('howto-panel'); };
 $('howto-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
 $('btn-settings').onclick = () => { sfx.uiClick(); settingsReturn = 'main-menu'; show('settings-panel'); };
@@ -130,6 +134,35 @@ $('char-confirm').onclick = () => { sfx.uiClick(); if (selChar) startGame(curren
 const nickEl = $('nick-input');
 nickEl.value = localStorage.getItem(NICK_KEY) || '';
 nickEl.oninput = () => localStorage.setItem(NICK_KEY, nickEl.value);
+const socialEl = $('social-input');
+socialEl.value = localStorage.getItem(SOCIAL_KEY) || '';
+socialEl.oninput = () => localStorage.setItem(SOCIAL_KEY, socialEl.value);
+
+/* ---------------- local stats (futuro ranking global via Supabase) ---------------- */
+const STATS_KEY = 'awpbr_stats';
+function loadStats() {
+  return Object.assign({ matches: 0, wins: 0, kills: 0, deaths: 0, headshots: 0, bestStreak: 0 },
+    JSON.parse(localStorage.getItem(STATS_KEY) || '{}'));
+}
+function recordMatchStats(s) {
+  const st = loadStats();
+  st.matches++; if (s.won) st.wins++;
+  st.kills += s.kills; st.deaths += s.deaths; st.headshots += s.headshots;
+  st.bestStreak = Math.max(st.bestStreak, s.bestStreak);
+  localStorage.setItem(STATS_KEY, JSON.stringify(st));
+}
+function showRanking() {
+  const st = loadStats();
+  const kd = st.deaths ? (st.kills / st.deaths).toFixed(2) : st.kills.toFixed(2);
+  const nick = (nickEl.value || 'VOCÊ').trim();
+  const social = socialEl.value.trim();
+  $('rank-local').innerHTML =
+    `<div style="grid-column:1/-1;text-align:center;color:var(--cs);font-size:18px">${nick}` +
+    (social ? ` · <span style="color:#8a8064;font-size:12px">${social.replace(/</g, '&lt;')}</span>` : '') + `</div>` +
+    `<div><b>${st.matches}</b>partidas</div><div><b>${st.wins}</b>vitórias</div><div><b>${kd}</b>K/D</div>` +
+    `<div><b>${st.kills}</b>abates</div><div><b>${st.headshots}</b>headshots</div><div><b>${st.bestStreak}×</b>melhor sequência</div>`;
+  show('ranking-panel');
+}
 
 function pickTeam(team) {
   currentTeam = team;
