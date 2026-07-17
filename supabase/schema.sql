@@ -3,11 +3,13 @@
 -- (js/ranking.js, a criar) — a anon key é pública por design; a segurança
 -- vem das policies abaixo, não de esconder a chave.
 
--- Tabela de jogadores: nick único + token secreto gerado no client
--- (UUID salvo no localStorage; funciona como "senha invisível" até a Fase 3,
--- quando Supabase Auth com email/OAuth substitui o token).
+-- Tabela de jogadores: id UUID estável (PK, futuro link com auth.users na
+-- Fase 3) + nick único (identidade anti-impersonação, estilo CS 1.6).
+-- Se um dia quiser nicks duplicados (modelo BattleTag), basta dropar o
+-- unique do nick — o id continua distinguindo cada jogador.
 create table if not exists public.players (
-  nick        text primary key check (char_length(nick) between 2 and 14),
+  id          uuid primary key default gen_random_uuid(),
+  nick        text not null unique check (char_length(nick) between 2 and 14),
   token       uuid not null,
   social_link text check (char_length(social_link) <= 60),
   hidden      boolean not null default false,  -- moderação: esconde do ranking
@@ -95,3 +97,42 @@ from stats s join players p on p.nick = s.nick
 where not p.hidden
 order by s.kills desc, s.wins desc
 limit 100;
+
+-- ---------------------------------------------------------------------------
+-- PRESENÇA & MAPA ("mapa da treta ao vivo")
+-- Preenchida por uma Edge Function (Deno) — RPC do PostgREST NÃO tem acesso
+-- ao IP do client. A function lê x-forwarded-for, resolve GeoIP (cidade) e
+-- faz upsert aqui. LGPD: NÃO guardar IP bruto — só geo aproximado (cidade),
+-- com consentimento na tela de registro.
+-- ---------------------------------------------------------------------------
+create table if not exists public.presence (
+  nick      text primary key references public.players(nick) on delete cascade,
+  last_seen timestamptz not null default now(),
+  city      text,
+  country   text,
+  lat       float8,
+  lon       float8
+);
+
+alter table public.presence enable row level security;
+create policy "presence: leitura pública" on public.presence
+  for select using (true);
+
+-- "online agora" = heartbeat nos últimos 2 minutos
+create or replace view public.online_now as
+select nick, city, country, lat, lon, last_seen
+from presence
+where last_seen > now() - interval '2 minutes';
+
+-- Histórico AGREGADO por cidade (não por pessoa) — privacidade primeiro.
+create table if not exists public.city_daily (
+  day     date not null,
+  city    text not null,
+  country text,
+  matches int not null default 0,
+  primary key (day, city)
+);
+
+alter table public.city_daily enable row level security;
+create policy "city_daily: leitura pública" on public.city_daily
+  for select using (true);

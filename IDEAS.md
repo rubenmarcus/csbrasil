@@ -63,6 +63,9 @@ A base já está pronta: `skill`, `reactAt`, `nextShotAt` e dano dos bots em
 
 - 🟡 **Ranking online** — leaderboard global e por semana (Supabase: auth +
   Postgres). Validação anti-cheat no servidor.
+- 🟡 **Mapa da treta ao vivo** — presença em tempo real por cidade num mapa
+  Leaflet (Edge Function + GeoIP; geo aproximado, sem IP bruto, histórico
+  agregado — schema já preparado em `supabase/schema.sql`).
 - 🟡 **Perfis de jogador** — nick único, stats, personagem favorito.
 - 🔴 **Multiplayer real** — salas 4×4 via WebSocket/WebRTC com servidor
   autoritativo.
