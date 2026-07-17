@@ -1,0 +1,26 @@
+; Engine configuration file.
+; Edit through the Godot editor when possible.
+;
+; Format:
+;   [section]
+;   param=value
+
+config_version=5
+
+[application]
+
+config/name="CS Brasil: Treta Suprema"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+run/main_scene="res://src/main/main.tscn"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+

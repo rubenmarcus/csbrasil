@@ -11,3 +11,12 @@ dist/
 .astro/
 .env
 .env.*
+
+audio/*
+!audio/cs/
+!audio/cs/LEIA-ME.txt
+!audio/manifest.example.json
+godot/.godot/
+build/
+test-results/
+playwright-report/
