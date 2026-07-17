@@ -37,7 +37,7 @@ export function badgeSvg(p: any, avatarUri: string | null): string {
   const kd = p.deaths ? (p.kills / p.deaths).toFixed(2) : String(p.kills);
   const cells: [string, string][] = [
     ['PARTIDAS', String(p.matches)], ['VITÓRIAS', String(p.wins)], ['K/D', kd], ['TEMPO', displayTime(p)],
-    ['ABATES', String(p.kills)], ['HEADSHOTS', String(p.headshots)], ['SEQUÊNCIA', `${p.best_streak}×`], ['ROUNDS', String(p.rounds)],
+    ['KILLS', String(p.kills)], ['HEADSHOTS', String(p.headshots)], ['SEQUÊNCIA', `${p.best_streak}×`], ['ROUNDS', String(p.rounds)],
   ];
   const grid = cells.map(([label, v], i) => {
     const x = 60 + (i % 4) * 190, y = 285 + Math.floor(i / 4) * 105;

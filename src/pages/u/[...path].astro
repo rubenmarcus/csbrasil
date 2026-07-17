@@ -37,7 +37,7 @@ const tempo = p ? displayTime(p) : '0min';
 const badgeUrl = `${Astro.site}api/badge/${pid}.png`;
 const pageUrl = `${Astro.site}u/${pid}/${encodeURIComponent(nick)}`;
 const title = `${nick} no CS BRASIL: Treta Suprema`;
-const desc = p ? `${p.kills} abates · K/D ${kd} · ${p.wins} vitórias · ${p.headshots} headshots · ${tempo} de arena` : 'Perfil de jogador';
+const desc = p ? `${p.kills} kills · K/D ${kd} · ${p.wins} vitórias · ${p.headshots} headshots · ${tempo} de arena` : 'Perfil de jogador';
 ---
 <Layout title={title} description={desc} ogImage={badgeUrl}>
   <Fragment slot="head">
@@ -71,7 +71,7 @@ const desc = p ? `${p.kills} abates · K/D ${kd} · ${p.wins} vitórias · ${p.h
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.wins}</b>vitórias</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.rounds}</b>rounds</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{kd}</b>K/D</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.kills}</b>abates</div>
+        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.kills}</b>kills</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.headshots}</b>headshots</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.best_streak}×</b>melhor sequência</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{tempo}</b>tempo de arena</div>
@@ -79,7 +79,7 @@ const desc = p ? `${p.kills} abates · K/D ${kd} · ${p.wins} vitórias · ${p.h
       <h2>Compartilhar</h2>
       <p>
         <a class="btn-play" style="padding:10px 22px;border-radius:5px;text-decoration:none" target="_blank" rel="noopener"
-           href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Meu placar no CS BRASIL: ${p.kills} abates, K/D ${kd}, ${p.headshots} headshots. E aí, aguenta a treta?`)}&url=${encodeURIComponent(pageUrl)}`}>
+           href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Meu placar no CS BRASIL: ${p.kills} kills, K/D ${kd}, ${p.headshots} headshots. E aí, aguenta a treta?`)}&url=${encodeURIComponent(pageUrl)}`}>
           Postar no X</a>
         <button class="btn-play" style="padding:10px 22px;border-radius:5px;border:0;cursor:pointer;margin-left:10px"
                 onclick={`navigator.clipboard.writeText('${pageUrl}').then(()=>this.textContent='Link copiado!')`}>

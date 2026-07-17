@@ -62,7 +62,7 @@ npm run preview       # serve dist/client estaticamente
 | Tab | Placar |
 | Esc | Pausar |
 
-**Regras:** 4×4 com respawn (2,5s). Round de 1:39; o time com mais abates leva o round;
+**Regras:** 4×4 com respawn (2,5s). Round de 1:39; o time com mais kills leva o round;
 vence quem levar 3 rounds. AWP mata com 1 tiro; headshot tem som próprio. Multikills
 disparam anúncios estilo Unreal Tournament. Defina seu **nick** no menu principal
 (fica salvo, com stats locais na tela RANKING).

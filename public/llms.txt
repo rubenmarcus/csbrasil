@@ -12,7 +12,7 @@
 - WASD move, mouse mira, botão esquerdo atira, botão direito abre a luneta
   da AWP, Ctrl agacha (mira mais estável), Shift corre, Espaço pula, R
   recarrega, 1/2/3 troca AWP/pistola/faca, Z/X/C comandos de voz, Tab placar.
-- Regras: 4×4 com respawn, rounds de 1:39; mais abates leva o round; 3
+- Regras: 4×4 com respawn, rounds de 1:39; mais kills leva o round; 3
   rounds vencem a partida. Multikills têm anúncios estilo Unreal Tournament.
 
 ## Perguntas frequentes

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.6.3] — 2026-07-18
+### Mudado
+- "Abates" vira "kills" em toda a UI (placar, ranking, perfil, badge, docs)
+
 ## [1.6.2] — 2026-07-18
 ### Corrigido
 - Heartbeat/submit usam o nick **registrado** na sessão (editar o nick no menu

@@ -342,7 +342,7 @@ export class Game {
       : 'Derrota na arena. Já pediram CPI da partida.';
     this.el.matchStats.innerHTML =
       `<div><b>${this.roundsWon.P} × ${this.roundsWon.B}</b>rounds</div>` +
-      `<div><b>${this.player.kills}</b>abates de ${this.player.name}</div>` +
+      `<div><b>${this.player.kills}</b>kills de ${this.player.name}</div>` +
       `<div><b>${this.player.deaths}</b>suas mortes</div>`;
     this.el.matchEnd.classList.remove('hidden');
     if (document.pointerLockElement) document.exitPointerLock();
