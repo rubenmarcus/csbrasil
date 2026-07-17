@@ -17,7 +17,7 @@ func test_main_scene_exposes_parallel_boot_hosts() -> void:
 	assert_not_null(main.get_node_or_null("GuiHost"))
 	assert_true(main.get_node("GuiHost") is CanvasLayer)
 	assert_eq(main.get_node("GuiHost/BootPanel/Title").text, "CS BRASIL")
-	assert_eq(main.get_node("GuiHost/BootPanel/Status").text, "CLIENTE GODOT — MIGRAÇÃO EM ANDAMENTO")
+	assert_eq(main.get_node("GuiHost/BootPanel/Status").text, "CLIQUE PARA CAPTURAR O MOUSE · WASD PARA MOVER")
 
 
 func test_project_declares_main_scene() -> void:
@@ -25,4 +25,3 @@ func test_project_declares_main_scene() -> void:
 		ProjectSettings.get_setting("application/run/main_scene"),
 		MAIN_SCENE_PATH
 	)
-

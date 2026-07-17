@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://src/arena/minimal_arena.tscn" id="1_arena"]
+[ext_resource type="PackedScene" path="res://src/player/player.tscn" id="2_player"]
+
+[node name="Match" type="Node3D"]
+
+[node name="Arena" parent="." instance=ExtResource("1_arena")]
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector3(0, 0.1, 8)

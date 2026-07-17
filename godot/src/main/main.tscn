@@ -1,11 +1,14 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://src/match/movement_match.tscn" id="2_match"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
 
 [node name="WorldHost" type="Node3D" parent="."]
+
+[node name="Match" parent="WorldHost" instance=ExtResource("2_match")]
 
 [node name="GuiHost" type="CanvasLayer" parent="."]
 
@@ -15,7 +18,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.035, 0.043, 0.055, 1)
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
 
 [node name="Title" type="Label" parent="GuiHost/BootPanel"]
 anchors_preset = 8
@@ -24,9 +28,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -240.0
-offset_top = -62.0
+offset_top = -342.0
 offset_right = 240.0
-offset_bottom = -8.0
+offset_bottom = -288.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 0.8235, 0.2471, 1)
@@ -41,12 +45,30 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -300.0
-offset_top = 8.0
+offset_top = -286.0
 offset_right = 300.0
-offset_bottom = 42.0
+offset_bottom = -252.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.7059, 0.7569, 0.8196, 1)
 theme_override_font_sizes/font_size = 18
-text = "CLIENTE GODOT — MIGRAÇÃO EM ANDAMENTO"
+text = "CLIQUE PARA CAPTURAR O MOUSE · WASD PARA MOVER"
+horizontal_alignment = 1
+
+[node name="Crosshair" type="Label" parent="GuiHost"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -12.0
+offset_top = -17.0
+offset_right = 12.0
+offset_bottom = 17.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_font_sizes/font_size = 24
+text = "+"
 horizontal_alignment = 1

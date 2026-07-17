@@ -23,6 +23,8 @@ Chrome/Edge e Firefox sem afetar o cliente atual.
 
 ### 2. Slice jogável de movimento
 
+Status: concluído e verificado em 2026-07-17.
+
 Gerar uma arena mínima com colisão e um jogador `CharacterBody3D`. Portar
 pointer lock, câmera, caminhada, strafe, corrida, agachamento e salto. Validar
 os contratos de movimento por testes headless e smoke test Web.
