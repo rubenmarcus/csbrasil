@@ -9,6 +9,9 @@
 FPS de navegador em Three.js: arena de sniper estilo CS 1.6 (`awp_map`) em uma Brasília
 fictícia e satírica. Personagens 100% fictícios, sem gore — só arquétipos exagerados.
 
+> 📝 Este jogo foi gerado do zero por IA (Kimi K3) a partir de um único prompt —
+> [leia o prompt original em PROMPT.md](PROMPT.md).
+
 ## Rodar localmente
 
 Precisa de um servidor estático (módulos ES não abrem via `file://`):
