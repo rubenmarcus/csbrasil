@@ -27,7 +27,7 @@
     `CharacterBody3D`; smoke test Web de input.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:movement`
 
-- [ ] **Entregar duelo com AWP, morte e respawn** (test-type: both)
+- [x] **Entregar duelo com AWP, morte e respawn** (test-type: both)
   - blocked-by: movimento FPS em arena procedural mínima
   - summary: adicionar um bot, saúde, Resource de AWP, hitscan, oclusão, scope,
     spread, recoil, munição, recarga, morte e respawn.
@@ -37,7 +37,7 @@
     bloqueia tiro, headshot é identificado e respawn ocorre após 2,5 segundos.
   - tests: unitários para arma/dano; integração de física e ciclo de vida;
     smoke test Web do duelo.
-  - verification: `godot --headless --path godot --script res://tests/test_runner.gd -- combat && npm run test:web:combat`
+  - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:combat`
 
 - [ ] **Completar inventário com pistola e faca** (test-type: both)
   - blocked-by: duelo com AWP, morte e respawn

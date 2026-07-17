@@ -4,6 +4,7 @@
   "scripts": {
     "test:web:smoke": "playwright test tests/web/boot.spec.mjs",
 	"test:web:movement": "playwright test tests/web/movement.spec.mjs",
+	"test:web:combat": "playwright test tests/web/combat.spec.mjs",
     "test:web": "playwright test tests/web"
   },
   "devDependencies": {

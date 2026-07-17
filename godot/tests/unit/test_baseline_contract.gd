@@ -35,3 +35,6 @@ func test_legacy_baseline_captures_first_port_contracts() -> void:
 	assert_eq(baseline.weapons.awp.damage, 400.0)
 	assert_eq(baseline.weapons.pistol.damage, 34.0)
 	assert_eq(baseline.weapons.knife.damage, 55.0)
+	assert_eq(baseline.bots.shot_damage_to_player, 42.0)
+	assert_almost_eq(baseline.bots.shot_interval_minimum, 2.1, 0.001)
+	assert_almost_eq(baseline.bots.shot_interval_maximum, 3.5, 0.001)
