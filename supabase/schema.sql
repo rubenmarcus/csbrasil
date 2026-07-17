@@ -48,6 +48,7 @@ alter table public.stats add column if not exists rounds int not null default 0;
 alter table public.stats add column if not exists matches_p int not null default 0;
 alter table public.stats add column if not exists matches_b int not null default 0;
 alter table public.stats add column if not exists play_seconds bigint not null default 0;
+alter table public.stats add column if not exists last_character text;
 alter table public.city_daily add column if not exists rounds int not null default 0;
 
 alter table public.stats   enable row level security;
@@ -81,7 +82,8 @@ end $$;
 create or replace function public.submit_match(
   p_nick text, p_token uuid,
   p_won boolean, p_kills int, p_deaths int, p_headshots int, p_best_streak int,
-  p_rounds int default 0, p_team text default null, p_seconds int default 0
+  p_rounds int default 0, p_team text default null, p_seconds int default 0,
+  p_character text default null
 ) returns void language plpgsql security definer set search_path = public as $$
 declare
   v_last timestamptz;
@@ -100,10 +102,10 @@ begin
      or p_rounds < 0 or p_rounds > 6 or p_seconds < 0 or p_seconds > 900 then
     raise exception 'stats implausíveis';
   end if;
-  insert into stats (nick, matches, wins, rounds, matches_p, matches_b, kills, deaths, headshots, best_streak, play_seconds)
+  insert into stats (nick, matches, wins, rounds, matches_p, matches_b, kills, deaths, headshots, best_streak, play_seconds, last_character)
   values (p_nick, 1, p_won::int, p_rounds,
           (p_team = 'P')::int, (p_team = 'B')::int,
-          p_kills, p_deaths, p_headshots, p_best_streak, p_seconds)
+          p_kills, p_deaths, p_headshots, p_best_streak, p_seconds, p_character)
   on conflict (nick) do update set
     matches     = stats.matches + 1,
     wins        = stats.wins + p_won::int,
@@ -115,6 +117,7 @@ begin
     headshots   = stats.headshots + p_headshots,
     best_streak = greatest(stats.best_streak, p_best_streak),
     play_seconds = stats.play_seconds + p_seconds,
+    last_character = coalesce(p_character, stats.last_character),
     updated_at  = now();
 end $$;
 

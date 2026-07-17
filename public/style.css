@@ -25,6 +25,10 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 .footnote{position:absolute;bottom:18px;font-size:11px;letter-spacing:1px;color:#8a8064;font-family:Arial,sans-serif}
 
 #logo-canvas{width:min(760px,92vw);height:auto;filter:drop-shadow(0 10px 30px rgba(0,0,0,.8))}
+.corner-links{position:absolute;top:18px;right:18px;display:flex;gap:8px;z-index:2}
+.corner-btn{font-family:Consolas,monospace;font-size:11px;letter-spacing:1px;text-decoration:none;
+  color:var(--cs);background:rgba(10,12,8,.75);border:1px solid #4a5a2a;border-radius:4px;padding:6px 10px}
+.corner-btn:hover{border-color:var(--cs);color:#fff}
 
 /* ---------- buttons & inputs ---------- */
 .btn{font-family:inherit;font-size:16px;letter-spacing:3px;color:var(--hud);cursor:pointer;

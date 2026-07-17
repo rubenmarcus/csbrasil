@@ -247,7 +247,7 @@ function partialPayload() {
   return {
     nick, token: getToken(), won: false, kills: p.kills, deaths: p.deaths,
     headshots: p.headshots || 0, bestStreak: g.mk.best || 0, rounds, team: g.playerTeam,
-    seconds: Math.round(g.time),
+    seconds: Math.round(g.time), character: currentChar,
   };
 }
 addEventListener('beforeunload', () => {
@@ -277,6 +277,7 @@ async function recordMatchStats(s) {
       nick, token: getToken(), won: s.won, kills: s.kills, deaths: s.deaths,
       headshots: s.headshots, bestStreak: s.bestStreak,
       rounds: s.roundsP + s.roundsB, team: s.team, seconds: s.seconds || 0,
+      character: s.character,
     });
     if (!res) submitNote('ranking global indisponível');
     else if (res.error) submitNote(res.error);

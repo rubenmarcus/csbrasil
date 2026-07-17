@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.0] — 2026-07-18
+### Adicionado
+- **Personagem como avatar**: sem foto/X, a badge usa o personagem escolhido no
+  jogo (SVG por id) e mostra "joga de &lt;personagem&gt;" — `last_character`
+  gravado por partida (rode o schema.sql pra criar a coluna)
+- **NEUTRO**: empate de lados (1P × 1B) vira terceiro estado no card
+- **Site imersivo**: páginas do Astro agora têm o fundo 3D do jogo (o mundo
+  real orbitando, mesmo código do menu) com overlay escuro
+- **Botões de canto** no menu do jogo: RANKING ↗ MAPA ↗ SOBRE ↗
+
+### Mudado
+- Redesign do card de badge: stat-cards arredondados, glow na cor do lado,
+  skyline de Brasília no rodapé
+
 ## [1.6.3] — 2026-07-18
 ### Mudado
 - "Abates" vira "kills" em toda a UI (placar, ranking, perfil, badge, docs)

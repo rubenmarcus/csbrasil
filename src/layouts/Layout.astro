@@ -22,11 +22,16 @@ const { title, description = 'FPS gratuito de navegador estilo CS 1.6: arena de 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content={ogImage}>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='8' height='16' fill='%23e03232'/><rect x='8' width='8' height='16' fill='%231faa4d'/></svg>">
+<script type="importmap">{ "imports": { "three": "/vendor/three.module.js" } }</script>
 <slot name="head" />
 <style is:global>
 :root{--red:#e03232;--green:#1faa4d;--yellow:#ffd23f;--dark:#0c0e11;--cs:#b8d94a}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--dark);color:#f2ead8;font-family:Tahoma,Verdana,sans-serif;line-height:1.55}
+body{background:transparent;color:#f2ead8;font-family:Tahoma,Verdana,sans-serif;line-height:1.55}
+#bg-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+#bg-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 30%,rgba(12,14,17,.72) 0%,rgba(12,14,17,.88) 100%)}
+header,main,footer{position:relative;z-index:2}
 a{color:var(--cs)}
 header{display:flex;align-items:center;gap:18px;padding:14px 22px;background:rgba(20,18,12,.95);border-bottom:1px solid #3a3325;position:sticky;top:0;z-index:10}
 .logo{font-family:"Arial Black",Impact,sans-serif;letter-spacing:2px;font-size:18px;color:var(--yellow);text-decoration:none}
@@ -42,6 +47,9 @@ footer{border-top:1px solid #3a3325;padding:18px 22px;text-align:center;color:#8
 </style>
 </head>
 <body>
+<canvas id="bg-canvas"></canvas>
+<div id="bg-overlay"></div>
+<script type="module" src="/js/site-bg.js"></script>
 <header>
   <a class="logo" href="/">CS BRASIL</a>
   <nav>
