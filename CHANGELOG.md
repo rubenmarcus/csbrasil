@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.1] — 2026-07-17
+### Corrigido
+- `submit-match` auto-recuperável: se a função do banco está desatualizada
+  (sem p_seconds/p_rounds/p_team), grava o núcleo dos stats mesmo assim e
+  responde com aviso pra rodar o schema.sql atual
+
 ## [1.6.0] — 2026-07-17
 ### Adicionado
 - **Stats de abandono**: quem sai da partida no meio (botão sair ou fechar a

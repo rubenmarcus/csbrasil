@@ -28,21 +28,28 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   if (typeof nick !== 'string' || typeof token !== 'string')
     return new Response(JSON.stringify({ error: 'missing_fields' }), { status: 400, headers: { 'content-type': 'application/json' } });
 
-  const { error } = await supabaseAdmin.rpc('submit_match', {
-    p_nick: nick.slice(0, 14), p_token: token,
-    p_won: !!won, p_kills: kills | 0, p_deaths: deaths | 0,
-    p_headshots: headshots | 0, p_best_streak: bestStreak | 0,
-    p_rounds: rounds | 0, p_team: team === 'P' || team === 'B' ? team : null,
-    p_seconds: seconds | 0,
-  });
+  const n = nick.slice(0, 14);
+  // cascata de compatibilidade: se a função do banco está desatualizada
+  // (sem p_seconds/p_rounds/p_team), grava o núcleo dos stats mesmo assim
+  const attempts = [
+    { p_nick: n, p_token: token, p_won: !!won, p_kills: kills | 0, p_deaths: deaths | 0, p_headshots: headshots | 0, p_best_streak: bestStreak | 0, p_rounds: rounds | 0, p_team: team === 'P' || team === 'B' ? team : null, p_seconds: seconds | 0 },
+    { p_nick: n, p_token: token, p_won: !!won, p_kills: kills | 0, p_deaths: deaths | 0, p_headshots: headshots | 0, p_best_streak: bestStreak | 0, p_rounds: rounds | 0, p_team: team === 'P' || team === 'B' ? team : null },
+    { p_nick: n, p_token: token, p_won: !!won, p_kills: kills | 0, p_deaths: deaths | 0, p_headshots: headshots | 0, p_best_streak: bestStreak | 0 },
+  ];
+  let error: any = null, degraded = false;
+  for (let i = 0; i < attempts.length; i++) {
+    const r = await supabaseAdmin.rpc('submit_match', attempts[i]);
+    if (!r.error) { degraded = i > 0; error = null; break; }
+    error = r.error;
+    if (!/could not find the function|schema cache/i.test(r.error.message)) break; // erro real (token, rate limit…)
+  }
   if (error)
     return new Response(JSON.stringify({ error: error.message }), { status: 403, headers: { 'content-type': 'application/json' } });
 
   hits.set(ip, now);
   // geo: presença + histórico agregado por cidade (nunca IP bruto)
   const g = geoFrom(request);
-  if (g) {
-    const today = new Date().toISOString().slice(0, 10);
+  if (g) {    const today = new Date().toISOString().slice(0, 10);
     await supabaseAdmin.from('presence').upsert({
       nick: nick.slice(0, 14), last_seen: new Date().toISOString(),
       city: g.city, country: g.country, lat: g.lat, lon: g.lon,
@@ -57,5 +64,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       });
     }
   }
-  return new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } });
+  return new Response(JSON.stringify(degraded
+    ? { ok: true, warn: 'banco desatualizado — rode supabase/schema.sql (perdeu rounds/time/tempo desta partida)' }
+    : { ok: true }), { headers: { 'content-type': 'application/json' } });
 };
