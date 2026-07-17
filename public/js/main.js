@@ -103,6 +103,7 @@ async function startGame(team, charId) {
   });
   window.__game = game;
   submitted = false;
+  retryPending();   // se sobrou submit preso por rate limit, tenta agora
   game.start();
   // registra nick no ranking global (silencioso se a API não estiver no ar)
   const nick = $('nick-input').value.trim();
@@ -194,7 +195,7 @@ $('btn-pause-settings').onclick = () => { sfx.uiClick(); settingsReturn = 'pause
 $('btn-quit').onclick = () => {
   sfx.uiClick();
   const pl = partialPayload();
-  if (pl) { submitted = true; api('/api/submit-match', pl); }
+  if (pl) { submitted = true; submitGlobal(pl); }
   quitToMenu();
 };
 $('btn-again').onclick = () => { sfx.uiClick(); startGame(currentTeam, currentChar); };
@@ -255,6 +256,24 @@ addEventListener('beforeunload', () => {
   if (pl) navigator.sendBeacon('/api/submit-match', new Blob([JSON.stringify(pl)], { type: 'application/json' }));
 });
 
+/* ---------------- fila de reenvio (rate limit do servidor) ---------------- */
+const PENDING_KEY = 'awpbr_pending_submit';
+async function submitGlobal(pl) {
+  const res = await api('/api/submit-match', pl);
+  if (res?.error && /aguarde/i.test(res.error)) {
+    localStorage.setItem(PENDING_KEY, JSON.stringify(pl));
+    setTimeout(retryPending, 95_000);   // reenvia sozinho quando a janela abrir
+  }
+  return res;
+}
+async function retryPending() {
+  const raw = localStorage.getItem(PENDING_KEY);
+  if (!raw) return;
+  const res = await api('/api/submit-match', JSON.parse(raw));
+  if (res && !res.error) localStorage.removeItem(PENDING_KEY);
+  else if (res?.error && /aguarde/i.test(res.error)) setTimeout(retryPending, 95_000);
+}
+
 /* ---------------- local stats (espelhados pro ranking global) ---------------- */
 const STATS_KEY = 'awpbr_stats';
 function loadStats() {
@@ -273,7 +292,7 @@ async function recordMatchStats(s) {
   // espelha pro ranking global (avisa na tela se falhar)
   const nick = registeredNick || (nickEl.value || '').trim();
   if (nick && !testMode) {
-    const res = await api('/api/submit-match', {
+    const res = await submitGlobal({
       nick, token: getToken(), won: s.won, kills: s.kills, deaths: s.deaths,
       headshots: s.headshots, bestStreak: s.bestStreak,
       rounds: s.roundsP + s.roundsB, team: s.team, seconds: s.seconds || 0,

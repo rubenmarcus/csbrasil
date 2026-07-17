@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.7.2] — 2026-07-18
+### Corrigido
+- Submits rejeitados pelo rate limit de 90s (abandono + partida em seguida)
+  agora entram numa fila local e são reenviados automaticamente — nenhuma
+  partida se perde mais por janela de rate limit
+
 ## [1.7.1] — 2026-07-18
 ### Adicionado
 - Placar geral no `/mapa`: total de jogadores, partidas e kills + barra de
