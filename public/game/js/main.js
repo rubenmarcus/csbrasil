@@ -5,6 +5,7 @@ import { CHARACTERS, buildCharacter } from './characters.js';
 import { buildWorld } from './map.js';
 import { Sfx } from './audio.js';
 import { Game } from './game.js';
+import { VERSION } from './version.js';
 
 /* ---------------- settings & nickname ---------------- */
 const SETTINGS_KEY = 'awpbr_settings';
@@ -293,6 +294,8 @@ function loop() {
 loop();
 
 /* ---------------- boot ---------------- */
+document.querySelector('.footnote').textContent =
+  `v${VERSION} · Sátira política fictícia. Nenhum político real foi consultado (ou poupado).`;
 show(isMobile && !testMode ? 'mobile-warning' : 'main-menu');
 if (testMode && params.get('auto')) {
   const [team, char] = params.get('auto').split(',');
