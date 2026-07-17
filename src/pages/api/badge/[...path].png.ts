@@ -1,18 +1,24 @@
 // GET /api/badge/<id|nick>.png — badge com stats.
-// Render: resvg-wasm (binário único, funciona em qualquer serverless) + fonte embutida.
+// Render: resvg-wasm (binário único servido de /wasm/, funciona em qualquer
+// serverless) + fonte DejaVu embutida.
 import type { APIRoute } from 'astro';
 import { initWasm, Resvg } from '@resvg/resvg-wasm';
 import sharp from 'sharp';
 import { supabaseAdmin, NOT_CONFIGURED } from '../../../lib/supabase';
 import { FONT_BOLD_B64 } from '../../../lib/font-data';
-import { RESVG_WASM_B64 } from '../../../lib/resvg-wasm-data';
 import { displayTime } from '../../../lib/fmt';
 
 export const prerender = false;
 
 const fontBuffers = [Buffer.from(FONT_BOLD_B64, 'base64')];
 let wasmReady: Promise<unknown> | null = null;
-const init = () => (wasmReady ??= initWasm(Buffer.from(RESVG_WASM_B64, 'base64')));
+function init(req: Request) {
+  return wasmReady ??= (async () => {
+    const r = await fetch(new URL('/wasm/resvg.wasm', req.url));
+    if (!r.ok) throw new Error('wasm fetch failed: ' + r.status);
+    return initWasm(await r.arrayBuffer());
+  })();
+}
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 async function avatarDataUri(url?: string | null): Promise<string | null> {
@@ -72,7 +78,7 @@ export const GET: APIRoute = async ({ params }) => {
   if (!data) return new Response('not found', { status: 404 });
   const p = { ...data, social: (data as any).players?.social_link };
   const avatarUri = await avatarDataUri((data as any).players?.avatar_url);
-  await init();
+  await init(request);
   const resvg = new Resvg(badgeSvg(p, avatarUri), {
     font: { fontBuffers, loadSystemFonts: false, defaultFontFamily: 'DejaVu Sans' },
     background: '#0c0e11',
