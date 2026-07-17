@@ -13,3 +13,5 @@ extends Resource
 @export var recoil: float
 @export var range: float = 400.0
 @export var supports_scope: bool = false
+@export var draw_delay: float = 0.35
+@export var melee: bool = false

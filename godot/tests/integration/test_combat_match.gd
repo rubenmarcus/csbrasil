@@ -7,7 +7,7 @@ const MAIN_SCENE_PATH := "res://src/main/main.tscn"
 func test_match_composes_player_awp_bot_and_combat_hud() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
-	assert_not_null(match_scene.get_node_or_null("Player/CameraPivot/Camera3D/AWP"))
+	assert_not_null(match_scene.get_node_or_null("Player/CameraPivot/Camera3D/Inventory/AWP"))
 	assert_not_null(match_scene.get_node_or_null("Bot"))
 	assert_eq(match_scene.get_node("Bot").position, Vector3(0.0, 0.0, 1.0))
 
