@@ -2,13 +2,13 @@
 import * as THREE from 'three';
 import { initTextures } from './textures.js';
 import { CHARACTERS, buildCharacter } from './characters.js';
-import { buildWorld } from './map.js';
+import { MAPS, MAP_IDS, DEFAULT_MAP, resolveMapId } from './maps.js';
 import { Sfx } from './audio.js';
 import { Game } from './game.js';
 
 /* ---------------- settings & nickname ---------------- */
 const SETTINGS_KEY = 'awpbr_settings';
-const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med' },
+const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', map: DEFAULT_MAP },
   JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 const saveSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 const NICK_KEY = 'awpbr_nick';
@@ -28,10 +28,19 @@ const textures = initTextures();
 const sfx = new Sfx(); sfx.vol = settings.vol;
 const sfxReady = sfx.loadManifest();
 
+/* ---------------- selected map ---------------- */
+const urlMap = new URLSearchParams(location.search).get('map');
+let currentMap = resolveMapId(urlMap || settings.map);
+settings.map = currentMap;
+
 /* ---------------- menu backdrop (orbiting map) ---------------- */
-const menuScene = new THREE.Scene();
-buildWorld(menuScene, textures);
+let menuScene = new THREE.Scene();
+MAPS[currentMap].build(menuScene, textures);
 const menuCam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 400);
+function rebuildMenuBackdrop() {
+  menuScene = new THREE.Scene();
+  MAPS[currentMap].build(menuScene, textures);
+}
 
 /* ---------------- screens ---------------- */
 const screens = ['mobile-warning', 'main-menu', 'team-select', 'char-select', 'settings-panel', 'howto-panel', 'ranking-panel', 'pause-menu', 'match-end'];
@@ -92,13 +101,13 @@ async function startGame(team, charId) {
   await sfxReady;   // make sure voice/CS samples are registered before round 1 sounds
   game = new Game({
     renderer, textures, sfx, settings,
-    playerCharId: charId, playerTeam: team,
+    playerCharId: charId, playerTeam: team, mapId: currentMap,
     nickname: $('nick-input').value, testMode,
     onMatchEnd: recordMatchStats,
   });
   window.__game = game;
   game.start();
-  try { window.va?.('event', { name: 'game_start', data: { team, character: charId } }); } catch {}
+  try { window.va?.('event', { name: 'game_start', data: { team, character: charId, map: currentMap } }); } catch {}
   if (!testMode) { try { renderer.domElement.requestPointerLock()?.catch?.(() => {}); } catch {} }
 }
 function quitToMenu() {
@@ -111,6 +120,17 @@ function quitToMenu() {
 $('btn-jogar').onclick = () => { sfx.uiClick(); show('team-select'); };
 $('btn-ranking').onclick = () => { sfx.uiClick(); showRanking(); };
 $('ranking-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
+const mapBtn = $('btn-map');
+function updateMapLabel() { mapBtn.textContent = `MAPA: ${MAPS[currentMap].name}`; }
+mapBtn.onclick = () => {
+  sfx.uiClick();
+  const i = MAP_IDS.indexOf(currentMap);
+  currentMap = MAP_IDS[(i + 1) % MAP_IDS.length];
+  settings.map = currentMap; saveSettings();
+  updateMapLabel();
+  rebuildMenuBackdrop();
+};
+updateMapLabel();
 $('btn-howto').onclick = () => { sfx.uiClick(); show('howto-panel'); };
 $('howto-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
 $('btn-settings').onclick = () => { sfx.uiClick(); settingsReturn = 'main-menu'; show('settings-panel'); };
