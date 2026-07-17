@@ -31,6 +31,11 @@ func start_reload() -> bool:
 	return true
 
 
+func cancel_reload() -> void:
+	reloading = false
+	reload_remaining = 0.0
+
+
 func advance(delta: float) -> void:
 	cooldown_remaining = maxf(0.0, cooldown_remaining - delta)
 	if not reloading:

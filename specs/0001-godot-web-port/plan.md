@@ -37,6 +37,9 @@ Adicionar um bot, saúde, AWP, hitscan, oclusão, scope, munição, recarga, mor
 respawn. Separar dados de armas em Resources. Este slice estabelece os limites
 entre ator, arma, dano, efeitos e UI.
 
+O marco inclui também o inventário completo com AWP, pistola e faca, mantendo
+estado independente, draw delay e controllers separados para hitscan e melee.
+
 ### 4. Partida 4×4
 
 Expandir para os sete bots, portar grafo de waypoints/IA, round de 99 segundos,

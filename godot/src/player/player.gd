@@ -3,7 +3,7 @@ extends CharacterBody3D
 
 signal input_capture_changed(captured: bool)
 signal health_changed(current: int)
-signal weapon_state_changed(ammo: int, reserve: int)
+signal weapon_state_changed(weapon_name: String, ammo: int, reserve: int)
 signal shot_fired(result: Dictionary)
 signal scope_changed(active: bool)
 signal died
@@ -19,7 +19,7 @@ const MovementMotorScript := preload("res://src/player/movement_motor.gd")
 @onready var camera: Camera3D = $CameraPivot/Camera3D
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var health: HealthComponent = $Health
-@onready var weapon: HitscanWeapon = $CameraPivot/Camera3D/AWP
+@onready var weapon_inventory: WeaponInventory = $CameraPivot/Camera3D/Inventory
 
 var crouch_fraction: float = 0.0
 var scoped: bool = false
@@ -30,6 +30,10 @@ var _pitch: float = 0.0
 var _motor: RefCounted
 var _spawn_position: Vector3
 
+var weapon: Node3D:
+	get:
+		return weapon_inventory.active_weapon
+
 
 func _ready() -> void:
 	_motor = MovementMotorScript.new(movement_config)
@@ -39,7 +43,8 @@ func _ready() -> void:
 	_spawn_position = global_position
 	health.damaged.connect(_on_health_damaged)
 	health.died.connect(_on_health_died)
-	weapon.ammo_changed.connect(_on_ammo_changed)
+	weapon_inventory.ammo_changed.connect(_on_ammo_changed)
+	weapon_inventory.weapon_changed.connect(_on_weapon_changed)
 
 
 func _input(event: InputEvent) -> void:
@@ -53,7 +58,13 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed:
 		release_pointer()
 	elif event is InputEventKey and event.keycode == KEY_R and event.pressed:
-		weapon.reload()
+		weapon_inventory.reload()
+	elif event is InputEventKey and event.keycode == KEY_1 and event.pressed:
+		switch_weapon(&"awp")
+	elif event is InputEventKey and event.keycode == KEY_2 and event.pressed:
+		switch_weapon(&"pistol")
+	elif event is InputEventKey and event.keycode == KEY_3 and event.pressed:
+		switch_weapon(&"knife")
 	elif event is InputEventMouseMotion and _is_pointer_captured() and accepts_input:
 		rotate_view(event.relative)
 
@@ -106,11 +117,18 @@ func take_damage(amount: int, source: Node = null, headshot: bool = false) -> bo
 
 
 func set_scoped(active: bool) -> void:
-	if active and not weapon.definition.supports_scope:
+	if not weapon_inventory.set_scoped(active):
 		return
 	scoped = active
-	weapon.scoped = active
 	scope_changed.emit(scoped)
+
+
+func switch_weapon(weapon_id: StringName) -> bool:
+	var changed := weapon_inventory.switch_to(weapon_id)
+	if changed:
+		scoped = false
+		scope_changed.emit(false)
+	return changed
 
 
 func respawn() -> void:
@@ -148,7 +166,9 @@ func _is_pointer_captured() -> bool:
 
 
 func _fire_weapon() -> void:
-	var result := weapon.fire(camera.global_position, -camera.global_transform.basis.z, self)
+	var result := weapon_inventory.attack(
+		camera.global_position, -camera.global_transform.basis.z, self
+	)
 	if result.fired:
 		_pitch = clampf(
 			_pitch - float(weapon.definition.recoil),
@@ -173,7 +193,13 @@ func _on_health_died(_source: Node, _headshot: bool) -> void:
 
 
 func _on_ammo_changed(ammo: int, reserve: int) -> void:
-	weapon_state_changed.emit(ammo, reserve)
+	weapon_state_changed.emit(weapon.definition.display_name, ammo, reserve)
+
+
+func _on_weapon_changed(
+	_weapon_id: StringName, display_name: String, ammo: int, reserve: int
+) -> void:
+	weapon_state_changed.emit(display_name, ammo, reserve)
 
 
 func _prepare_step_up(horizontal_motion: Vector3, grounded: bool) -> void:

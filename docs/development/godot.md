@@ -44,6 +44,7 @@ para iniciar a sessão de input e use:
 - clique esquerdo: disparar a AWP depois de capturar o mouse;
 - clique direito: ativar/desativar a mira telescópica;
 - `R`: recarregar;
+- `1`, `2`, `3`: alternar entre AWP, pistola e faca;
 - `Esc`: liberar o mouse com segurança.
 
 O movimento é dividido entre `MovementConfig` (contratos numéricos),
@@ -55,6 +56,10 @@ O slice de combate adiciona um bot procedural, componentes de saúde, AWP
 configurada por `WeaponDefinition`, estado independente de munição/recarga e
 hitscan com oclusão e hitbox de cabeça. Jogador e bot morrem e reaparecem após
 2,5 segundos.
+
+O inventário mantém instâncias e munição independentes para AWP e pistola,
+aplica 0,35 s de draw delay e usa uma scene dedicada de ataque corpo a corpo
+para a faca. Armas sem suporte a scope rejeitam essa ação.
 
 ## Linha de comando
 

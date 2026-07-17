@@ -39,7 +39,7 @@
     smoke test Web do duelo.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:combat`
 
-- [ ] **Completar inventário com pistola e faca** (test-type: both)
+- [x] **Completar inventário com pistola e faca** (test-type: both)
   - blocked-by: duelo com AWP, morte e respawn
   - summary: implementar Resources/scenes das armas secundárias, troca,
     cadência, reload da pistola e alcance da faca.
@@ -48,7 +48,7 @@
   - acceptance criteria: dano, munição, cadência, alcance, draw delay e bloqueio
     de scope correspondem ao baseline.
   - tests: unitários por arma; integração de inventário e HUD.
-  - verification: `godot --headless --path godot --script res://tests/test_runner.gd -- weapons`
+  - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:weapons`
 
 - [ ] **Entregar partida 4×4 completa** (test-type: both)
   - blocked-by: inventário com pistola e faca

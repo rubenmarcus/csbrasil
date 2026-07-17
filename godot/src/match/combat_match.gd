@@ -1,7 +1,7 @@
 class_name CombatMatch
 extends Node3D
 
-signal hud_updated(health: int, ammo: int, reserve: int, scoped: bool)
+signal hud_updated(health: int, weapon_name: String, ammo: int, reserve: int, scoped: bool)
 signal bot_state_changed(alive: bool, respawn_remaining: float)
 
 @onready var player: PlayerController = $Player
@@ -26,22 +26,23 @@ func _process(_delta: float) -> void:
 func current_hud() -> Dictionary:
 	return {
 		"health": player.health.current_health,
-		"ammo": player.weapon.state.ammo,
-		"reserve": player.weapon.state.reserve,
+		"weapon_name": player.weapon.definition.display_name,
+		"ammo": player.weapon_inventory.current_ammo().x,
+		"reserve": player.weapon_inventory.current_ammo().y,
 		"scoped": player.scoped,
 	}
 
 
 func _publish_hud() -> void:
 	var hud := current_hud()
-	hud_updated.emit(hud.health, hud.ammo, hud.reserve, hud.scoped)
+	hud_updated.emit(hud.health, hud.weapon_name, hud.ammo, hud.reserve, hud.scoped)
 
 
 func _on_player_health_changed(_current: int) -> void:
 	_publish_hud()
 
 
-func _on_weapon_state_changed(_ammo: int, _reserve: int) -> void:
+func _on_weapon_state_changed(_weapon_name: String, _ammo: int, _reserve: int) -> void:
 	_publish_hud()
 
 

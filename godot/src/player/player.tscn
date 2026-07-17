@@ -1,9 +1,13 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://src/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://src/combat/health_component.gd" id="2_health"]
 [ext_resource type="Script" path="res://src/weapons/hitscan_weapon.gd" id="3_weapon"]
 [ext_resource type="Resource" path="res://src/weapons/definitions/awp.tres" id="4_awp"]
+[ext_resource type="Script" path="res://src/weapons/weapon_inventory.gd" id="5_inventory"]
+[ext_resource type="Resource" path="res://src/weapons/definitions/pistol.tres" id="6_pistol"]
+[ext_resource type="Script" path="res://src/weapons/melee_weapon.gd" id="7_melee"]
+[ext_resource type="Resource" path="res://src/weapons/definitions/knife.tres" id="8_knife"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape_player"]
 radius = 0.38
@@ -38,6 +42,18 @@ near = 0.08
 far = 400.0
 environment = SubResource("Environment_player")
 
-[node name="AWP" type="Node3D" parent="CameraPivot/Camera3D"]
+[node name="Inventory" type="Node3D" parent="CameraPivot/Camera3D"]
+script = ExtResource("5_inventory")
+
+[node name="AWP" type="Node3D" parent="CameraPivot/Camera3D/Inventory"]
 script = ExtResource("3_weapon")
 definition = ExtResource("4_awp")
+
+[node name="Pistol" type="Node3D" parent="CameraPivot/Camera3D/Inventory"]
+script = ExtResource("3_weapon")
+definition = ExtResource("6_pistol")
+spread_seed = 2026
+
+[node name="Knife" type="Node3D" parent="CameraPivot/Camera3D/Inventory"]
+script = ExtResource("7_melee")
+definition = ExtResource("8_knife")
