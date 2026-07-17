@@ -118,9 +118,11 @@ begin
     updated_at  = now();
 end $$;
 
--- Leaderboard: top por kills (o client pode ordenar por outras colunas),
--- sem jogadores escondidos pela moderação.
-create or replace view public.leaderboard as
+-- Leaderboard: top por kills, sem jogadores escondidos pela moderação.
+-- (drop antes de recriar: o Postgres não aceita mudar colunas de uma view
+-- existente com create or replace)
+drop view if exists public.leaderboard;
+create view public.leaderboard as
 select p.id, s.nick, p.social_link, p.avatar_url, s.matches, s.wins, s.rounds,
        s.matches_p, s.matches_b, s.kills, s.deaths,
        s.headshots, s.best_streak, s.play_seconds,
