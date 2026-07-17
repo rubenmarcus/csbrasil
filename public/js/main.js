@@ -209,8 +209,19 @@ async function api(path, body) {
     const r = await fetch(path, body
       ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
       : undefined);
-    return r.ok ? await r.json() : null;
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? j : { error: j.error || `http_${r.status}` };
   } catch { return null; }
+}
+function submitNote(msg) {
+  console.warn('[ranking]', msg);
+  const el = document.getElementById('match-stats');
+  if (el && !document.getElementById('match-end').classList.contains('hidden')) {
+    const d = document.createElement('div');
+    d.style.cssText = 'color:#ff8080;font-size:12px;width:100%';
+    d.textContent = '⚠ stats não enviados: ' + msg;
+    el.appendChild(d);
+  }
 }
 
 /* ---------------- local stats (espelhados pro ranking global) ---------------- */
@@ -219,7 +230,7 @@ function loadStats() {
   return Object.assign({ matches: 0, wins: 0, kills: 0, deaths: 0, headshots: 0, bestStreak: 0 },
     JSON.parse(localStorage.getItem(STATS_KEY) || '{}'));
 }
-function recordMatchStats(s) {
+async function recordMatchStats(s) {
   const st = loadStats();
   st.matches++; if (s.won) st.wins++;
   st.kills += s.kills; st.deaths += s.deaths; st.headshots += s.headshots;
@@ -227,13 +238,17 @@ function recordMatchStats(s) {
   st.rounds = (st.rounds || 0) + s.roundsP + s.roundsB;
   st.bestStreak = Math.max(st.bestStreak, s.bestStreak);
   localStorage.setItem(STATS_KEY, JSON.stringify(st));
-  // espelha pro ranking global (silencioso se a API não estiver no ar)
+  // espelha pro ranking global (avisa na tela se falhar)
   const nick = (nickEl.value || '').trim();
-  if (nick && !testMode) api('/api/submit-match', {
-    nick, token: getToken(), won: s.won, kills: s.kills, deaths: s.deaths,
-    headshots: s.headshots, bestStreak: s.bestStreak,
-    rounds: s.roundsP + s.roundsB, team: s.team, seconds: s.seconds || 0,
-  });
+  if (nick && !testMode) {
+    const res = await api('/api/submit-match', {
+      nick, token: getToken(), won: s.won, kills: s.kills, deaths: s.deaths,
+      headshots: s.headshots, bestStreak: s.bestStreak,
+      rounds: s.roundsP + s.roundsB, team: s.team, seconds: s.seconds || 0,
+    });
+    if (!res) submitNote('ranking global indisponível');
+    else if (res.error) submitNote(res.error);
+  }
 }
 function showRanking() {
   const st = loadStats();

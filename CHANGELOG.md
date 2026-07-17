@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.1] — 2026-07-17
+### Corrigido
+- Falhas de envio pro ranking (função desatualizada, rate limit, token) eram
+  engolidas em silêncio — agora aparecem na tela de fim de partida e no console
+
 ## [1.5.0] — 2026-07-17
 ### Mudado
 - URL de perfil agora é canônica `/u/<id>/<nick>` (estável mesmo com troca de
