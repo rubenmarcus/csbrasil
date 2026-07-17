@@ -28,7 +28,7 @@ if (supabaseAdmin) {
             <td style="padding:8px 6px">{i + 1}</td>
             <td style="padding:8px 6px">
               {p.avatar_url && <img src={p.avatar_url} alt="" width="22" height="22" style="border-radius:50%;vertical-align:-6px;margin-right:6px">}
-              <a href={`/u/${encodeURIComponent(p.nick)}`} style="color:inherit">{p.nick}</a>
+              <a href={`/u/${p.id}/${encodeURIComponent(p.nick)}`} style="color:inherit">{p.nick}</a>
               {p.social_link && <span style="color:#5a6b3a;font-size:11px"> · {p.social_link}</span>}
             </td>
             <td style="padding:8px 6px">{p.matches}</td>

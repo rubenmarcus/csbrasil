@@ -106,7 +106,7 @@ end $$;
 -- Leaderboard: top por kills (o client pode ordenar por outras colunas),
 -- sem jogadores escondidos pela moderação.
 create or replace view public.leaderboard as
-select s.nick, p.social_link, p.avatar_url, s.matches, s.wins, s.rounds,
+select p.id, s.nick, p.social_link, p.avatar_url, s.matches, s.wins, s.rounds,
        s.matches_p, s.matches_b, s.kills, s.deaths,
        s.headshots, s.best_streak, s.play_seconds,
        round(s.kills::numeric / greatest(s.deaths, 1), 2) as kd

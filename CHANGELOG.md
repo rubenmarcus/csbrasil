@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0] — 2026-07-17
+### Mudado
+- URL de perfil agora é canônica `/u/<id>/<nick>` (estável mesmo com troca de
+  nick e pronta pra nicks duplicados no futuro); `/u/<nick>` redireciona (301)
+- Badge aceita id ou nick (`/api/badge/<id>.png`)
+- Leaderboard expõe `players.id` (migration 004)
+
 ## [1.4.3] — 2026-07-17
 ### Corrigido
 - Tempo "0min" em partidas anteriores ao tracking: agora estima pelos rounds

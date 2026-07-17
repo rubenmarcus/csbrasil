@@ -1,4 +1,4 @@
-// GET /api/badge/[nick].png — badge compartilhável com stats (og:image).
+// GET /api/badge/<id|nick>.png ou /api/badge/<id>/<nick>.png — badge com stats.
 // Render: resvg-js + fonte embutida (serverless da Vercel não tem fontes de sistema).
 import type { APIRoute } from 'astro';
 import { Resvg } from '@resvg/resvg-js';
@@ -12,7 +12,6 @@ export const prerender = false;
 const fontBuffers = [Buffer.from(FONT_BOLD_B64, 'base64')];
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-// avatar do perfil → data URI 120×120 (null se não houver/falhar)
 async function avatarDataUri(url?: string | null): Promise<string | null> {
   if (!url) return null;
   try {
@@ -59,9 +58,14 @@ export function badgeSvg(p: any, avatarUri: string | null): string {
 export const GET: APIRoute = async ({ params }) => {
   if (!supabaseAdmin)
     return new Response(NOT_CONFIGURED, { status: 503, headers: { 'content-type': 'application/json' } });
-  const nick = (params.nick || '').slice(0, 14);
-  const { data } = await supabaseAdmin
-    .from('stats').select('*, players!inner(nick, social_link, avatar_url)').eq('nick', nick).maybeSingle();
+  const parts = (params.path || '').split('/').filter(Boolean);
+  let query = supabaseAdmin.from('stats').select('*, players!inner(id, nick, social_link, avatar_url)');
+  // /api/badge/<id>.png | /api/badge/<id>/<nick>.png | /api/badge/<nick>.png (legado)
+  const first = parts[0] || '';
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(first);
+  const { data } = await (isUuid
+    ? query.eq('players.id', first).maybeSingle()
+    : query.eq('nick', first.replace(/\.png$/, '').slice(0, 14)).maybeSingle());
   if (!data) return new Response('not found', { status: 404 });
   const p = { ...data, social: (data as any).players?.social_link };
   const avatarUri = await avatarDataUri((data as any).players?.avatar_url);

@@ -5,19 +5,36 @@ import { displayTime } from '../../lib/fmt';
 
 export const prerender = false;
 
-const nick = (Astro.params.nick || '').slice(0, 14);
+// canônico: /u/<id>/<nick> · legado: /u/<nick> → redirect 301
+const parts = (Astro.params.path || '').split('/').filter(Boolean);
 let p: any = null, configured = !!supabaseAdmin;
+
 if (supabaseAdmin) {
-  const { data } = await supabaseAdmin
-    .from('stats').select('*, players!inner(nick, social_link, avatar_url)').eq('nick', nick).maybeSingle();
-  p = data;
+  if (parts.length === 2) {
+    const { data } = await supabaseAdmin
+      .from('stats').select('*, players!inner(id, nick, social_link, avatar_url)')
+      .eq('players.id', parts[0]).maybeSingle();
+    p = data;
+    if (p) {
+      const real = p.players.nick;
+      if (decodeURIComponent(parts[1]).toLowerCase() !== real.toLowerCase())
+        return Astro.redirect(`/u/${p.players.id}/${encodeURIComponent(real)}`, 301);
+    }
+  } else if (parts.length === 1) {
+    const { data } = await supabaseAdmin
+      .from('players').select('id, nick')
+      .eq('nick', decodeURIComponent(parts[0]).slice(0, 14)).maybeSingle();
+    if (data) return Astro.redirect(`/u/${data.id}/${encodeURIComponent(data.nick)}`, 301);
+  }
 }
 if (configured && !p) return Astro.redirect('/ranking', 302);
 
+const nick = p?.players?.nick ?? parts.join('/') ?? '';
+const pid = p?.players?.id ?? '';
 const kd = p ? (p.deaths ? (p.kills / p.deaths).toFixed(2) : String(p.kills)) : '0';
 const tempo = p ? displayTime(p) : '0min';
-const badgeUrl = `${Astro.site}api/badge/${encodeURIComponent(nick)}.png`;
-const pageUrl = `${Astro.site}u/${encodeURIComponent(nick)}`;
+const badgeUrl = `${Astro.site}api/badge/${pid}.png`;
+const pageUrl = `${Astro.site}u/${pid}/${encodeURIComponent(nick)}`;
 const title = `${nick} no CS BRASIL: Treta Suprema`;
 const desc = p ? `${p.kills} abates · K/D ${kd} · ${p.wins} vitórias · ${p.headshots} headshots · ${tempo} de arena` : 'Perfil de jogador';
 ---
@@ -34,14 +51,14 @@ const desc = p ? `${p.kills} abates · K/D ${kd} · ${p.wins} vitórias · ${p.h
         {p.players.avatar_url
           ? <img src={p.players.avatar_url} alt={`Avatar de ${nick}`} width="72" height="72" style="border-radius:50%;border:2px solid #4a5a2a">
           : <div style="width:72px;height:72px;border-radius:50%;border:2px solid #4a5a2a;background:#161a12;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--cs);font-family:'Arial Black',sans-serif">{p.nick[0].toUpperCase()}</div>}
-        <h1 style="margin-bottom:4px">{p.nick}</h1>
+        <h1 style="margin-bottom:4px">{nick}</h1>
       </div>
       <p style="margin-top:0">
         {p.players.social_link && <span>{p.players.social_link} · </span>}
         <span style="color:#ff8080">{p.matches_p} partidas de Petista</span> ×
         <span style="color:#9dff9d">{p.matches_b} de Bolsonarista</span>
       </p>
-      <img src={`/api/badge/${encodeURIComponent(nick)}.png`} alt={`Badge de ${nick} no CS BRASIL`} width="840" height="440" style="width:100%;max-width:840px;border-radius:10px;border:1px solid #3a3325">
+      <img src={`/api/badge/${pid}.png`} alt={`Badge de ${nick} no CS BRASIL`} width="840" height="440" style="width:100%;max-width:840px;border-radius:10px;border:1px solid #3a3325">
       <h2>Stats</h2>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;font-family:Consolas,monospace">
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.matches}</b>partidas</div>
