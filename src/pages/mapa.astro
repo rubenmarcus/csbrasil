@@ -36,8 +36,8 @@ mapData.cities = cities.filter(c => c.lat && c.lon);
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" is:inline></script>
   <script is:inline define:vars={{ mapData }}>
     const map = L.map('map', { scrollWheelZoom: true }).setView([-14.5, -52.5], 4);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 12, attribution: '&copy; OpenStreetMap',
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+      maxZoom: 12, attribution: '&copy; OpenStreetMap &copy; CARTO',
     }).addTo(map);
     const maxM = Math.max(1, ...mapData.cities.map(c => c.matches));
     for (const c of mapData.cities) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.2] — 2026-07-17
+### Corrigido
+- Página `/mapa` quebrada: o Layout não tinha `<slot name="head"/>` — o CSS do
+  Leaflet (e o JSON-LD da landing e as meta do perfil) eram descartados
+- Tiles do mapa agora escuros (CARTO dark), combinando com o tema do site
+
 ## [1.4.1] — 2026-07-17
 ### Adicionado
 - Avatar do usuário na badge compartilhável (círculo com anel na cor do time;

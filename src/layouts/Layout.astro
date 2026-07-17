@@ -22,6 +22,7 @@ const { title, description = 'FPS gratuito de navegador estilo CS 1.6: arena de 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content={ogImage}>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='8' height='16' fill='%23e03232'/><rect x='8' width='8' height='16' fill='%231faa4d'/></svg>">
+<slot name="head" />
 <style is:global>
 :root{--red:#e03232;--green:#1faa4d;--yellow:#ffd23f;--dark:#0c0e11;--cs:#b8d94a}
 *{margin:0;padding:0;box-sizing:border-box}
