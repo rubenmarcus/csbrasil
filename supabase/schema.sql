@@ -30,6 +30,7 @@ create table if not exists public.stats (
   deaths      int not null default 0,
   headshots   int not null default 0,
   best_streak int not null default 0,
+  play_seconds bigint not null default 0,
   updated_at  timestamptz not null default now()
 );
 
@@ -65,7 +66,7 @@ end $$;
 create or replace function public.submit_match(
   p_nick text, p_token uuid,
   p_won boolean, p_kills int, p_deaths int, p_headshots int, p_best_streak int,
-  p_rounds int default 0, p_team text default null
+  p_rounds int default 0, p_team text default null, p_seconds int default 0
 ) returns void language plpgsql security definer set search_path = public as $$
 declare
   v_last timestamptz;
@@ -81,13 +82,13 @@ begin
   -- sanity check anti-cheat básico (valores absurdos são descartados)
   if p_kills < 0 or p_kills > 60 or p_deaths < 0 or p_deaths > 60
      or p_headshots < 0 or p_headshots > p_kills or p_best_streak < 0 or p_best_streak > 15
-     or p_rounds < 0 or p_rounds > 6 then
+     or p_rounds < 0 or p_rounds > 6 or p_seconds < 0 or p_seconds > 900 then
     raise exception 'stats implausíveis';
   end if;
-  insert into stats (nick, matches, wins, rounds, matches_p, matches_b, kills, deaths, headshots, best_streak)
+  insert into stats (nick, matches, wins, rounds, matches_p, matches_b, kills, deaths, headshots, best_streak, play_seconds)
   values (p_nick, 1, p_won::int, p_rounds,
           (p_team = 'P')::int, (p_team = 'B')::int,
-          p_kills, p_deaths, p_headshots, p_best_streak)
+          p_kills, p_deaths, p_headshots, p_best_streak, p_seconds)
   on conflict (nick) do update set
     matches     = stats.matches + 1,
     wins        = stats.wins + p_won::int,
@@ -98,6 +99,7 @@ begin
     deaths      = stats.deaths + p_deaths,
     headshots   = stats.headshots + p_headshots,
     best_streak = greatest(stats.best_streak, p_best_streak),
+    play_seconds = stats.play_seconds + p_seconds,
     updated_at  = now();
 end $$;
 
@@ -106,7 +108,7 @@ end $$;
 create or replace view public.leaderboard as
 select s.nick, p.social_link, p.avatar_url, s.matches, s.wins, s.rounds,
        s.matches_p, s.matches_b, s.kills, s.deaths,
-       s.headshots, s.best_streak,
+       s.headshots, s.best_streak, s.play_seconds,
        round(s.kills::numeric / greatest(s.deaths, 1), 2) as kd
 from stats s join players p on p.nick = s.nick
 where not p.hidden

@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { supabaseAdmin } from '../../lib/supabase';
+import { fmtTime } from '../../lib/fmt';
 
 export const prerender = false;
 
@@ -14,10 +15,11 @@ if (supabaseAdmin) {
 if (configured && !p) return Astro.redirect('/ranking', 302);
 
 const kd = p ? (p.deaths ? (p.kills / p.deaths).toFixed(2) : String(p.kills)) : '0';
+const tempo = p ? fmtTime(p.play_seconds) : '0min';
 const badgeUrl = `${Astro.site}api/badge/${encodeURIComponent(nick)}.png`;
 const pageUrl = `${Astro.site}u/${encodeURIComponent(nick)}`;
 const title = `${nick} no CS BRASIL: Treta Suprema`;
-const desc = p ? `${p.kills} abates · K/D ${kd} · ${p.wins} vitórias · ${p.headshots} headshots na arena Treta Suprema` : 'Perfil de jogador';
+const desc = p ? `${p.kills} abates · K/D ${kd} · ${p.wins} vitórias · ${p.headshots} headshots · ${tempo} de arena` : 'Perfil de jogador';
 ---
 <Layout title={title} description={desc} ogImage={badgeUrl}>
   <Fragment slot="head">
@@ -44,6 +46,7 @@ const desc = p ? `${p.kills} abates · K/D ${kd} · ${p.wins} vitórias · ${p.h
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.kills}</b>abates</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.headshots}</b>headshots</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.best_streak}×</b>melhor sequência</div>
+        <div><b style="font-size:26px;color:var(--yellow);display:block">{tempo}</b>tempo de arena</div>
       </div>
       <h2>Compartilhar</h2>
       <p>

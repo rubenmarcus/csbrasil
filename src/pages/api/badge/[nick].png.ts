@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { Resvg } from '@resvg/resvg-js';
 import { supabaseAdmin, NOT_CONFIGURED } from '../../../lib/supabase';
 import { FONT_BOLD_B64 } from '../../../lib/font-data';
+import { fmtTime } from '../../../lib/fmt';
 
 export const prerender = false;
 
@@ -13,13 +14,13 @@ const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 export function badgeSvg(p: any): string {
   const kd = p.deaths ? (p.kills / p.deaths).toFixed(2) : String(p.kills);
   const cells: [string, string][] = [
-    ['PARTIDAS', String(p.matches)], ['VITÓRIAS', String(p.wins)], ['K/D', kd],
-    ['ABATES', String(p.kills)], ['HEADSHOTS', String(p.headshots)], ['SEQUÊNCIA', `${p.best_streak}×`],
+    ['PARTIDAS', String(p.matches)], ['VITÓRIAS', String(p.wins)], ['K/D', kd], ['TEMPO', fmtTime(p.play_seconds)],
+    ['ABATES', String(p.kills)], ['HEADSHOTS', String(p.headshots)], ['SEQUÊNCIA', `${p.best_streak}×`], ['ROUNDS', String(p.rounds)],
   ];
   const grid = cells.map(([label, v], i) => {
-    const x = 60 + (i % 3) * 250, y = 290 + Math.floor(i / 3) * 105;
-    return `<text x="${x}" y="${y}" font-size="44" font-weight="bold" fill="#ffd23f" font-family="DejaVu Sans">${v}</text>
-    <text x="${x}" y="${y + 32}" font-size="17" fill="#8a8064" font-family="DejaVu Sans" letter-spacing="2">${label}</text>`;
+    const x = 60 + (i % 4) * 190, y = 285 + Math.floor(i / 4) * 105;
+    return `<text x="${x}" y="${y}" font-size="40" font-weight="bold" fill="#ffd23f" font-family="DejaVu Sans">${v}</text>
+    <text x="${x}" y="${y + 30}" font-size="15" fill="#8a8064" font-family="DejaVu Sans" letter-spacing="1">${label}</text>`;
   }).join('');
   const side = p.matches_p >= p.matches_b ? ['PETISTA', '#e03232'] : ['BOLSONARISTA', '#1faa4d'];
   return `<svg xmlns="http://www.w3.org/2000/svg" width="840" height="440" viewBox="0 0 840 440">

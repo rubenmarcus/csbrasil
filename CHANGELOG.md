@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0] — 2026-07-17
+### Adicionado
+- **Tempo de jogo** por usuário (min/horas/dias): contado por partida no client
+  e somado no ranking — aparece na badge compartilhável, no perfil `/u/[nick]`,
+  na página `/ranking` e no painel local do jogo
+- Badge agora tem 8 stats (entra TEMPO e ROUNDS)
+
 ## [1.3.1] — 2026-07-17
 ### Corrigido
 - Badge de perfil renderizava texto como caixas (□□□): serverless da Vercel

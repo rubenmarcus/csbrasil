@@ -353,6 +353,7 @@ export class Game {
         kills: this.player.kills, deaths: this.player.deaths,
         headshots: this.player.headshots || 0, bestStreak: this.mk.best || 0,
         roundsP: this.roundsWon.P, roundsB: this.roundsWon.B,
+        seconds: Math.round(this.time),
       });
     } catch {}
     mine ? this.sfx.matchWin() : this.sfx.roundLose();

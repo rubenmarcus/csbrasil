@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { supabaseAdmin } from '../lib/supabase';
+import { fmtTime } from '../lib/fmt';
 
 export const prerender = false;
 
@@ -18,7 +19,7 @@ if (supabaseAdmin) {
     <table style="width:100%;border-collapse:collapse;font-size:14px">
       <thead>
         <tr style="color:#8a8064;font-size:11px;letter-spacing:2px;text-align:left">
-          <th>#</th><th>JOGADOR</th><th>PART.</th><th>VIT.</th><th>K/D</th><th>ABATES</th><th>HS</th><th>SEQ.</th><th>LADO</th>
+          <th>#</th><th>JOGADOR</th><th>PART.</th><th>VIT.</th><th>K/D</th><th>ABATES</th><th>HS</th><th>SEQ.</th><th>TEMPO</th><th>LADO</th>
         </tr>
       </thead>
       <tbody>
@@ -36,6 +37,7 @@ if (supabaseAdmin) {
             <td style="padding:8px 6px">{p.kills}</td>
             <td style="padding:8px 6px">{p.headshots}</td>
             <td style="padding:8px 6px">{p.best_streak}×</td>
+            <td style="padding:8px 6px">{fmtTime(p.play_seconds)}</td>
             <td style="padding:8px 6px">
               <span style="color:#ff8080">{p.matches_p}P</span> × <span style="color:#9dff9d">{p.matches_b}B</span>
             </td>

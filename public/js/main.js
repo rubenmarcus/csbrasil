@@ -223,6 +223,7 @@ function recordMatchStats(s) {
   const st = loadStats();
   st.matches++; if (s.won) st.wins++;
   st.kills += s.kills; st.deaths += s.deaths; st.headshots += s.headshots;
+  st.playSeconds = (st.playSeconds || 0) + (s.seconds || 0);
   st.bestStreak = Math.max(st.bestStreak, s.bestStreak);
   localStorage.setItem(STATS_KEY, JSON.stringify(st));
   // espelha pro ranking global (silencioso se a API não estiver no ar)
@@ -230,19 +231,21 @@ function recordMatchStats(s) {
   if (nick && !testMode) api('/api/submit-match', {
     nick, token: getToken(), won: s.won, kills: s.kills, deaths: s.deaths,
     headshots: s.headshots, bestStreak: s.bestStreak,
-    rounds: s.roundsP + s.roundsB, team: s.team,
+    rounds: s.roundsP + s.roundsB, team: s.team, seconds: s.seconds || 0,
   });
 }
 function showRanking() {
   const st = loadStats();
   const kd = st.deaths ? (st.kills / st.deaths).toFixed(2) : st.kills.toFixed(2);
+  const m = Math.round((st.playSeconds || 0) / 60);
+  const tempo = m < 60 ? `${m}min` : m < 1440 ? `${Math.floor(m / 60)}h ${m % 60}min` : `${Math.floor(m / 1440)}d ${Math.floor((m % 1440) / 60)}h`;
   const nick = (nickEl.value || 'VOCÊ').trim();
   const social = socialEl.value.trim();
   $('rank-local').innerHTML =
     `<div style="grid-column:1/-1;text-align:center;color:var(--cs);font-size:18px">${nick}` +
     (social ? ` · <span style="color:#8a8064;font-size:12px">${social.replace(/</g, '&lt;')}</span>` : '') + `</div>` +
     `<div><b>${st.matches}</b>partidas</div><div><b>${st.wins}</b>vitórias</div><div><b>${kd}</b>K/D</div>` +
-    `<div><b>${st.kills}</b>abates</div><div><b>${st.headshots}</b>headshots</div><div><b>${st.bestStreak}×</b>melhor sequência</div>`;
+    `<div><b>${st.kills}</b>abates</div><div><b>${st.headshots}</b>headshots</div><div><b>${tempo}</b>de arena</div>`;
   show('ranking-panel');
   renderGlobal(nick);
 }
