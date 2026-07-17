@@ -4,6 +4,24 @@ Ideias válidas pra onde o CS BRASIL pode ir. Quer pegar alguma? Abra uma
 issue com a tag da ideia antes de codar (ver `CONTRIBUTING.md`).
 Níveis: 🟢 fácil · 🟡 médio · 🔴 grande.
 
+## Prioridade #1: Dificuldades extras
+
+Hoje os bots têm skill fixa. A primeira grande evolução do jogo é ter
+**níveis de dificuldade selecionáveis** no menu (antes de qualquer ranking
+online — dificuldade é o que dá replayability):
+
+- 🟢 **Fácil** — bots lentos pra reagir (0,8s+), mira ruim, menos dano.
+- 🟢 **Médio** (atual) — padrão equilibrado.
+- 🟡 **Difícil** — reação 0,2s, mira quase perfeita, strafe rápido, rush
+  coordenado em grupo.
+- 🟡 **Treta Insana** — Difícil + modificadores: sem crosshair, sem radar,
+  friendly fire ligado, uma vida por round (sem respawn).
+- 🟡 **Modificadores avulsos** (combináveis com qualquer nível): modo só
+  headshot mata, HUD mínimo, HP 50, velocidade ×1.5.
+
+A base já está pronta: `skill`, `reactAt`, `nextShotAt` e dano dos bots em
+`js/game.js` são parâmetros fáceis de escalar por nível.
+
 ## Gameplay
 
 - 🟢 **Modo CS clássico** — sem respawn dentro do round (eliminação), com
