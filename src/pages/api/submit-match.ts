@@ -49,9 +49,11 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     });
     if (g.city) {
       const { data: row } = await supabaseAdmin
-        .from('city_daily').select('matches').eq('day', today).eq('city', g.city).maybeSingle();
+        .from('city_daily').select('matches, rounds').eq('day', today).eq('city', g.city).maybeSingle();
       await supabaseAdmin.from('city_daily').upsert({
-        day: today, city: g.city, country: g.country, matches: (row?.matches ?? 0) + 1,
+        day: today, city: g.city, country: g.country,
+        matches: (row?.matches ?? 0) + 1,
+        rounds: (row?.rounds ?? 0) + (rounds | 0),
       });
     }
   }

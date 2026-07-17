@@ -1,2 +1,2 @@
 // Versão do jogo — bump a cada release (segue as tags git v*).
-export const VERSION = '1.5.3';
+export const VERSION = '1.6.0';

@@ -169,6 +169,7 @@ create table if not exists public.city_daily (
   city    text not null,
   country text,
   matches int not null default 0,
+  rounds  int not null default 0,
   primary key (day, city)
 );
 

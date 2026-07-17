@@ -8,13 +8,12 @@ let online: any[] = [], cities: any[] = [], configured = !!supabaseAdmin;
 if (supabaseAdmin) {
   const { data: on } = await supabaseAdmin.from('online_now').select('*');
   online = on ?? [];
-  const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-  const { data: cd } = await supabaseAdmin.from('city_daily').select('*').gte('day', weekAgo);
-  // agrega por cidade (7 dias)
+  // histórico TOTAL por cidade (todas as datas)
+  const { data: cd } = await supabaseAdmin.from('city_daily').select('*');
   const agg = new Map<string, any>();
   for (const r of cd ?? []) {
-    const cur = agg.get(r.city) || { city: r.city, country: r.country, matches: 0 };
-    cur.matches += r.matches; agg.set(r.city, cur);
+    const cur = agg.get(r.city) || { city: r.city, country: r.country, matches: 0, rounds: 0 };
+    cur.matches += r.matches; cur.rounds += r.rounds ?? 0; agg.set(r.city, cur);
   }
   cities = [...agg.values()].sort((a, b) => b.matches - a.matches);
 }
@@ -30,7 +29,7 @@ mapData.cities = cities.filter(c => c.lat && c.lon);
 <Layout title="Mapa da treta ao vivo — CS BRASIL" description="Jogadores online agora e partidas por cidade no CS BRASIL: Treta Suprema.">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" slot="head">
   <h1>🗺️ MAPA DA TRETA</h1>
-  <p><strong style="color:#9dff9d">{online.length}</strong> jogadores online agora · partidas por cidade nos últimos 7 dias (localização aproximada, nível cidade — sem IP).</p>
+  <p><strong style="color:#9dff9d">{online.length}</strong> jogadores online agora · em amarelo, o histórico total de partidas por cidade (localização aproximada, nível cidade — sem IP).</p>
   {!configured && <p>Mapa ainda não configurado.</p>}
   <div id="map" style="height:520px;border-radius:10px;border:1px solid #3a3325;background:#10130c"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" is:inline></script>
@@ -44,7 +43,7 @@ mapData.cities = cities.filter(c => c.lat && c.lon);
       L.circleMarker([c.lat, c.lon], {
         radius: 6 + 18 * (c.matches / maxM), color: '#ffd23f', weight: 2,
         fillColor: '#ffd23f', fillOpacity: 0.25,
-      }).addTo(map).bindPopup(`<b>${c.city}</b><br>${c.matches} partidas (7 dias)`);
+      }).addTo(map).bindPopup(`<b>${c.city}</b><br>${c.matches} partidas · ${c.rounds} rounds (histórico)`);
     }
     for (const o of mapData.online) {
       L.circleMarker([o.lat, o.lon], {

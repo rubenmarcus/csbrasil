@@ -83,6 +83,7 @@ function pvThumb(def) {
 
 /* ---------------- game lifecycle ---------------- */
 let game = null, currentTeam = 'P', currentChar = CHARACTERS[0].id, selChar = null;
+let submitted = true;   // stats da partida atual já enviados?
 const params = new URLSearchParams(location.search);
 const testMode = params.get('debug') === '1';
 
@@ -99,6 +100,7 @@ async function startGame(team, charId) {
     onMatchEnd: recordMatchStats,
   });
   window.__game = game;
+  submitted = false;
   game.start();
   // registra nick no ranking global (silencioso se a API não estiver no ar)
   const nick = $('nick-input').value.trim();
@@ -185,7 +187,12 @@ $('btn-team-p').onclick = () => { sfx.uiClick(); pickTeam('P'); };
 $('btn-team-b').onclick = () => { sfx.uiClick(); pickTeam('B'); };
 $('btn-resume').onclick = () => { sfx.uiClick(); game?.resume(); };
 $('btn-pause-settings').onclick = () => { sfx.uiClick(); settingsReturn = 'pause-menu'; show('settings-panel'); };
-$('btn-quit').onclick = () => { sfx.uiClick(); quitToMenu(); };
+$('btn-quit').onclick = () => {
+  sfx.uiClick();
+  const pl = partialPayload();
+  if (pl) { submitted = true; api('/api/submit-match', pl); }
+  quitToMenu();
+};
 $('btn-again').onclick = () => { sfx.uiClick(); startGame(currentTeam, currentChar); };
 $('btn-menu').onclick = () => { sfx.uiClick(); quitToMenu(); };
 $('char-confirm').onclick = () => { sfx.uiClick(); if (selChar) startGame(currentTeam, selChar.id); };
@@ -224,6 +231,26 @@ function submitNote(msg) {
   }
 }
 
+// stats parciais quando o jogador abandona a partida (sair pro menu / fechar aba)
+function partialPayload() {
+  if (!game || submitted || testMode) return null;
+  if (!['live', 'roundEnd', 'countdown'].includes(game.state)) return null;
+  const g = game, p = g.player;
+  const rounds = g.roundsWon.P + g.roundsWon.B;
+  if (!p.kills && !p.deaths && !rounds && g.time < 30) return null;
+  const nick = (nickEl.value || '').trim();
+  if (!nick) return null;
+  return {
+    nick, token: getToken(), won: false, kills: p.kills, deaths: p.deaths,
+    headshots: p.headshots || 0, bestStreak: g.mk.best || 0, rounds, team: g.playerTeam,
+    seconds: Math.round(g.time),
+  };
+}
+addEventListener('beforeunload', () => {
+  const pl = partialPayload();
+  if (pl) navigator.sendBeacon('/api/submit-match', new Blob([JSON.stringify(pl)], { type: 'application/json' }));
+});
+
 /* ---------------- local stats (espelhados pro ranking global) ---------------- */
 const STATS_KEY = 'awpbr_stats';
 function loadStats() {
@@ -231,6 +258,7 @@ function loadStats() {
     JSON.parse(localStorage.getItem(STATS_KEY) || '{}'));
 }
 async function recordMatchStats(s) {
+  submitted = true;
   const st = loadStats();
   st.matches++; if (s.won) st.wins++;
   st.kills += s.kills; st.deaths += s.deaths; st.headshots += s.headshots;

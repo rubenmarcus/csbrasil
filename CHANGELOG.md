@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.0] — 2026-07-17
+### Adicionado
+- **Stats de abandono**: quem sai da partida no meio (botão sair ou fechar a
+  aba) também entra no ranking — submit parcial ao sair + sendBeacon no unload
+- **Mapa com histórico total** por cidade (partidas + rounds), não só 7 dias
+- **Social link clicável** no perfil e no /ranking
+- **Avatar automático do X/Twitter** via unavatar.io quando o social link é um
+  handle do X (badge, perfil e ranking; fallback: inicial)
+- city_daily agora soma rounds também (migration 005)
+
 ## [1.5.3] — 2026-07-17
 ### Corrigido
 - Badge sem texto em produção: o binding nativo Linux do `resvg-js` ignorava

@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import { supabaseAdmin, NOT_CONFIGURED } from '../../../lib/supabase';
 import { FONT_BOLD_B64 } from '../../../lib/font-data';
 import { displayTime } from '../../../lib/fmt';
+import { socialAvatar } from '../../../lib/social';
 
 export const prerender = false;
 
@@ -86,7 +87,7 @@ const handle: APIRoute = async ({ params, request }) => {
     : query.eq('nick', first.replace(/\.png$/, '').slice(0, 14)).maybeSingle());
   if (!data) return new Response('not found', { status: 404 });
   const p = { ...data, social: (data as any).players?.social_link };
-  const avatarUri = await avatarDataUri((data as any).players?.avatar_url);
+  const avatarUri = await avatarDataUri((data as any).players?.avatar_url || socialAvatar(p.social));
   await init(request);
   const resvg = new Resvg(badgeSvg(p, avatarUri), {
     font: { fontBuffers, loadSystemFonts: false, defaultFontFamily: 'DejaVu Sans' },

@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import { supabaseAdmin } from '../../lib/supabase';
 import { displayTime } from '../../lib/fmt';
+import { socialHref, socialAvatar } from '../../lib/social';
 
 export const prerender = false;
 
@@ -48,13 +49,18 @@ const desc = p ? `${p.kills} abates · K/D ${kd} · ${p.wins} vitórias · ${p.h
   {p && (
     <>
       <div style="display:flex;align-items:center;gap:16px">
-        {p.players.avatar_url
-          ? <img src={p.players.avatar_url} alt={`Avatar de ${nick}`} width="72" height="72" style="border-radius:50%;border:2px solid #4a5a2a">
-          : <div style="width:72px;height:72px;border-radius:50%;border:2px solid #4a5a2a;background:#161a12;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--cs);font-family:'Arial Black',sans-serif">{p.nick[0].toUpperCase()}</div>}
+        {(() => {
+          const av = p.players.avatar_url || socialAvatar(p.players.social_link);
+          return av
+            ? <img src={av} alt={`Avatar de ${nick}`} width="72" height="72" style="border-radius:50%;border:2px solid #4a5a2a">
+            : <div style="width:72px;height:72px;border-radius:50%;border:2px solid #4a5a2a;background:#161a12;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--cs);font-family:'Arial Black',sans-serif">{p.nick[0].toUpperCase()}</div>;
+        })()}
         <h1 style="margin-bottom:4px">{nick}</h1>
       </div>
       <p style="margin-top:0">
-        {p.players.social_link && <span>{p.players.social_link} · </span>}
+        {p.players.social_link && (
+          <><a href={socialHref(p.players.social_link)} target="_blank" rel="noopener">{p.players.social_link}</a> · </>
+        )}
         <span style="color:#ff8080">{p.matches_p} partidas de Petista</span> ×
         <span style="color:#9dff9d">{p.matches_b} de Bolsonarista</span>
       </p>
