@@ -62,7 +62,7 @@
     acelerada e smoke test Web.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:match`; `npm run test:web`
 
-- [~] **Portar arena e personagens procedurais completos** (test-type: both)
+- [x] **Portar arena e personagens procedurais completos** (test-type: both)
   - blocked-by: partida 4×4 completa
   - summary: portar mapa, props, skyline, oito personagens, acessórios, armas
     visuais, animações, texturas e caches com seed.
@@ -73,9 +73,9 @@
     caches evitam duplicação equivalente.
   - tests: unitários de determinismo/cache; integração de scenes; inspeção
     visual e screenshots nos navegadores suportados.
-  - verification: `godot --headless --path godot --script res://tests/test_runner.gd -- procedural && npm run test:web:visual`
+  - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:visual`; `npm run test:web`
 
-- [ ] **Completar menus, HUD, radar e persistência** (test-type: both)
+- [~] **Completar menus, HUD, radar e persistência** (test-type: both)
   - blocked-by: arena e personagens procedurais completos
   - summary: portar todos os fluxos UI, preview, nick, settings, qualidade,
     pause, radar, banners, scope, hitmarker, multikill e fim de partida.

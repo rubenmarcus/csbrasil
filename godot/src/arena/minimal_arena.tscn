@@ -7,6 +7,10 @@ script = ExtResource("1_arena")
 
 [node name="Geometry" type="Node3D" parent="."]
 
+[node name="Decor" type="Node3D" parent="."]
+
+[node name="Skyline" type="Node3D" parent="."]
+
 [node name="Sun" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-55, -35, 0)
 light_color = Color(1, 0.9, 0.76, 1)

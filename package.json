@@ -7,6 +7,7 @@
 	"test:web:combat": "playwright test tests/web/combat.spec.mjs",
 	"test:web:weapons": "playwright test tests/web/weapons.spec.mjs",
 	"test:web:match": "playwright test tests/web/match.spec.mjs",
+	"test:web:visual": "playwright test tests/web/visual.spec.mjs",
     "test:web": "playwright test tests/web"
   },
   "devDependencies": {
