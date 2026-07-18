@@ -95,6 +95,7 @@ let game = null, currentTeam = 'P', currentChar = CHARACTERS[0].id, selChar = nu
 let submitted = true;   // stats da partida atual já enviados?
 let registeredNick = ''; // nick usado no registro da sessão (token está atrelado a ele)
 let heartbeatOff = false;
+let nickRegistered = false; // true só quando /api/register confirma que o token possui o nick
 const params = new URLSearchParams(location.search);
 const testMode = params.get('debug') === '1';
 
@@ -125,11 +126,19 @@ async function startGame(team, charId) {
   game.start();
   // registra nick no ranking global (silencioso se a API não estiver no ar)
   const nick = $('nick-input').value.trim();
-  registeredNick = nick; heartbeatOff = false;
+  registeredNick = nick; heartbeatOff = false; nickRegistered = false;
   if (nick && !testMode) {
     api('/api/register', {
       nick, token: getToken(),
       socials: socials.filter(s => s.handle),
+    }).then(reg => {
+      if (reg && reg.error) {
+        // nick já pertence a outro jogador (token não bate) — não martela a API nem loopa o login
+        heartbeatOff = true;
+        submitNote('o nick "' + nick + '" já é de outro jogador — troque o nick pra salvar no ranking (a partida roda normal).');
+      } else {
+        nickRegistered = true; // só a partir daqui heartbeat/submit são válidos
+      }
     });
   }
   try { window.va?.('event', { name: 'game_start', data: { team, character: charId, map: currentMap } }); } catch {}
@@ -143,7 +152,7 @@ function quitToMenu() {
 
 /* ---------------- heartbeat (presença/mapa) ---------------- */
 setInterval(async () => {
-  if (!game || !registeredNick || testMode || heartbeatOff) return;
+  if (!game || !registeredNick || testMode || heartbeatOff || !nickRegistered) return;
   const res = await api('/api/heartbeat', { nick: registeredNick, token: getToken() });
   if (res && res.error) heartbeatOff = true;   // token inválido etc. — para de martelar
 }, 30_000);
@@ -358,7 +367,7 @@ function submitNote(msg) {
 
 // stats parciais quando o jogador abandona a partida (sair pro menu / fechar aba)
 function partialPayload() {
-  if (!game || submitted || testMode) return null;
+  if (!game || submitted || testMode || !nickRegistered) return null;
   if (!['live', 'roundEnd', 'countdown'].includes(game.state)) return null;
   const g = game, p = g.player;
   const rounds = g.roundsWon.P + g.roundsWon.B;
@@ -411,7 +420,7 @@ async function recordMatchStats(s) {
   localStorage.setItem(STATS_KEY, JSON.stringify(st));
   // espelha pro ranking global (avisa na tela se falhar)
   const nick = registeredNick || (nickEl.value || '').trim();
-  if (nick && !testMode) {
+  if (nick && !testMode && nickRegistered) {
     const res = await submitGlobal({
       nick, token: getToken(), won: s.won, kills: s.kills, deaths: s.deaths,
       headshots: s.headshots, bestStreak: s.bestStreak,
