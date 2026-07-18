@@ -6,11 +6,11 @@
 export const XP = { kill: 25, headshot: 12, winRound: 40, winMatch: 120, match: 25 };
 
 /* ─── Curva de progressão ─────────────────────────────────────────────── */
-// nv1→2: 850 XP | nv25→26: 9.350 XP | nv49→50: 17.650 XP
-// Total nv1→50 ≈ 453.000 XP → ~1.100 partidas competitivas ≈ 275h de jogo
+// nv1→2: 170 XP | nv25→26: 650 XP | nv49→50: 1.130 XP
+// Total nv1→50 ≈ 31.850 XP → ~91 partidas competitivas ≈ 24h de jogo
 export function xpToNextLevel(level) {
   if (level >= 50) return Infinity;
-  return 500 + level * 350;
+  return 150 + level * 20;
 }
 
 export function progressFromXp(totalXp) {
