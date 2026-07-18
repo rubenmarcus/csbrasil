@@ -221,7 +221,7 @@ export function buildPoolDay(scene, T) {
     g.position.set(x, 0.02, z); g.rotation.y = yaw; g.traverse(o => { if (o.isMesh) o.castShadow = true; }); root.add(g); return g;
   }
   const RIFLES = ['awp', 'ak', 'm4', 'shotgun', 'mp5'];
-  const place = (kind, x, z, yaw) => { const mesh = buildGun(kind, x, z, yaw); pickups.push({ x, z, kind, weapon: (kind === 'pistol' || kind === 'deagle') ? 'pistol' : 'awp', readyAt: 0, mesh }); };
+  const place = (kind, x, z, yaw) => { const mesh = buildGun(kind, x, z, yaw); pickups.push({ x, z, kind, weapon: kind, readyAt: 0, mesh }); };
   let ri = 0;
   for (const sx of [-1, 1]) { const x = sx * 15.5; for (const z of [-8, -4, 0, 4, 8]) place(RIFLES[ri++ % RIFLES.length], x, z, sx > 0 ? Math.PI / 2 : -Math.PI / 2); }
   for (const s of [-1, 1]) { const z = 20 * s; ['deagle', 'pistol', 'pistol', 'deagle'].forEach((k, i) => place(k, [-6, -2, 2, 6][i], z, s > 0 ? Math.PI : 0)); }
@@ -293,6 +293,32 @@ export function buildPoolDay(scene, T) {
   // spawns at the two ends, on the deck
   const mk = s => [-6, -2, 2, 6].map(x => ({ x, z: (HALF_Z - 4) * s, yaw: s < 0 ? 0 : Math.PI }));
   const spawns = { P: mk(-1), B: mk(1) };
+
+  /* ---------------- mais obstáculos (cover no deck) ---------------- */
+  // pilares de sustentação (cover alto)
+  for (const px of [-10, 10]) for (const pz of [-14, 0, 14]) {
+    addBox(1.1, 6.5, 1.1, lam({ map: T ? T.concrete : undefined, color: 0xc8c4bc }), px, 0, pz);
+  }
+  // bancos de vestiário (cover baixo em fileira)
+  for (const s of [-1, 1]) for (let i = 0; i < 3; i++) {
+    const bz = s * (6 + i * 5), bx = s * 4;
+    addBox(3.2, 0.45, 0.8, lam({ map: GM && GM.wood }), bx, 0, bz);
+    addBox(0.15, 0.45, 0.7, lam({ color: 0x2a2a2a }), bx - 1.4, 0, bz, { collide: false });
+    addBox(0.15, 0.45, 0.7, lam({ color: 0x2a2a2a }), bx + 1.4, 0, bz, { collide: false });
+  }
+  // boxes de chuveiro (cabines fechadas = cover sólido)
+  for (const sx of [-1, 1]) {
+    const cx = sx * (typeof HALF_X !== 'undefined' ? HALF_X - 3.2 : 14);
+    for (let i = 0; i < 2; i++) {
+      const cz = -4 + i * 8;
+      addBox(0.15, 2.4, 2.2, lam({ color: 0xd8d4cc }), cx, 0, cz);
+      addBox(1.8, 2.4, 0.15, lam({ color: 0xd8d4cc }), cx + sx * 0.8, 0, cz + 1.1);
+      addBox(1.8, 2.4, 0.15, lam({ color: 0xd8d4cc }), cx + sx * 0.8, 0, cz - 1.1);
+    }
+  }
+  // lixeiras de toalha (cover pequeno espalhado)
+  for (const [tx, tz] of [[-7, -18], [7, 18], [-3, 10], [3, -10]])
+    addBox(0.9, 1.1, 0.9, lam({ color: 0x3a5a8f }), tx, 0, tz);
 
   return {
     root, colliders, occluders, groundHeightAt, spawns, sun, hemi, pickups,

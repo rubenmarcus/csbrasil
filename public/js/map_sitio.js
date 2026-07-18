@@ -185,6 +185,44 @@ export function buildSitio(scene, T) {
       addBox(0.14, 1.0, 0.14, lam({ map: woodTex }), fx + Math.cos(ry) * (len / 2) * i, 0, fz - Math.sin(ry) * (len / 2) * i, { collide: false });
   }
 
+  /* ---------------- mais obstáculos rurais ---------------- */
+  // fardos de feno (cover cilíndrico)
+  for (const [hx, hz, hr] of [[-8, 14, 0.2], [9, -13, -0.3], [-17, 3, 0.8], [14, 22, 0.1]]) {
+    const hay = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 1.6, 12), lam({ color: 0xc9a24a }));
+    hay.rotation.set(Math.PI / 2, 0, hr); hay.position.set(hx, 1.0, hz);
+    hay.castShadow = hay.receiveShadow = true; root.add(hay); occluders.push(hay);
+    colliders.push({ minX: hx - 1, maxX: hx + 1, minY: 0, maxY: 2, minZ: hz - 1, maxZ: hz + 1 });
+  }
+  // trator velho (cover grande)
+  {
+    const TX = 22, TZ = 34, TR = -0.4;
+    addBox(2.2, 1.2, 3.2, lam({ color: 0x8f2a2a }), TX, 0.6, TZ, { ry: TR });           // corpo
+    addBox(1.6, 1.4, 1.6, lam({ color: 0x8f2a2a }), TX - 0.2, 1.8, TZ + 0.5, { ry: TR }); // cabine
+    addBox(1.8, 0.5, 2.2, lam({ color: 0x2a2a2a }), TX, 0, TZ - 0.3, { ry: TR, collide: false }); // chassis
+    for (const [wx, wz, r] of [[-1.2, -1, 0.55], [1.2, -1, 0.55], [-1.2, 1.1, 0.75], [1.2, 1.1, 0.75]]) {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.4, 10), lam({ color: 0x1a1a1a }));
+      wheel.rotation.z = Math.PI / 2; wheel.rotation.y = TR;
+      wheel.position.set(TX + wx, r, TZ + wz); root.add(wheel);
+    }
+  }
+  // poço de pedra (cover central no pasto)
+  {
+    const WX = -14, WZ = 26;
+    const well = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.3, 1.0, 10), lam({ map: T.concreteDark }));
+    well.position.set(WX, 0.5, WZ); well.castShadow = true; root.add(well); occluders.push(well);
+    colliders.push({ minX: WX - 1.2, maxX: WX + 1.2, minY: 0, maxY: 1.0, minZ: WZ - 1.2, maxZ: WZ + 1.2 });
+    for (const px of [-1, 1]) addBox(0.12, 1.8, 0.12, lam({ map: woodTex }), WX + px, 0.5, WZ, { collide: false });
+    addBox(2.8, 0.12, 2.2, lam({ map: roofTex }), WX, 2.3, WZ, { collide: false });
+  }
+  // bebedouro dos cavalos
+  addBox(3.4, 0.6, 1.0, lam({ map: woodTex }), -4, 0, 34);
+  addPlane(3.2, 0.7, lam({ map: waterTex, transparent: true, opacity: 0.85 }), -4, 0.62, 34, 0, -Math.PI / 2);
+  // mais cercas (zig-zag de cover no pasto sul)
+  for (const [fx, fz, len, ry] of [[-18, 38, 8, 0.6], [-6, 40, 7, -0.4], [18, 40, 8, 0.3]]) {
+    addBox(len, 0.12, 0.08, lam({ map: woodTex }), fx, 0.85, fz, { ry });
+    addBox(len, 0.12, 0.08, lam({ map: woodTex }), fx, 0.45, fz, { ry });
+  }
+
   /* ---------------- PORTEIRA + placas (spawn B, sul) ---------------- */
   {
     const GX = 8, GZ = 46;
