@@ -58,7 +58,7 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 #social-net{font-size:13px;cursor:pointer}
 #social-input{font-size:13px}
 #social-input:disabled{opacity:.35;cursor:not-allowed}
-#social-input.invalid{border-color:#e03232!important;animation:shake .3s}
+#nick-input.invalid,#social-input.invalid{border-color:#e03232!important;animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 #social-preview{font-size:11px;color:#5a6b3a;font-family:Consolas,monospace;min-height:14px;text-align:center}
 #avatar-row{display:flex;flex-direction:column;gap:6px;align-items:center}

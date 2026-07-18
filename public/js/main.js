@@ -170,6 +170,13 @@ $('avatar-file').onchange = async e => {
 
 /* ---------------- menu wiring ---------------- */
 $('btn-jogar').onclick = () => {
+  if (!(nickEl.value || '').trim()) {
+    nickEl.classList.add('invalid');
+    nickEl.placeholder = 'DIGITE UM NICK PRIMEIRO!';
+    nickEl.focus();
+    setTimeout(() => nickEl.classList.remove('invalid'), 1500);
+    return;   // sem nick, sem treta
+  }
   sfx.uiClick();
   const firstEmpty = socials.find(s => !s.handle);
   if (firstEmpty) {
