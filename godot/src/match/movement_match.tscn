@@ -12,7 +12,8 @@
 [node name="Actors" type="Node3D" parent="."]
 
 [node name="Player" parent="Actors" instance=ExtResource("2_player")]
-position = Vector3(0, 0.1, 8)
+position = Vector3(-9, 1.5, -42)
+rotation_degrees = Vector3(0, 180, 0)
 
 [node name="Bots" type="Node3D" parent="Actors"]
 

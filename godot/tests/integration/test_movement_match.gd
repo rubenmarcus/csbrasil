@@ -18,7 +18,7 @@ func test_movement_match_composes_arena_and_player_scenes() -> void:
 	add_child_autofree(match_scene)
 	assert_not_null(match_scene.get_node_or_null("Arena"))
 	assert_true(match_scene.get_node("Actors/Player") is CharacterBody3D)
-	assert_eq(match_scene.get_node("Actors/Player").position, Vector3(0.0, 0.1, 8.0))
+	assert_eq(match_scene.get_node("Actors/Player").position, Vector3(-9.0, 1.5, -42.0))
 
 
 func test_main_hosts_the_playable_movement_match() -> void:
@@ -33,6 +33,8 @@ func test_player_walks_and_center_obstacle_blocks_forward_motion() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
 	var player := match_scene.get_node("Actors/Player") as CharacterBody3D
+	player.position = Vector3(0.0, 0.1, 8.0)
+	player.rotation.y = 0.0
 	await wait_physics_frames(10)
 
 	Input.action_press("move_forward")
@@ -48,6 +50,8 @@ func test_player_jumps_and_crouch_lowers_the_camera() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
 	var player := match_scene.get_node("Actors/Player") as CharacterBody3D
+	player.position = Vector3(0.0, 0.1, 8.0)
+	player.rotation.y = 0.0
 	await wait_physics_frames(10)
 
 	Input.action_press("crouch")
@@ -68,6 +72,7 @@ func test_player_climbs_steps_within_legacy_height_limit() -> void:
 	add_child_autofree(match_scene)
 	var player := match_scene.get_node("Actors/Player") as CharacterBody3D
 	player.position = Vector3(6.0, 0.1, 6.0)
+	player.rotation.y = 0.0
 	await wait_physics_frames(10)
 
 	Input.action_press("move_forward")

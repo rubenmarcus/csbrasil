@@ -55,9 +55,17 @@ smoke test Web.
 
 ### 5. Conteúdo procedural e apresentação
 
+Status: conteúdo procedural concluído e verificado em 2026-07-18; apresentação
+em andamento.
+
 Portar arena completa, props, skyline, oito personagens, armas visuais,
 texturas, animações e efeitos. Implementar seed determinística, factories e
 caches compartilhados. Completar menus, seleção, HUD, radar e scoreboard.
+
+A arena completa e os oito arquétipos foram entregues exclusivamente com
+primitivas, imagens geradas em runtime e caches de materiais/meshes. A seed
+2026 produz uma assinatura verificável; spawns, bloqueios e waypoints derivam
+da geometria procedural, e screenshots Web são exercitados nos dois browsers.
 
 ### 6. Áudio, persistência e integração Web
 

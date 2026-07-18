@@ -37,8 +37,9 @@ func _process(delta: float) -> void:
 		return
 	_web_state_elapsed = 0.0
 	var match_state := match_controller.current_match_state()
+	var procedural_state := match_controller.current_procedural_state()
 	JavaScriptBridge.eval(
-		"window.__csbrasilPlayerState={x:%f,y:%f,z:%f,crouch:%f,captured:%s,health:%d,weaponId:'%s',ammo:%d,reserve:%d,scoped:%s,botAlive:%s,botRespawn:%f,actorCount:%d,petistasCount:%d,bolsonaristasCount:%d,round:%d,roundSeconds:%f,petistasKills:%d,bolsonaristasKills:%d,scoreboardVisible:%s};" % [
+		"window.__csbrasilPlayerState={x:%f,y:%f,z:%f,crouch:%f,captured:%s,health:%d,weaponId:'%s',ammo:%d,reserve:%d,scoped:%s,botAlive:%s,botRespawn:%f,actorCount:%d,petistasCount:%d,bolsonaristasCount:%d,round:%d,roundSeconds:%f,petistasKills:%d,bolsonaristasKills:%d,scoreboardVisible:%s,arenaSignature:'%s',arenaGeometryCount:%d,proceduralMaterialCount:%d,visualSignatureCount:%d};" % [
 			player.position.x,
 			player.position.y,
 			player.position.z,
@@ -59,6 +60,10 @@ func _process(delta: float) -> void:
 			int(match_state.petistas_kills),
 			int(match_state.bolsonaristas_kills),
 			"true" if scoreboard.visible else "false",
+			String(procedural_state.arena_signature),
+			int(procedural_state.geometry_count),
+			int(procedural_state.material_count),
+			int(procedural_state.visual_signature_count),
 		]
 	)
 

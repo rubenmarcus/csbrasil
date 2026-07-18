@@ -114,8 +114,7 @@ func test_waypoint_bot_routes_without_entering_center_obstacle() -> void:
 		await wait_physics_frames(1)
 		var inside_obstacle := (
 			absf(moving_bot.global_position.x) < 1.85
-			and moving_bot.global_position.z > -3.85
-			and moving_bot.global_position.z < -0.15
+			and absf(moving_bot.global_position.z) < 1.5
 		)
 		assert_false(inside_obstacle, "Bot crossed center obstacle at frame %d" % frame)
-	assert_gt(moving_bot.global_position.z, -7.0, "Bot must make progress toward its target")
+	assert_lt(moving_bot.global_position.z, 41.0, "Bot must make progress toward its target")
