@@ -99,6 +99,23 @@ begin
   update players set hidden = true where nick = p_nick and flagged_count >= 3;
 end $$;
 
+-- ---------------------------------------------------------------------------
+-- IMPORTANTE: "create or replace function" NÃO substitui quando a assinatura
+-- muda — ele cria OVERLOADS (foi o que quebrou o submit: versões de 9/10/11
+-- params coexistindo). Este bloco derruba TODAS as sobrecargas antes de
+-- recriar a assinatura atual. Manter sempre aqui.
+-- ---------------------------------------------------------------------------
+do $$
+declare f record;
+begin
+  for f in select p.oid::regprocedure::text as sig
+           from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where p.proname = 'submit_match' and n.nspname = 'public'
+  loop
+    execute 'drop function if exists ' || f.sig || ' cascade';
+  end loop;
+end $$;
+
 -- Submeter stats de uma partida (token + rate limits + CONSISTÊNCIA FÍSICA anti-trainer).
 create or replace function public.submit_match(
   p_nick text, p_token uuid,
