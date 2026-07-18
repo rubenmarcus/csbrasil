@@ -37,7 +37,7 @@ const tempo = p ? displayTime(p) : '0min';
 const badgeUrl = `${Astro.site}api/badge/${pid}.png`;
 const pageUrl = `${Astro.site}u/${pid}/${encodeURIComponent(nick)}`;
 const title = `${nick} no CS BRASIL: Treta Suprema`;
-const desc = p ? `${p.kills} kills · K/D ${kd} · ${p.wins} vitórias · ${p.headshots} headshots · ${tempo} de arena` : 'Perfil de jogador';
+const desc = p ? `${p.kills} kills · K/D ${kd} · ${p.wins > 0 ? p.wins : "—"} vitórias · ${p.headshots} headshots · ${tempo} de arena` : 'Perfil de jogador';
 ---
 <Layout title={title} description={desc} ogImage={badgeUrl}>
   <Fragment slot="head">
@@ -68,7 +68,7 @@ const desc = p ? `${p.kills} kills · K/D ${kd} · ${p.wins} vitórias · ${p.he
       <h2>Stats</h2>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;font-family:Consolas,monospace">
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.matches}</b>partidas</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.wins}</b>vitórias</div>
+        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.wins > 0 ? p.wins : "—"}</b>vitórias</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.rounds}</b>rounds</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{kd}</b>K/D</div>
         <div><b style="font-size:26px;color:var(--yellow);display:block">{p.kills}</b>kills</div>

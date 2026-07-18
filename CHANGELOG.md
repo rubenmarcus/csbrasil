@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.3] — 2026-07-18
+### Mudado
+- Vitórias zeradas aparecem como "—" (não parece mais bug) no ranking, perfil,
+  badge e painel local
+
 ## [1.7.2] — 2026-07-18
 ### Corrigido
 - Submits rejeitados pelo rate limit de 90s (abandono + partida em seguida)

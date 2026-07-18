@@ -94,7 +94,7 @@ function badgeSvg(p: any, avatarUri: string | null, charId: string | null): stri
   const cName = charName(charId);
 
   const cells: [string, string][] = [
-    ['PARTIDAS', String(p.matches)], ['VITÓRIAS', String(p.wins)], ['K/D', kd], ['TEMPO', displayTime(p)],
+    ['PARTIDAS', String(p.matches)], ['VITÓRIAS', p.wins > 0 ? String(p.wins) : '—'], ['K/D', kd], ['TEMPO', displayTime(p)],
     ['KILLS', String(p.kills)], ['HEADSHOTS', String(p.headshots)], ['SEQUÊNCIA', `${p.best_streak}×`], ['ROUNDS', String(p.rounds)],
   ];
   const grid = cells.map(([label, v], i) => {

@@ -33,7 +33,7 @@ if (supabaseAdmin) {
               {socialHref(p.social_link) && <a href={socialHref(p.social_link)} target="_blank" rel="noopener" style="color:#5a6b3a;font-size:11px"> · {p.social_link}</a>}
             </td>
             <td style="padding:8px 6px">{p.matches}</td>
-            <td style="padding:8px 6px">{p.wins}</td>
+            <td style="padding:8px 6px">{p.wins > 0 ? p.wins : "—"}</td>
             <td style="padding:8px 6px">{p.kd}</td>
             <td style="padding:8px 6px">{p.kills}</td>
             <td style="padding:8px 6px">{p.headshots}</td>

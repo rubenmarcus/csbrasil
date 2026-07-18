@@ -315,7 +315,7 @@ function showRanking() {
   $('rank-local').innerHTML =
     `<div style="grid-column:1/-1;text-align:center;color:var(--cs);font-size:18px">${nick}` +
     (social ? ` · <span style="color:#8a8064;font-size:12px">${social.replace(/</g, '&lt;')}</span>` : '') + `</div>` +
-    `<div><b>${st.matches}</b>partidas</div><div><b>${st.wins}</b>vitórias</div><div><b>${kd}</b>K/D</div>` +
+    `<div><b>${st.matches}</b>partidas</div><div><b>${st.wins > 0 ? st.wins : "—"}</b>vitórias</div><div><b>${kd}</b>K/D</div>` +
     `<div><b>${st.kills}</b>kills</div><div><b>${st.headshots}</b>headshots</div><div><b>${tempo}</b>de arena</div>`;
   show('ranking-panel');
   renderGlobal(nick);
@@ -329,7 +329,7 @@ async function renderGlobal(nick) {
     return;
   }
   const rows = data.players.slice(0, 10).map((p, i) =>
-    `<tr class="${p.nick === nick ? 'me' : ''}"><td>${i + 1}</td><td>${p.nick}</td><td>${p.kd}</td><td>${p.kills}</td><td>${p.wins}</td></tr>`).join('');
+    `<tr class="${p.nick === nick ? 'me' : ''}"><td>${i + 1}</td><td>${p.nick}</td><td>${p.kd}</td><td>${p.kills}</td><td>${p.wins > 0 ? p.wins : "—"}</td></tr>`).join('');
   box.innerHTML = '<h3>🌐 RANKING GLOBAL (top 10)</h3>' +
     (rows
       ? `<table><tr><th>#</th><th>JOGADOR</th><th>K/D</th><th>KILLS</th><th>VIT.</th></tr>${rows}</table>`
