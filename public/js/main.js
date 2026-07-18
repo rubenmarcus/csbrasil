@@ -22,10 +22,10 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.06;
+renderer.toneMappingExposure = 1.1;
 container.appendChild(renderer.domElement);
 
-const textures = initTextures();
+const textures = initTextures(renderer.capabilities.getMaxAnisotropy());
 const sfx = new Sfx(); sfx.vol = settings.vol;
 sfx.speechEnabled = settings.speech !== false;
 const sfxReady = sfx.loadManifest();

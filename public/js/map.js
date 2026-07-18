@@ -281,7 +281,7 @@ export function buildWorld(scene, T) {
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.left = -60; sun.shadow.camera.right = 60;
   sun.shadow.camera.top = 60; sun.shadow.camera.bottom = -60;
-  sun.shadow.camera.far = 160; sun.shadow.bias = -0.0004;
+  sun.shadow.camera.far = 160; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
   scene.add(sun);
   // warm fill from the other side
   const fill = new THREE.DirectionalLight(0xffc890, 0.35);
