@@ -33,6 +33,23 @@ if (supabaseAdmin) {
   cities = [...agg.values()].sort((a, b) => b.matches - a.matches)
     .map(c => ({ ...c, players: [...c.players].sort() }));
 }
+const COUNTRY_NAMES: Record<string, string> = { BR:'Brasil', PT:'Portugal', US:'Estados Unidos', AR:'Argentina', UY:'Uruguai', PY:'Paraguai', CL:'Chile', CO:'Colômbia', PE:'Peru', BO:'Bolívia', VE:'Venezuela', EC:'Equador', MX:'México', CA:'Canadá', ES:'Espanha', FR:'França', DE:'Alemanha', IT:'Itália', GB:'Reino Unido', IE:'Irlanda', NL:'Países Baixos', BE:'Bélgica', CH:'Suíça', AT:'Áustria', SE:'Suécia', NO:'Noruega', DK:'Dinamarca', FI:'Finlândia', PL:'Polônia', RU:'Rússia', UA:'Ucrânia', TR:'Turquia', JP:'Japão', CN:'China', KR:'Coreia do Sul', IN:'Índia', AU:'Austrália', NZ:'Nova Zelândia', ZA:'África do Sul', AO:'Angola', MZ:'Moçambique', CV:'Cabo Verde', AE:'Emirados Árabes', IL:'Israel' };
+const flagOf = (cc: string) => (cc && cc.length === 2) ? cc.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0))) : '🏳️';
+const nameOf = (cc: string) => COUNTRY_NAMES[(cc || '').toUpperCase()] || cc || '—';
+const cAgg = new Map<string, any>();
+for (const c of cities) {
+  const code = (c.country || '').toUpperCase();
+  const cur = cAgg.get(code) || { code, players: new Set<string>(), matches: 0, cities: 0 };
+  c.players.forEach((n: string) => cur.players.add(n));
+  cur.matches += c.matches; cur.cities += 1; cAgg.set(code, cur);
+}
+const countries = [...cAgg.values()]
+  .map(c => ({ code: c.code, name: nameOf(c.code), flag: flagOf(c.code), players: [...c.players], matches: c.matches, cities: c.cities }))
+  .sort((a, b) => b.players.length - a.players.length);
+const totalCities = cities.length;
+const totalCountries = countries.length;
+const tableData = cities.map(c => ({ city: c.city, cc: (c.country || '').toUpperCase(), players: c.players }));
+const countryMeta = Object.fromEntries(countries.map(c => [c.code, { name: c.name, flag: c.flag }]));
 const sideTotal = Math.max(1, totals.mp + totals.mb);
 const pctP = Math.round((totals.mp / sideTotal) * 100), pctB = 100 - pctP;
 const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.filter(c => c.lat && c.lon) };
@@ -53,6 +70,8 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
       <span><b style="color:var(--yellow);font-size:20px">{totals.players}</b> jogadores</span>
       <span><b style="color:var(--yellow);font-size:20px">{totals.matches}</b> partidas</span>
       <span><b style="color:var(--yellow);font-size:20px">{totals.kills}</b> kills</span>
+      <span><b style="color:var(--yellow);font-size:20px">{totalCities}</b> cidades</span>
+      <span><b style="color:var(--yellow);font-size:20px">{totalCountries}</b> países</span>
       <span style="flex:1;min-width:220px">
         <span style="color:#ff8080">{pctP}% petistas</span> × <span style="color:#9dff9d">{pctB}% bolsonaristas</span>
         <span style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:4px;border:1px solid #3a3325">
@@ -66,6 +85,34 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
   {!configured && <p>Mapa ainda não configurado.</p>}
   <div id="map" style="height:520px;border-radius:10px;border:1px solid #3a3325;background:#10130c"></div>
 
+  {configured && online.length > 0 && (
+    <div style="margin-top:24px;font-family:Consolas,monospace">
+      <h2 style="margin:0 0 10px;color:#9dff9d;font-size:18px">🟢 ONLINE AGORA ({online.length})</h2>
+      <div style="overflow-x:auto;border:1px solid #2a4a2a;border-radius:8px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;color:#c9bfa4">
+          <thead>
+            <tr style="background:#12180f;color:#9dff9d;text-align:left">
+              <th style="padding:8px 10px">JOGADOR</th>
+              <th style="padding:8px 10px">CIDADE</th>
+              <th style="padding:8px 10px">PAÍS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {online.map(o => (
+              <tr style="border-top:1px solid #1e2a1a">
+                <td style="padding:7px 10px">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3fdd57;box-shadow:0 0 6px #3fdd57;margin-right:7px;vertical-align:1px"></span>
+                  <a href={`/u/${encodeURIComponent(o.nick)}`} style="color:#d8e0b0">{o.nick}</a>
+                </td>
+                <td style="padding:7px 10px">{o.city || '—'}</td>
+                <td style="padding:7px 10px">{o.country ? `${flagOf(o.country)} ${o.country.toUpperCase()}` : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
   {configured && cities.length > 0 && (
     <div style="margin-top:24px;font-family:Consolas,monospace">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
@@ -73,8 +120,8 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
         <input id="ct-filter" placeholder="filtrar cidade ou país…" autocomplete="off"
           style="flex:1;min-width:180px;background:#10130c;border:1px solid #3a3325;color:#d8e0b0;padding:6px 10px;border-radius:6px;font-family:inherit;font-size:13px" />
         <select id="ct-country" style="background:#10130c;border:1px solid #3a3325;color:#d8e0b0;padding:6px 10px;border-radius:6px;font-family:inherit;font-size:13px">
-          <option value="">todos os países</option>
-          {[...new Set(cities.map(c => c.country).filter(Boolean))].sort().map(co => <option value={co}>{co}</option>)}
+          <option value="">todos os países ({totalCountries})</option>
+          {countries.map(c => <option value={c.code}>{c.flag} {c.name} ({c.players.length})</option>)}
         </select>
       </div>
       <div style="overflow-x:auto;border:1px solid #3a3325;border-radius:8px">
@@ -95,8 +142,8 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
                 data-city={(c.city || '').toLowerCase()} data-country={(c.country || '').toLowerCase()}
                 data-players={c.players.length} data-matches={c.matches} data-rounds={c.rounds}>
                 <td class="ct-rank" style="padding:7px 10px;color:var(--yellow)">{i + 1}</td>
-                <td style="padding:7px 10px;color:#d8e0b0">{c.city}</td>
-                <td style="padding:7px 10px">{c.country}</td>
+                <td class="ct-city-cell" style="padding:7px 10px;color:#d8e0b0;cursor:pointer;text-decoration:underline dotted #4a5a2a">{c.city}</td>
+                <td class="ct-country-cell" style="padding:7px 10px;cursor:pointer">{flagOf(c.country)} {(c.country || '').toUpperCase()}</td>
                 <td style="padding:7px 10px;text-align:right">{c.players.length}</td>
                 <td style="padding:7px 10px;text-align:right">{c.matches}</td>
                 <td style="padding:7px 10px;text-align:right">{c.rounds}</td>
@@ -108,6 +155,15 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
       <p id="ct-empty" style="display:none;color:#c9bfa4;margin-top:8px">nenhuma cidade com esse filtro.</p>
     </div>
   )}
+  <div id="ct-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:16px">
+    <div style="background:#10130c;border:1px solid #4a5a2a;border-radius:10px;max-width:520px;width:100%;max-height:80vh;overflow:auto;padding:18px;font-family:Consolas,monospace">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px">
+        <h3 id="ct-modal-title" style="margin:0;color:var(--yellow);font-size:16px"></h3>
+        <button id="ct-modal-close" style="background:none;border:1px solid #4a5a2a;color:#d8e0b0;border-radius:6px;cursor:pointer;font-size:16px;padding:2px 10px">✕</button>
+      </div>
+      <div id="ct-modal-body" style="font-size:13px;color:#c9bfa4;line-height:1.9"></div>
+    </div>
+  </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" is:inline></script>
   <script is:inline define:vars={{ mapData }}>
     const map = L.map('map', { scrollWheelZoom: true }).setView([-14.5, -52.5], 4);
@@ -123,9 +179,10 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
       // nome da cidade sempre visível (amarelo)…
       m.bindTooltip(`${c.city} · ${c.matches}`, { permanent: true, direction: 'top', offset: [0, -8], className: 'map-tip' });
       // …e popup com a lista de jogadores + total
-      const shown = c.players.slice(0, 12), more = c.players.length - shown.length;
+      const link = (n) => `<a href="/u/${encodeURIComponent(n)}">${n}</a>`;
+      const shown = c.players.slice(0, 20), more = c.players.length - shown.length;
       const plist = c.players.length
-        ? `<br><b>${c.players.length} jogador${c.players.length > 1 ? 'es' : ''}:</b> ${shown.join(', ')}${more > 0 ? ` +${more}` : ''}`
+        ? `<br><b>${c.players.length} jogador${c.players.length > 1 ? 'es' : ''}:</b><br>${shown.map(link).join(', ')}${more > 0 ? ` <span style="opacity:.7">+${more}</span>` : ''}`
         : '';
       m.bindPopup(`<b>${c.city}</b><br>${c.matches} partidas · ${c.rounds} rounds (histórico)${plist}`, { className: 'map-pop' });
     }
@@ -135,7 +192,7 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
       }).addTo(map).bindPopup(`<b>${o.nick}</b> online agora${o.city ? ' · ' + o.city : ''}`);
     }
   </script>
-  <script is:inline>
+  <script is:inline define:vars={{ tableData, countryMeta }}>
     (() => {
       const table = document.getElementById('ct-table');
       if (!table) return;
@@ -172,6 +229,35 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
         if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = num.has(k) ? -1 : 1; }
         apply();
       }));
+      // ---- modal de usuários por cidade / país (link pro perfil) ----
+      const modal = document.getElementById('ct-modal');
+      const mTitle = document.getElementById('ct-modal-title');
+      const mBody = document.getElementById('ct-modal-body');
+      const userLink = n => `<a href="/u/${encodeURIComponent(n)}" style="color:#b8d94a">${n}</a>`;
+      function openModal(title, users) {
+        mTitle.innerHTML = title + ` <span style="opacity:.6;font-weight:normal">(${users.length})</span>`;
+        mBody.innerHTML = users.length
+          ? users.slice().sort((a, b) => a.localeCompare(b)).map(userLink).join(' · ')
+          : 'ninguém por aqui ainda.';
+        modal.style.display = 'flex';
+      }
+      const closeModal = () => { modal.style.display = 'none'; };
+      document.getElementById('ct-modal-close').addEventListener('click', closeModal);
+      modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+      tbody.addEventListener('click', e => {
+        const tr = e.target.closest('tr'); if (!tr) return;
+        const cityKey = tr.dataset.city, cc = (tr.dataset.country || '').toUpperCase();
+        const meta = countryMeta[cc] || { flag: '', name: cc };
+        if (e.target.closest('.ct-city-cell')) {
+          const row = tableData.find(t => t.city.toLowerCase() === cityKey && t.cc === cc);
+          openModal(`${meta.flag} ${row ? row.city : cityKey}`, row ? row.players : []);
+        } else if (e.target.closest('.ct-country-cell')) {
+          const users = new Set();
+          tableData.filter(t => t.cc === cc).forEach(t => t.players.forEach(p => users.add(p)));
+          openModal(`${meta.flag} ${meta.name}`, [...users]);
+        }
+      });
       apply();
     })();
   </script>
