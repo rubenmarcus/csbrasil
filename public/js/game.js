@@ -102,6 +102,13 @@ export class Game {
     this._input();
     this._applyQuality();
     this.radarCtx = this.el.radar ? this.el.radar.getContext('2d') : null;
+    // botões do HUD: configurações + liga/desliga falas (memes)
+    this.el.hudSettings.onclick = () => this.onOpenSettings?.();
+    this.el.hudSpeech.textContent = this.settings.speech === false ? '🔇' : '🔊';
+    this.el.hudSpeech.onclick = () => {
+      const on = this.onToggleSpeech?.();
+      this.el.hudSpeech.textContent = on ? '🔊' : '🔇';
+    };
   }
 
   /* ================= setup ================= */
@@ -120,7 +127,7 @@ export class Game {
       matchEnd: $('match-end'), matchTitle: $('match-title'), matchSub: $('match-sub'), matchStats: $('match-stats'),
       pause: $('pause-menu'), radar: $('radar'),
       radioMenu: $('radio-menu'), radioLog: $('radio-log'), mkBanner: $('mk-banner'),
-      lockHint: $('lock-hint'),
+      lockHint: $('lock-hint'), hudSpeech: $('hud-speech'), hudSettings: $('hud-settings'),
     };
   }
 
@@ -370,7 +377,12 @@ export class Game {
     this.setPaused(false);
     if (!this.testMode) this._requestLock();
   }
-  applySettings() { this.sfx.setVolume(this.settings.vol); this._applyQuality(); }
+  applySettings() {
+    this.sfx.setVolume(this.settings.vol);
+    this.sfx.speechEnabled = this.settings.speech !== false;
+    if (this.el?.hudSpeech) this.el.hudSpeech.textContent = this.settings.speech === false ? '🔇' : '🔊';
+    this._applyQuality();
+  }
   _applyQuality() {
     const q = this.settings.quality;
     this.renderer.setPixelRatio(q === 'high' ? Math.min(devicePixelRatio, 2) : q === 'med' ? 1 : 0.75);

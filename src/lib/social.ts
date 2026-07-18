@@ -7,6 +7,49 @@ export function socialHref(s?: string | null): string | null {
   return /^https?:\/\//i.test(v) ? v : 'https://' + v.replace(/^@/, '');
 }
 
+// identifica a rede pela URL
+export function socialNet(s?: string | null): string {
+  if (!s) return 'site';
+  const v = s.toLowerCase();
+  if (v.includes('github.com')) return 'github';
+  if (v.includes('instagram.com')) return 'instagram';
+  if (v.includes('linkedin.com')) return 'linkedin';
+  if (v.includes('tiktok.com')) return 'tiktok';
+  if (v.includes('youtube.com') || v.includes('youtu.be')) return 'youtube';
+  if (v.includes('x.com') || v.includes('twitter.com')) return 'x';
+  return 'site';
+}
+
+// handle final da URL ("https://x.com/foo/" → "foo")
+export function socialHandle(s?: string | null): string {
+  if (!s) return '';
+  const m = s.match(/\/@?([A-Za-z0-9._-]+)\/?$/) || s.match(/^@?([A-Za-z0-9._-]+)$/);
+  return m ? m[1] : s;
+}
+
+// info visual por rede (chip de ícone)
+export const NET_INFO: Record<string, { label: string; short: string; color: string }> = {
+  x: { label: 'X / Twitter', short: '𝕏', color: '#e8e8e8' },
+  github: { label: 'GitHub', short: 'GH', color: '#c9d1d9' },
+  instagram: { label: 'Instagram', short: 'IG', color: '#e1306c' },
+  linkedin: { label: 'LinkedIn', short: 'in', color: '#3b82c4' },
+  tiktok: { label: 'TikTok', short: 'TT', color: '#69c9d0' },
+  youtube: { label: 'YouTube', short: 'YT', color: '#ff5252' },
+  site: { label: 'Site', short: '⌂', color: '#b8d94a' },
+};
+
+// monta URL a partir de rede + handle cru
+const NET_PREFIX: Record<string, string> = {
+  x: 'https://x.com/', github: 'https://github.com/', instagram: 'https://instagram.com/',
+  linkedin: 'https://linkedin.com/in/', tiktok: 'https://tiktok.com/@', youtube: 'https://youtube.com/@',
+};
+export function buildSocialUrl(net: string, handle: string): string {
+  const h = (handle || '').trim().replace(/^@/, '');
+  if (!net || !h) return '';
+  if (net === 'site') return /^https?:\/\//i.test(h) ? h : 'https://' + h;
+  return (NET_PREFIX[net] || '') + h;
+}
+
 // extrai handle de twitter/x.com/rubenmarcus_dev, twitter.com/@foo ou @foo
 export function twitterHandle(s?: string | null): string | null {
   if (!s) return null;

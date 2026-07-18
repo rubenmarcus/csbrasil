@@ -5,6 +5,7 @@ export class Sfx {
   constructor() {
     this.ctx = null; this.master = null; this.vol = 0.7;
     this.pack = null;            // parsed manifest
+    this.speechEnabled = true;   // falas dos times (memes) — vitória/UT/arma sempre tocam
     this._lastVoice = 0;
     this._radioAudio = null;
   }
@@ -26,6 +27,7 @@ export class Sfx {
 
   // team voice line (kill celebration / random), throttled
   voice(team, minGap = 3.5) {
+    if (!this.speechEnabled) return;
     const now = performance.now();
     if (now - this._lastVoice < minGap * 1000) return;
     const f = this._pick(this.pack?.voice?.[team]);
@@ -33,6 +35,7 @@ export class Sfx {
   }
   // player-triggered radio line (CS-style) — always plays, stops previous
   radioVoice(team) {
+    if (!this.speechEnabled) return false;
     const f = this._pick(this.pack?.voice?.[team]);
     if (!f) return false;
     if (this._radioAudio) this._radioAudio.pause();

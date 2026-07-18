@@ -9,7 +9,7 @@ import { VERSION } from './version.js';
 
 /* ---------------- settings & nickname ---------------- */
 const SETTINGS_KEY = 'awpbr_settings';
-const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med' },
+const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true },
   JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 const saveSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 const NICK_KEY = 'awpbr_nick';
@@ -27,6 +27,7 @@ container.appendChild(renderer.domElement);
 
 const textures = initTextures();
 const sfx = new Sfx(); sfx.vol = settings.vol;
+sfx.speechEnabled = settings.speech !== false;
 const sfxReady = sfx.loadManifest();
 
 /* ---------------- menu backdrop (orbiting map) ---------------- */
@@ -102,13 +103,24 @@ async function startGame(team, charId) {
   });
   window.__game = game;
   submitted = false;
-  retryPending();   // se sobrou submit preso por rate limit, tenta agora
+  retryPending();
+  game.onOpenSettings = () => { game.setPaused(true); settingsReturn = 'pause-menu'; show('settings-panel'); };
+  game.onToggleSpeech = () => {
+    settings.speech = !settings.speech;
+    sfx.speechEnabled = settings.speech;
+    saveSettings();
+    $('set-speech').checked = settings.speech;
+    return settings.speech;
+  };
   game.start();
   // registra nick no ranking global (silencioso se a API não estiver no ar)
   const nick = $('nick-input').value.trim();
   registeredNick = nick; heartbeatOff = false;
   if (nick && !testMode) {
-    api('/api/register', { nick, token: getToken(), social: socialUrl() });
+    api('/api/register', {
+      nick, token: getToken(),
+      socials: socials.filter(s => s.handle),
+    });
   }
   try { window.va?.('event', { name: 'game_start', data: { team, character: charId } }); } catch {}
   if (!testMode) { try { renderer.domElement.requestPointerLock()?.catch?.(() => {}); } catch {} }
@@ -147,7 +159,15 @@ $('avatar-file').onchange = async e => {
 };
 
 /* ---------------- menu wiring ---------------- */
-$('btn-jogar').onclick = () => { sfx.uiClick(); show('team-select'); };
+$('btn-jogar').onclick = () => {
+  sfx.uiClick();
+  const firstEmpty = socials.find(s => !s.handle);
+  if (firstEmpty) {
+    document.querySelector('.social-item input')?.classList.add('invalid');
+    setTimeout(() => document.querySelector('.social-item input')?.classList.remove('invalid'), 1200);
+  }
+  show('team-select');
+};
 $('btn-ranking').onclick = () => { sfx.uiClick(); showRanking(); };
 $('ranking-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
 $('btn-howto').onclick = () => { sfx.uiClick(); show('howto-panel'); };
@@ -178,32 +198,58 @@ $('char-confirm').onclick = () => { sfx.uiClick(); if (selChar) startGame(curren
 const nickEl = $('nick-input');
 nickEl.value = localStorage.getItem(NICK_KEY) || '';
 nickEl.oninput = () => localStorage.setItem(NICK_KEY, nickEl.value);
-const socialEl = $('social-input'), socialNetEl = $('social-net');
-const SOCIAL_NET_KEY = 'awpbr_social_net';
-socialEl.value = localStorage.getItem(SOCIAL_KEY) || '';
-socialEl.oninput = () => localStorage.setItem(SOCIAL_KEY, socialEl.value);
-socialNetEl.value = localStorage.getItem(SOCIAL_NET_KEY) || '';
-function syncSocialState() {
-  socialEl.disabled = !socialNetEl.value;
-  // upload visível só quando a rede NÃO for X/GitHub (esses puxam avatar sozinhos)
-  const autoAvatar = ['x', 'github'].includes(socialNetEl.value);
-  $('avatar-row').classList.toggle('hidden', autoAvatar || !(nickEl.value || '').trim());
+const SOCIAL_NET_KEY = 'awpbr_social_net'; // legado (migração pro multi-redes)
+function sanitizeHandle(v) { return v.replace(/^@+/, '').replace(/[^a-zA-Z0-9._-]/g, ''); }
+function extractFromUrl(v) {
+  const m = v.match(/(?:x\.com|twitter\.com|github\.com|instagram\.com|tiktok\.com\/@|youtube\.com\/@|linkedin\.com\/in)\/?@?([A-Za-z0-9._-]+)/i);
+  return m ? m[1] : null;
 }
-socialNetEl.onchange = () => { localStorage.setItem(SOCIAL_NET_KEY, socialNetEl.value); syncSocialState(); };
-nickEl.addEventListener('input', syncSocialState);
-syncSocialState();
 
-// monta a URL social a partir da rede escolhida + handle (sem login)
-const NET_PREFIX = {
-  x: 'https://x.com/', github: 'https://github.com/', instagram: 'https://instagram.com/',
-  linkedin: 'https://linkedin.com/in/', tiktok: 'https://tiktok.com/@', youtube: 'https://youtube.com/@',
-};
-function socialUrl() {
-  const net = socialNetEl.value, h = socialEl.value.trim().replace(/^@/, '');
-  if (!net || !h) return '';
-  if (net === 'site') return /^https?:\/\//i.test(h) ? h : 'https://' + h;
-  return (NET_PREFIX[net] || '') + h;
+/* ---------------- multi-redes sociais (até 3, sem login) ---------------- */
+const SOCIALS_KEY = 'awpbr_socials';
+const NETS = [['x', 'X / Twitter'], ['github', 'GitHub'], ['instagram', 'Instagram'],
+  ['linkedin', 'LinkedIn'], ['tiktok', 'TikTok'], ['youtube', 'YouTube'], ['site', 'Site próprio']];
+let socials = [];
+try { socials = JSON.parse(localStorage.getItem(SOCIALS_KEY) || '[]'); } catch {}
+// migração do campo único antigo
+if (!socials.length) {
+  const oldNet = localStorage.getItem(SOCIAL_NET_KEY), oldHandle = localStorage.getItem(SOCIAL_KEY);
+  if (oldNet && oldHandle) socials = [{ net: oldNet, handle: oldHandle }];
 }
+function saveSocials() {
+  localStorage.setItem(SOCIALS_KEY, JSON.stringify(socials));
+  updateAvatarVisibility();
+}
+function updateAvatarVisibility() {
+  const hasAuto = socials.some(s => ['x', 'github'].includes(s.net) && s.handle);
+  $('avatar-row').classList.toggle('hidden', hasAuto || !(nickEl.value || '').trim());
+}
+function renderSocials() {
+  const list = $('social-list');
+  list.innerHTML = '';
+  socials.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'pc-row social-item';
+    row.innerHTML =
+      `<select>${NETS.map(([v, l]) => `<option value="${v}"${v === s.net ? ' selected' : ''}>${l}</option>`).join('')}</select>` +
+      `<input maxlength="40" placeholder="usuário" value="${String(s.handle).replace(/"/g, '&quot;')}">` +
+      `<button class="social-del" title="remover" type="button">✕</button>`;
+    const sel = row.querySelector('select'), inp = row.querySelector('input'), del = row.querySelector('.social-del');
+    sel.onchange = () => { s.net = sel.value; saveSocials(); };
+    inp.oninput = () => {
+      let v = extractFromUrl(inp.value) || inp.value;
+      v = sanitizeHandle(v);
+      if (v !== inp.value) inp.value = v;
+      s.handle = v; saveSocials();
+    };
+    del.onclick = () => { socials.splice(i, 1); saveSocials(); renderSocials(); };
+    list.appendChild(row);
+  });
+  $('social-add').classList.toggle('hidden', socials.length >= 3);
+}
+$('social-add').onclick = () => { socials.push({ net: 'x', handle: '' }); saveSocials(); renderSocials(); };
+nickEl.addEventListener('input', updateAvatarVisibility);
+renderSocials();
 
 /* ---------------- global ranking API (via /api/* do site) ---------------- */
 const TOKEN_KEY = 'awpbr_token';
@@ -307,10 +353,10 @@ function showRanking() {
     : (st.rounds || 0) > 0 ? `~${fmt(st.rounds * 99)}`
     : st.matches > 0 ? `~${fmt(st.matches * 297)}` : '0min';
   const nick = (nickEl.value || 'VOCÊ').trim();
-  const social = socialUrl();
+  const social = socials.find(s => s.handle);
   $('rank-local').innerHTML =
     `<div style="grid-column:1/-1;text-align:center;color:var(--cs);font-size:18px">${nick}` +
-    (social ? ` · <span style="color:#8a8064;font-size:12px">${social.replace(/</g, '&lt;')}</span>` : '') + `</div>` +
+    (social ? ` · <span style="color:#8a8064;font-size:12px">${social.net}/${social.handle.replace(/</g, '&lt;')}</span>` : '') + `</div>` +
     `<div><b>${st.matches}</b>partidas</div><div><b>${st.wins > 0 ? st.wins : "—"}</b>vitórias</div><div><b>${kd}</b>K/D</div><div><b>${tempo}</b>arena</div>` +
     `<div><b>${st.kills}</b>kills</div><div><b>${st.deaths}</b>mortes</div><div><b>${st.headshots}</b>headshots</div><div><b>${st.rounds || 0}</b>rounds</div>`;
   show('ranking-panel');
@@ -368,6 +414,14 @@ const updLabels = () => {
 sensEl.oninput = () => { settings.sens = +sensEl.value; updLabels(); saveSettings(); };
 volEl.oninput = () => { settings.vol = +volEl.value; sfx.setVolume(settings.vol); updLabels(); saveSettings(); };
 qualEl.onchange = () => { settings.quality = qualEl.value; saveSettings(); if (game) game.applySettings(); };
+const speechEl = $('set-speech');
+speechEl.checked = settings.speech !== false;
+speechEl.onchange = () => {
+  settings.speech = speechEl.checked;
+  sfx.speechEnabled = settings.speech;
+  saveSettings();
+  if (game?.el?.hudSpeech) game.el.hudSpeech.textContent = settings.speech ? '🔊' : '🔇';
+};
 updLabels();
 
 /* ---------------- logo ---------------- */

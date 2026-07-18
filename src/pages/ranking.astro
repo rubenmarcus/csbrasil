@@ -2,7 +2,9 @@
 import Layout from '../layouts/Layout.astro';
 import { supabaseAdmin } from '../lib/supabase';
 import { displayTime } from '../lib/fmt';
-import { socialHref, socialAvatar } from '../lib/social';
+import { socialHref, socialAvatar, socialNet, socialHandle, NET_INFO } from '../lib/social';
+import { CHARS, charSvg } from '../lib/charsvg';
+import { sideOf } from '../lib/side';
 
 export const prerender = false;
 
@@ -17,30 +19,50 @@ if (supabaseAdmin) {
   {!configured && <p>Ranking ainda não configurado (envs do Supabase pendentes).</p>}
   {configured && players.length === 0 && <p>Ainda ninguém na arena. Seja o primeiro a cravar seu nome na treta: <a href="/">▶ JOGAR</a></p>}
   {players.length > 0 && (
-    <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <table>
       <thead>
-        <tr style="color:#8a8064;font-size:11px;letter-spacing:2px;text-align:left">
+        <tr>
           <th>#</th><th>JOGADOR</th><th>PART.</th><th>VIT.</th><th>K/D</th><th>KILLS</th><th>MORTES</th><th>HS</th><th>SEQ.</th><th>TEMPO</th><th>LADO</th>
         </tr>
       </thead>
       <tbody>
         {players.map((p, i) => (
           <tr style={`border-top:1px solid #2a2a20;${i < 3 ? 'color:#ffd23f;font-weight:bold' : 'color:#c9bfa4'}`}>
-            <td style="padding:8px 6px">{i + 1}</td>
-            <td style="padding:8px 6px">
-              {(() => { const av = p.avatar_url || socialAvatar(p.social_link); return av && <img src={av} alt="" width="22" height="22" style="border-radius:50%;vertical-align:-6px;margin-right:6px">; })()}
+            <td>{i + 1}</td>
+            <td>
+              {(() => {
+                const av = p.avatar_url || socialAvatar(p.social_link);
+                if (av) return <img src={av} alt="" width="24" height="24" style="border-radius:50%;vertical-align:-6px;margin-right:6px;object-fit:cover">;
+                if (p.last_character && CHARS[p.last_character]) {
+                  const [, sc] = sideOf(p.matches_p, p.matches_b);
+                  return (
+                    <svg width="24" height="24" viewBox="688 36 120 120" style="vertical-align:-5px;margin-right:6px;border-radius:50%">
+                      <Fragment set:html={charSvg(p.last_character, sc, `cav-r${i}`)} />
+                    </svg>
+                  );
+                }
+                return null;
+              })()}
               <a href={p.id ? `/u/${p.id}/${encodeURIComponent(p.nick)}` : `/u/${encodeURIComponent(p.nick)}`} style="color:inherit">{p.nick}</a>
-              {socialHref(p.social_link) && <a href={socialHref(p.social_link)} target="_blank" rel="noopener" style="color:#5a6b3a;font-size:11px"> · {p.social_link}</a>}
+              {(p.socials?.length ? p.socials : (p.social_link ? [{ net: socialNet(p.social_link), url: p.social_link }] : [])).map((s: any) => {
+                const net = s.net || socialNet(s.url), info = NET_INFO[net] || NET_INFO.site;
+                return (
+                  <a href={s.url} target="_blank" rel="noopener" title={info.label}
+                     style={`display:inline-block;min-width:20px;height:20px;line-height:20px;text-align:center;margin-left:5px;vertical-align:-4px;font-size:10px;font-weight:bold;color:${info.color};border:1px solid ${info.color};padding:0 3px;text-decoration:none`}>
+                    {info.short}
+                  </a>
+                );
+              })}
             </td>
-            <td style="padding:8px 6px">{p.matches}</td>
-            <td style="padding:8px 6px">{p.wins > 0 ? p.wins : "—"}</td>
-            <td style="padding:8px 6px">{p.kd}</td>
-            <td style="padding:8px 6px">{p.kills}</td>
-            <td style="padding:8px 6px">{p.deaths}</td>
-            <td style="padding:8px 6px">{p.headshots}</td>
-            <td style="padding:8px 6px">{p.best_streak}×</td>
-            <td style="padding:8px 6px">{displayTime(p)}</td>
-            <td style="padding:8px 6px">
+            <td>{p.matches}</td>
+            <td>{p.wins > 0 ? p.wins : "—"}</td>
+            <td>{p.kd}</td>
+            <td>{p.kills}</td>
+            <td>{p.deaths}</td>
+            <td>{p.headshots}</td>
+            <td>{p.best_streak}×</td>
+            <td>{displayTime(p)}</td>
+            <td>
               <span style="color:#ff8080">{p.matches_p}P</span> × <span style="color:#9dff9d">{p.matches_b}B</span>
             </td>
           </tr>

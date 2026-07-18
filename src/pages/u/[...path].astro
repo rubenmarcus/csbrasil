@@ -2,7 +2,9 @@
 import Layout from '../../layouts/Layout.astro';
 import { supabaseAdmin } from '../../lib/supabase';
 import { displayTime } from '../../lib/fmt';
-import { socialHref, socialAvatar } from '../../lib/social';
+import { socialHref, socialAvatar, socialNet, NET_INFO } from '../../lib/social';
+import { CHARS, charSvg } from '../../lib/charsvg';
+import { sideOf } from '../../lib/side';
 
 export const prerender = false;
 
@@ -13,7 +15,7 @@ let p: any = null, configured = !!supabaseAdmin;
 if (supabaseAdmin) {
   if (parts.length === 2) {
     const { data } = await supabaseAdmin
-      .from('stats').select('*, players!inner(id, nick, social_link, avatar_url)')
+      .from('stats').select('*, players!inner(id, nick, social_link, socials, avatar_url)')
       .eq('players.id', parts[0]).maybeSingle();
     p = data;
     if (p) {
@@ -51,31 +53,48 @@ const desc = p ? `${p.kills} kills · K/D ${kd} · ${p.wins > 0 ? p.wins : "—"
       <div style="display:flex;align-items:center;gap:16px">
         {(() => {
           const av = p.players.avatar_url || socialAvatar(p.players.social_link);
-          return av
-            ? <img src={av} alt={`Avatar de ${nick}`} width="72" height="72" style="border-radius:50%;border:2px solid #4a5a2a">
-            : <div style="width:72px;height:72px;border-radius:50%;border:2px solid #4a5a2a;background:#161a12;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--cs);font-family:'Arial Black',sans-serif">{p.nick[0].toUpperCase()}</div>;
+          if (av) return <img src={av} alt={`Avatar de ${nick}`} width="72" height="72" style="border-radius:50%;border:2px solid #4a5a2a;object-fit:cover">;
+          if (p.last_character && CHARS[p.last_character]) {
+            const [, sc] = sideOf(p.matches_p, p.matches_b);
+            return (
+              <svg width="72" height="72" viewBox="688 36 120 120" style="border-radius:50%;border:2px solid #4a5a2a;background:#161a12">
+                <Fragment set:html={charSvg(p.last_character, sc, 'cav-head')} />
+              </svg>
+            );
+          }
+          return <div style="width:72px;height:72px;border-radius:50%;border:2px solid #4a5a2a;background:#161a12;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--cs);font-family:'Arial Black',sans-serif">{p.nick[0].toUpperCase()}</div>;
         })()}
-        <h1 style="margin-bottom:4px">{nick}</h1>
+        <div>
+          <h1 style="margin-bottom:4px">{nick}</h1>
+          <div>
+            {(p.players.socials?.length ? p.players.socials : (p.players.social_link ? [{ net: socialNet(p.players.social_link), url: p.players.social_link }] : [])).map((s: any) => {
+              const net = s.net || socialNet(s.url), info = NET_INFO[net] || NET_INFO.site;
+              return (
+                <a href={s.url} target="_blank" rel="noopener" title={info.label}
+                   style={`display:inline-block;min-width:24px;height:24px;line-height:24px;text-align:center;margin-right:6px;font-size:11px;font-weight:bold;color:${info.color};border:1px solid ${info.color};padding:0 5px;text-decoration:none`}>
+                  {info.short}
+                </a>
+              );
+            })}
+          </div>
+        </div>
       </div>
       <p style="margin-top:0">
-        {p.players.social_link && (
-          <><a href={socialHref(p.players.social_link)} target="_blank" rel="noopener">{p.players.social_link}</a> · </>
-        )}
         <span style="color:#ff8080">{p.matches_p} partidas de Petista</span> ×
         <span style="color:#9dff9d">{p.matches_b} de Bolsonarista</span>
       </p>
       <img src={`/api/badge/${pid}.png`} alt={`Badge de ${nick} no CS BRASIL`} width="840" height="440" style="width:100%;max-width:840px;border-radius:10px;border:1px solid #3a3325">
       <h2>Stats</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;font-family:Consolas,monospace">
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.matches}</b>partidas</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.wins > 0 ? p.wins : "—"}</b>vitórias</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.rounds}</b>rounds</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{kd}</b>K/D</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.kills}</b>kills</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.deaths}</b>mortes</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.headshots}</b>headshots</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{p.best_streak}×</b>melhor sequência</div>
-        <div><b style="font-size:26px;color:var(--yellow);display:block">{tempo}</b>tempo de arena</div>
+      <div class="tstat">
+        <div><b>{p.matches}</b><span>partidas</span></div>
+        <div><b>{p.wins > 0 ? p.wins : "—"}</b><span>vitórias</span></div>
+        <div><b>{p.rounds}</b><span>rounds</span></div>
+        <div><b>{kd}</b><span>K/D</span></div>
+        <div><b>{p.kills}</b><span>kills</span></div>
+        <div><b>{p.deaths}</b><span>mortes</span></div>
+        <div><b>{p.headshots}</b><span>headshots</span></div>
+        <div><b>{p.best_streak}×</b><span>melhor sequência</span></div>
+        <div><b>{tempo}</b><span>tempo de arena</span></div>
       </div>
       <h2>Compartilhar</h2>
       <p>

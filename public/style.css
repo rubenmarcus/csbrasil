@@ -39,21 +39,41 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 .btn-big{font-size:24px;padding:16px 64px;border-color:var(--yellow);color:var(--yellow)}
 .btn-big:hover{background:var(--yellow);color:#221e14}
 .btn-back{position:absolute;top:26px;left:26px;font-size:13px;padding:9px 20px}
-.menu-buttons{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;z-index:1;width:min(520px,92vw)}
-.menu-buttons .btn{padding:10px 8px;font-size:13px;letter-spacing:1.5px}
-.menu-buttons #nick-input{grid-column:span 3;width:100%}
-.menu-buttons #social-net{grid-column:span 2;width:100%}
-.menu-buttons #social-input{grid-column:span 4;width:100%}
-.menu-buttons #btn-jogar{grid-column:1/-1;font-size:18px;padding:13px}
-.menu-buttons #btn-ranking,.menu-buttons #btn-howto,.menu-buttons #btn-settings{grid-column:span 2}
+.menu-buttons{display:flex;flex-direction:column;gap:16px;align-items:center;z-index:1;width:min(480px,92vw)}
+.profile-card{width:100%;background:rgba(10,12,8,.72);border:1px solid #3a4028;border-radius:10px;
+  padding:18px 20px;display:flex;flex-direction:column;gap:12px;backdrop-filter:blur(3px)}
+.pc-title{font-size:11px;letter-spacing:3px;color:#6b7b4a;border-bottom:1px solid #2a2e20;padding-bottom:8px}
+.pc-row{display:grid;grid-template-columns:2fr 4fr;gap:10px}
+#social-list{display:flex;flex-direction:column;gap:10px}
+.social-item{display:grid;grid-template-columns:2fr 3fr auto;gap:8px;align-items:center}
+.social-item select,.social-item input{font-family:Consolas,monospace;font-size:13px;letter-spacing:1px;
+  background:#10130c;border:2px solid #4a5a2a;border-radius:4px;color:var(--cs);padding:9px 10px;outline:none;width:100%}
+.social-item input.invalid{border-color:#e03232!important;animation:shake .3s}
+.social-del{background:transparent;border:1px solid #4a5a2a;border-radius:4px;color:#8a8064;cursor:pointer;
+  width:34px;height:34px;font-size:13px}
+.social-del:hover{border-color:#e03232;color:#e03232}
 #nick-input,#social-input,#social-net{font-family:Consolas,monospace;font-size:15px;letter-spacing:1px;text-align:center;
   background:#10130c;border:2px solid #4a5a2a;border-radius:4px;color:var(--cs);
-  padding:9px 12px;outline:none}
+  padding:10px 12px;outline:none;width:100%}
 #social-net{font-size:13px;cursor:pointer}
-#social-input{font-size:12px;padding:8px 12px}
+#social-input{font-size:13px}
 #social-input:disabled{opacity:.35;cursor:not-allowed}
-#nick-input:focus,#social-input:focus{border-color:var(--cs);box-shadow:0 0 14px rgba(184,217,74,.3)}
-#nick-input::placeholder,#social-input::placeholder{color:#5a6b3a}
+#social-input.invalid{border-color:#e03232!important;animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+#social-preview{font-size:11px;color:#5a6b3a;font-family:Consolas,monospace;min-height:14px;text-align:center}
+#avatar-row{display:flex;flex-direction:column;gap:6px;align-items:center}
+.btn-ghost{font-family:Consolas,monospace;font-size:12px;letter-spacing:1px;cursor:pointer;width:100%;
+  background:transparent;border:1px dashed #4a5a2a;border-radius:6px;color:#8a8064;padding:10px}
+.btn-ghost:hover{border-color:var(--cs);color:var(--cs)}
+#avatar-note{font-size:11px;color:var(--cs);font-family:Arial,sans-serif;min-height:13px}
+.menu-secondary{display:flex;gap:10px;width:100%}
+.menu-secondary .btn{flex:1;padding:10px 8px;font-size:13px;letter-spacing:1.5px}
+#btn-jogar{font-size:20px;padding:15px;letter-spacing:4px;width:100%}
+#hud-actions{position:absolute;top:14px;right:14px;display:flex;gap:8px;z-index:25}
+#hud-actions button{width:34px;height:34px;border-radius:6px;border:1px solid #4a5a2a;cursor:pointer;
+  background:rgba(8,10,6,.8);color:var(--cs);font-size:16px;pointer-events:auto}
+#hud-actions button:hover{border-color:var(--cs)}
+.set-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--yellow)}
 .rank-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 26px;font-family:Consolas,monospace;font-size:14px;color:#c9bfa4}
 .rank-stats b{color:var(--yellow);font-size:26px;display:block;text-align:center}
 .rank-note{font-size:12px;font-family:Arial,sans-serif;color:#8a8064;line-height:1.5}
@@ -72,8 +92,6 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 #auth-row .auth-chip{display:flex;align-items:center;gap:8px;color:#c9bfa4;font-size:12px;font-family:Arial,sans-serif}
 #auth-row .auth-chip img{width:26px;height:26px;border-radius:50%;border:1px solid #4a5a2a}
 #auth-row .auth-chip button{background:none;border:1px solid #4a5a2a;border-radius:4px;color:#8a8064;cursor:pointer;font-size:11px;padding:2px 8px}
-#avatar-row{grid-column:1/-1;display:flex;gap:10px;align-items:center;justify-content:center}
-#avatar-row .btn{font-size:11px;padding:8px 16px;letter-spacing:1px}
 #avatar-note{font-size:11px;color:var(--cs);font-family:Arial,sans-serif}
 
 /* ---------- team select ---------- */

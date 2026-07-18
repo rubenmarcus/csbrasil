@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.9.0] — 2026-07-18
+### Adicionado
+- **Tema terminal Y2K/Half-Life** no site: âmbar em fundo escuro, monospace,
+  cantos retos, scanlines, tabelas e cards terminal (Layout + páginas)
+- **Multi-redes sociais** (até 3) no card de perfil do menu, com extração
+  automática de handle ao colar URL e validação — `players.socials` (jsonb,
+  migration 008)
+- **Chips de rede** (ícones X/GH/IG/in/TT/YT) no ranking e perfil em vez da URL crua
+- **Personagem como fallback de ícone** no ranking e no perfil (charSvg
+  compartilhado via `src/lib/charsvg.ts`)
+- **Botões no HUD durante o jogo**: ⚙ configurações e 🔊/🔇 liga-desliga falas
+  (só memes — vitória/UT/arma continuam), também nas configurações
+
 ## [1.8.1] — 2026-07-18
 ### Mudado
 - Botões de login social removidos do menu (OAuth fica pra era multiplayer)

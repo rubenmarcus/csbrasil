@@ -12,6 +12,7 @@ create table if not exists public.players (
   nick        text not null unique check (char_length(nick) between 2 and 14),
   token       uuid not null,
   social_link text check (char_length(social_link) <= 60),
+  socials     jsonb not null default '[]'::jsonb,   -- [{net, url}] multi-redes
   avatar_url  text,                            -- OAuth avatar ou upload no Storage
   auth_user   uuid,                            -- Fase 3: link com auth.users(id)
   hidden      boolean not null default false,  -- moderação: esconde do ranking
@@ -44,6 +45,7 @@ alter table public.players enable row level security;
 alter table public.players add column if not exists avatar_url text;
 alter table public.players add column if not exists auth_user uuid;
 alter table public.players add column if not exists hidden boolean not null default false;
+alter table public.players add column if not exists socials jsonb not null default '[]'::jsonb;
 alter table public.stats add column if not exists rounds int not null default 0;
 alter table public.stats add column if not exists matches_p int not null default 0;
 alter table public.stats add column if not exists matches_b int not null default 0;
@@ -127,9 +129,9 @@ end $$;
 -- existente com create or replace)
 drop view if exists public.leaderboard;
 create view public.leaderboard as
-select p.id, s.nick, p.social_link, p.avatar_url, s.matches, s.wins, s.rounds,
+select p.id, s.nick, p.social_link, p.socials, p.avatar_url, s.matches, s.wins, s.rounds,
        s.matches_p, s.matches_b, s.kills, s.deaths,
-       s.headshots, s.best_streak, s.play_seconds,
+       s.headshots, s.best_streak, s.play_seconds, s.last_character,
        round(s.kills::numeric / greatest(s.deaths, 1), 2) as kd
 from stats s join players p on p.nick = s.nick
 where not p.hidden

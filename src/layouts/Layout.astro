@@ -25,30 +25,56 @@ const { title, description = 'FPS gratuito de navegador estilo CS 1.6: arena de 
 <script type="importmap">{ "imports": { "three": "/vendor/three.module.js" } }</script>
 <slot name="head" />
 <style is:global>
-:root{--red:#e03232;--green:#1faa4d;--yellow:#ffd23f;--dark:#0c0e11;--cs:#b8d94a}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:transparent;color:#f2ead8;font-family:Tahoma,Verdana,sans-serif;line-height:1.55}
+:root{
+  --red:#e03232;--green:#1faa4d;--yellow:#e8b34b;--amber:#e8b34b;--amber-dim:#9c7f45;
+  --line:#4a3c1e;--dark:#0a0a08;--cs:#e8b34b;
+}
+*{margin:0;padding:0;box-sizing:border-box;border-radius:0!important}
+html{background:#0a0a08}
+body{background:transparent;color:#d8cfae;font-family:"Lucida Console",Monaco,Consolas,monospace;line-height:1.55}
+a{color:var(--amber)}
 #bg-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0}
 #bg-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(ellipse at 50% 30%,rgba(12,14,17,.72) 0%,rgba(12,14,17,.88) 100%)}
+  background:radial-gradient(ellipse at 50% 30%,rgba(10,10,8,.76) 0%,rgba(10,10,8,.9) 100%)}
+#bg-scan{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.1;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.7) 2px 4px)}
 header,main,footer{position:relative;z-index:2}
-a{color:var(--cs)}
-header{display:flex;align-items:center;gap:18px;padding:14px 22px;background:rgba(20,18,12,.95);border-bottom:1px solid #3a3325;position:sticky;top:0;z-index:10}
-.logo{font-family:"Arial Black",Impact,sans-serif;letter-spacing:2px;font-size:18px;color:var(--yellow);text-decoration:none}
+header{display:flex;align-items:center;gap:18px;padding:12px 22px;background:rgba(10,9,5,.92);
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.logo{font-family:inherit;letter-spacing:3px;font-size:17px;font-weight:bold;color:var(--amber);text-decoration:none}
+.logo:before{content:"▸ "}
 nav{display:flex;gap:16px;flex-wrap:wrap}
-nav a{color:#c9bfa4;text-decoration:none;font-size:13px;letter-spacing:1px}
-nav a:hover{color:#fff}
-.btn-play{margin-left:auto;background:var(--yellow);color:#221e14!important;font-weight:bold;padding:8px 20px;border-radius:5px}
-main{max-width:900px;margin:0 auto;padding:36px 20px 60px}
-h1{font-family:"Arial Black",Impact,sans-serif;letter-spacing:3px;color:var(--yellow);font-size:30px;margin-bottom:14px}
-h2{color:var(--yellow);letter-spacing:2px;font-size:19px;margin:28px 0 10px}
-p,li{color:#c9bfa4;font-size:15px}
-footer{border-top:1px solid #3a3325;padding:18px 22px;text-align:center;color:#8a8064;font-size:12px}
+nav a{color:var(--amber-dim);text-decoration:none;font-size:12px;letter-spacing:2px}
+nav a:hover{color:var(--amber)}
+.btn-play{margin-left:auto;background:var(--amber);color:#141008!important;font-weight:bold;
+  letter-spacing:2px;padding:8px 20px;border:1px solid var(--amber)}
+.btn-play:hover{background:#141008;color:var(--amber)!important}
+main{max-width:960px;margin:0 auto;padding:34px 20px 60px}
+h1{font-weight:bold;letter-spacing:4px;color:var(--amber);font-size:24px;margin-bottom:14px}
+h1:before{content:"▸ ";color:var(--amber-dim)}
+h2{color:var(--amber);letter-spacing:2px;font-size:16px;margin:26px 0 10px}
+h2:before{content:"▸ ";color:var(--amber-dim)}
+p,li{color:#c9bfa4;font-size:14px}
+footer{border-top:1px solid var(--line);padding:16px 22px;text-align:center;color:var(--amber-dim);font-size:11px;letter-spacing:1px}
+details{margin-bottom:8px;border:1px solid var(--line);padding:8px 14px;background:rgba(16,14,8,.7)}
+summary{cursor:pointer;color:var(--amber)}
+table{border-collapse:collapse;width:100%}
+th{color:var(--amber-dim);font-size:11px;letter-spacing:2px;text-align:left;
+  padding:8px 10px;border-bottom:1px solid var(--amber)}
+td{padding:7px 10px;border-bottom:1px solid #241d0e}
+tr:hover td{background:rgba(232,179,75,.06)}
+input,select,button{font-family:inherit}
+code{color:var(--amber)}
+.tstat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;font-family:inherit}
+.tstat>div{border:1px solid var(--line);background:rgba(16,14,8,.75);padding:10px 12px}
+.tstat b{color:var(--amber);font-size:22px;display:block}
+.tstat span{color:var(--amber-dim);font-size:11px;letter-spacing:1px}
 </style>
 </head>
 <body>
 <canvas id="bg-canvas"></canvas>
 <div id="bg-overlay"></div>
+<div id="bg-scan"></div>
 <script type="module" src="/js/site-bg.js"></script>
 <header>
   <a class="logo" href="/">CS BRASIL</a>
