@@ -6,7 +6,9 @@ import { buildCharacter, poseCharacter, byId, CHARACTERS, buildRifle } from './c
 export const WEAPONS = {
   awp:    { name: 'AWP "DELIBERADOR"', short: 'AWP', dmg: 400, mag: 5, reserve: 25, rate: 1.7, reload: 3.1, spreadHip: 0.075, spreadScope: 0.0008, recoil: 0.055, scope: true },
   pistol: { name: 'PT-38 "APITO"', short: 'PT-38', dmg: 34, mag: 12, reserve: 48, rate: 0.24, reload: 1.6, spreadHip: 0.02, recoil: 0.014, scope: false },
-  knife:  { name: 'FACA "CONVERSA FIADA"', short: 'FACA', dmg: 55, rate: 0.55, range: 2.4, reload: 0, recoil: 0.02, scope: false },
+  knife:    { name: 'FACA "CONVERSA FIADA"', short: 'FACA', dmg: 55, rate: 0.55, range: 2.4, reload: 0, recoil: 0.02, scope: false },
+  shotgun:  { name: 'ESCOPETA "PAMPEIRO"', short: 'ESCOPETA', dmg: 22, pellets: 8, mag: 6, reserve: 24, rate: 0.95, reload: 2.8, spreadHip: 0.13, recoil: 0.07, scope: false },
+  ak47:     { name: 'AK-47 "CARAMELO"', short: 'AK-47', dmg: 33, mag: 25, reserve: 75, rate: 0.092, reload: 2.4, spreadHip: 0.028, recoil: 0.022, auto: true, scope: false },
 };
 const ROUND_TIME = 99, ROUNDS_TO_WIN = 3, RESPAWN_DELAY = 2.5, PICKUP_RESPAWN = 8;
 const BOT_SPEED = 3.3, BOT_EYE = 1.5;
@@ -32,6 +34,7 @@ export class Game {
     this.time = 0;
     this.mk = { count: 0, until: 0, life: 0 };
     this.radioOpen = null;
+    this.mouseHeld = false;
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.08, 400);
@@ -51,8 +54,8 @@ export class Game {
       isPlayer: true, name: (nickname || '').trim().slice(0, 14) || 'VOCÊ', def: this.playerDef, team: playerTeam,
       pos: new THREE.Vector3(), vel: new THREE.Vector3(),
       yaw: 0, pitch: 0, hp: 100, alive: true, respawnAt: 0, crouchF: 0,
-      weapon: 'awp', scoped: false, reloadUntil: 0, nextShotAt: 0, drawUntil: 0,
-      ammo: { awp: { mag: WEAPONS.awp.mag, res: WEAPONS.awp.reserve }, pistol: { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve } },
+      weapon: 'awp', primaryWeapon: 'awp', scoped: false, reloadUntil: 0, nextShotAt: 0, drawUntil: 0,
+      ammo: { awp: { mag: WEAPONS.awp.mag, res: WEAPONS.awp.reserve }, pistol: { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve }, shotgun: { mag: WEAPONS.shotgun.mag, res: WEAPONS.shotgun.reserve }, ak47: { mag: WEAPONS.ak47.mag, res: WEAPONS.ak47.reserve } },
       kills: 0, deaths: 0, headshots: 0, grounded: true, stepPhase: 0, revealedAt: -99,
     };
     this.combatants.push(this.player);
@@ -102,6 +105,13 @@ export class Game {
     this._dom();
     this._input();
     this._applyQuality();
+    this.el.weaponPicker?.addEventListener('click', e => {
+      const w = e.target.closest('[data-w]')?.dataset.w;
+      if (w && WEAPONS[w]) {
+        this.player.primaryWeapon = w;
+        this.el.weaponPicker.querySelectorAll('.wpick').forEach(b => b.classList.toggle('active', b.dataset.w === w));
+      }
+    });
     this.radarCtx = this.el.radar ? this.el.radar.getContext('2d') : null;
     // botões do HUD: configurações + liga/desliga falas (memes)
     this.el.hudSettings.onclick = () => this.onOpenSettings?.();
@@ -129,6 +139,7 @@ export class Game {
       pause: $('pause-menu'), radar: $('radar'),
       radioMenu: $('radio-menu'), radioLog: $('radio-log'), mkBanner: $('mk-banner'),
       lockHint: $('lock-hint'), hudSpeech: $('hud-speech'), hudSettings: $('hud-settings'),
+      weaponPicker: $('weapon-picker'),
     };
   }
 
@@ -148,21 +159,62 @@ export class Game {
     const handR = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.09, 0.11), skin); handR.position.set(0, -0.085, 0.02); awp.add(handR);
     const handL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); handL.position.set(0.005, -0.04, -0.3); awp.add(handL);
     awp.position.set(0.26, -0.23, -0.5); awp.rotation.y = 0.03;
-    // pistol
+    // pistol - PT-38 "APITO" (redesenhada)
     const pistol = new THREE.Group();
-    pistol.add(new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.09, 0.22), dark(0x333333)));
-    const pgrip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.06), dark(0x3a2a1e));
-    pgrip.position.set(0, -0.09, 0.08); pgrip.rotation.x = 0.25; pistol.add(pgrip);
-    const handP = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.1, 0.08), skin); handP.position.set(0, -0.1, 0.08); pistol.add(handP);
-    pistol.position.set(0.24, -0.2, -0.42);
+    pistol.add(new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.058, 0.22), dark(0x282828)));  // slide
+    pistol.add(new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.032, 0.18), dark(0x363636)));  // frame inferior
+    const pBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.07, 6), dark(0x1a1a1a));
+    pBarrel.rotation.x = Math.PI / 2; pBarrel.position.set(0, 0.012, -0.13); pistol.add(pBarrel);
+    const pGuard = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.044, 0.06), dark(0x363636));
+    pGuard.position.set(0, -0.032, 0.06); pistol.add(pGuard);
+    const pGrip = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.14, 0.068), dark(0x4a3a2a));
+    pGrip.position.set(0, -0.1, 0.08); pGrip.rotation.x = 0.18; pistol.add(pGrip);
+    const handP = new THREE.Mesh(new THREE.BoxGeometry(0.078, 0.11, 0.09), skin); handP.position.set(0, -0.11, 0.07); pistol.add(handP);
+    pistol.position.set(0.25, -0.19, -0.38);
     // knife
     const knife = new THREE.Group();
     const blade = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.05, 0.3), dark(0xb8c0c8)); blade.position.z = -0.2; knife.add(blade);
     knife.add(new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.12), dark(0x2a1e14)));
     const handK = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.08, 0.08), skin); handK.position.set(0, -0.02, 0.03); knife.add(handK);
     knife.position.set(0.28, -0.22, -0.4); knife.rotation.set(-0.2, 0.25, -0.15);
-    root.add(awp, pistol, knife);
-    return { root, awp, pistol, knife, kick: 0, bobPhase: 0, reloadDip: 0 };
+    // shotgun - ESCOPETA "PAMPEIRO" (cano duplo)
+    const shotgun = new THREE.Group();
+    shotgun.add(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.068, 0.52), dark(0x4a3020)));  // corpo
+    const sBL = new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.017, 0.52, 7), dark(0x1c1c1c));
+    sBL.rotation.x = Math.PI / 2; sBL.position.set(-0.016, 0.026, -0.48); shotgun.add(sBL);  // cano esq
+    const sBR = new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.017, 0.52, 7), dark(0x1c1c1c));
+    sBR.rotation.x = Math.PI / 2; sBR.position.set(0.016, 0.026, -0.48); shotgun.add(sBR);   // cano dir
+    const sRib = new THREE.Mesh(new THREE.BoxGeometry(0.007, 0.008, 0.5), dark(0x777777));
+    sRib.position.set(0, 0.042, -0.48); shotgun.add(sRib);  // nervura entre canos
+    const sPump = new THREE.Mesh(new THREE.BoxGeometry(0.056, 0.056, 0.21), dark(0x6b4e30));
+    sPump.position.set(0, -0.006, -0.29); shotgun.add(sPump);  // pump
+    const sStock = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.1, 0.24), dark(0x4a3020));
+    sStock.position.set(0, -0.038, 0.28); shotgun.add(sStock);  // coronha
+    const sTrig = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.05, 0.07), dark(0x3c2618));
+    sTrig.position.set(0, -0.055, 0.1); shotgun.add(sTrig);  // guarda-gatilho
+    const handSR = new THREE.Mesh(new THREE.BoxGeometry(0.078, 0.095, 0.11), skin); handSR.position.set(0, -0.09, 0.09); shotgun.add(handSR);
+    const handSL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.068, 0.09), skin); handSL.position.set(0, -0.016, -0.3); shotgun.add(handSL);
+    shotgun.position.set(0.26, -0.22, -0.48); shotgun.visible = false;
+    // ak47 - AK-47 "CARAMELO"
+    const ak47 = new THREE.Group();
+    ak47.add(new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.08, 0.42), dark(0x3a2c14)));  // receptor
+    const akBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.46, 6), dark(0x222222));
+    akBarrel.rotation.x = Math.PI / 2; akBarrel.position.set(0, 0.014, -0.43); ak47.add(akBarrel);
+    const akFlash = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.015, 0.05, 6), dark(0x1a1a1a));
+    akFlash.rotation.x = Math.PI / 2; akFlash.position.set(0, 0.014, -0.67); ak47.add(akFlash);
+    const akGas = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.28, 5), dark(0x2a2a2a));
+    akGas.rotation.x = Math.PI / 2; akGas.position.set(0, 0.052, -0.35); ak47.add(akGas);
+    const akMag = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.17, 0.065), dark(0x1e1e1e));
+    akMag.position.set(0, -0.118, 0.02); akMag.rotation.x = 0.22; ak47.add(akMag);  // pente curvo
+    const akPGrip = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.12, 0.065), dark(0x4a3418));
+    akPGrip.position.set(0, -0.1, 0.16); akPGrip.rotation.x = 0.28; ak47.add(akPGrip);
+    const akStock = new THREE.Mesh(new THREE.BoxGeometry(0.044, 0.062, 0.22), dark(0x4a3418));
+    akStock.position.set(0, -0.026, 0.28); ak47.add(akStock);
+    const handAR = new THREE.Mesh(new THREE.BoxGeometry(0.076, 0.094, 0.1), skin); handAR.position.set(0, -0.09, 0.14); ak47.add(handAR);
+    const handAL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); handAL.position.set(0.004, -0.036, -0.27); ak47.add(handAL);
+    ak47.position.set(0.26, -0.23, -0.5); ak47.rotation.y = 0.02; ak47.visible = false;
+    root.add(awp, pistol, knife, shotgun, ak47);
+    return { root, awp, pistol, knife, shotgun, ak47, kick: 0, bobPhase: 0, reloadDip: 0 };
   }
 
   _makePuffTexture() {
@@ -192,7 +244,7 @@ export class Game {
       if (e.code === 'KeyZ') { this._radioShow('z'); return; }
       if (e.code === 'KeyX') { this._radioShow('x'); return; }
       if (e.code === 'KeyV') { this._radioShow('c'); return; }
-      if (e.code === 'Digit1') this._switchWeapon('awp');
+      if (e.code === 'Digit1') this._switchWeapon(this.player.primaryWeapon);
       if (e.code === 'Digit2') this._switchWeapon('pistol');
       if (e.code === 'Digit3') this._switchWeapon('knife');
       if (e.code === 'KeyM') this._switchTeam();
@@ -211,10 +263,10 @@ export class Game {
           this._requestLock();
         return;
       }
-      if (e.button === 0) this._tryShoot();
+      if (e.button === 0) { this.mouseHeld = true; this._tryShoot(); }
       if (e.button === 2) this._scope(true);
     };
-    this._mu = e => { if (e.button === 2) this._scope(false); };
+    this._mu = e => { if (e.button === 2) this._scope(false); if (e.button === 0) this.mouseHeld = false; };
     this._mm = e => {
       if (!this._acceptInput()) return;
       const s = this.settings.sens * 0.0021 * (this.player.scoped ? 0.45 : 1);
@@ -303,11 +355,14 @@ export class Game {
     this.player.pitch = 0; this.player.vel.set(0, 0, 0); this.player.crouchF = 0;
     this.player.ammo.awp = { mag: WEAPONS.awp.mag, res: WEAPONS.awp.reserve };
     this.player.ammo.pistol = { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve };
-    this.player.weapon = 'awp'; this.player.scoped = false; this.player.reloadUntil = 0;
+    this.player.ammo.shotgun = { mag: WEAPONS.shotgun.mag, res: WEAPONS.shotgun.reserve };
+    this.player.ammo.ak47 = { mag: WEAPONS.ak47.mag, res: WEAPONS.ak47.reserve };
+    const pw = this.player.primaryWeapon;
+    this.player.weapon = pw; this.player.scoped = false; this.player.reloadUntil = 0;
     for (const d of this.drops) this.scene.remove(d.mesh);
     this.drops = [];
-    this.vm.awp.visible = true; this.vm.pistol.visible = false; this.vm.knife.visible = false;
-    this.el.weaponName.textContent = WEAPONS.awp.name;
+    ['awp','pistol','knife','shotgun','ak47'].forEach(k => this.vm[k].visible = k === pw);
+    this.el.weaponName.textContent = WEAPONS[pw].name;
     const slots = { P: 1, B: 0 };
     for (const b of this.bots) {
       place(b, b.team, slots[b.team]++);
@@ -441,12 +496,15 @@ export class Game {
   _switchWeapon(w) {
     const p = this.player;
     if (p.weapon === w || !p.alive) return;
+    if (w !== p.primaryWeapon && w !== 'pistol' && w !== 'knife') return;
     p.weapon = w; p.reloadUntil = 0; p.drawUntil = this.time + 0.28;
     this.vm.reloadDip = 0;   // evita arma travada inclinada ao trocar no meio da recarga
     this._scope(false, true);
     this.vm.awp.visible = w === 'awp';
     this.vm.pistol.visible = w === 'pistol';
     this.vm.knife.visible = w === 'knife';
+    this.vm.shotgun.visible = w === 'shotgun';
+    this.vm.ak47.visible = w === 'ak47';
     this.el.weaponName.textContent = WEAPONS[w].name;
     this.el.reloadNote.classList.add('hidden');
     if (w === 'knife') this.sfx.knifeDeploy(); else this.sfx.uiClick();
@@ -486,17 +544,25 @@ export class Game {
     p.nextShotAt = this.time + w.rate;
     p.revealedAt = this.time;
     if (p.weapon === 'awp') setTimeout(() => this.sfx.bolt(), 420);
-    this.sfx[p.weapon === 'awp' ? 'shotAwp' : 'shotPistol']();
-    // spread & direction — crouching tightens it up
+    const _sfxMap = { awp: 'shotAwp', pistol: 'shotPistol', shotgun: 'shotShotgun', ak47: 'shotAk' };
+    this.sfx[_sfxMap[p.weapon] || 'shotPistol']();
+    // spread & direction — crouching tightens aim
     const crouchMul = 1 - 0.5 * p.crouchF;
-    const spread = (p.weapon === 'awp' ? (p.scoped ? w.spreadScope : w.spreadHip) : w.spreadHip) * crouchMul;
-    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
-    dir.x += (Math.random() - .5) * spread; dir.y += (Math.random() - .5) * spread; dir.z += (Math.random() - .5) * spread;
-    dir.normalize();
+    const baseSpread = (p.weapon === 'awp' ? (p.scoped ? w.spreadScope : w.spreadHip) : w.spreadHip) * crouchMul;
     const from = this.camera.getWorldPosition(new THREE.Vector3());
-    this._fireHitscan(this.player, from, dir, w.dmg, true, w.short);
+    const pellets = w.pellets || 1;
+    for (let i = 0; i < pellets; i++) {
+      const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+      const spread = baseSpread * (pellets > 1 ? (0.4 + Math.random() * 0.6) : 1);
+      dir.x += (Math.random() - .5) * spread; dir.y += (Math.random() - .5) * spread * 0.7; dir.z += (Math.random() - .5) * spread;
+      dir.normalize();
+      this._fireHitscan(this.player, from, dir, w.dmg, true, w.short);
+    }
     // recoil + muzzle flash
-    p.pitch += w.recoil * (1 - 0.25 * p.crouchF); this.vm.kick = 1;
+    const recoilMul = 1 - 0.25 * p.crouchF;
+    p.pitch += w.recoil * recoilMul;
+    if (p.weapon === 'ak47') p.yaw += (Math.random() - 0.5) * w.recoil * 0.5 * recoilMul;
+    this.vm.kick = 1;
     this._flash(this.camera.localToWorld(new THREE.Vector3(0.26, -0.2, -1.1)));
     if (p.weapon === 'awp') this._scope(false, true);
   }
@@ -660,15 +726,17 @@ export class Game {
 
   /* ================= player physics ================= */
   _collide(pos, r) {
-    for (const c of this.world.colliders) {
-      const nx = Math.max(c.minX, Math.min(pos.x, c.maxX));
-      const nz = Math.max(c.minZ, Math.min(pos.z, c.maxZ));
-      const dx = pos.x - nx, dz = pos.z - nz;
-      const d2 = dx * dx + dz * dz;
-      if (d2 < r * r && pos.y + 1.5 > c.minY && pos.y + 0.3 < c.maxY) {
-        if (d2 < 1e-8) { pos.x += r; continue; }
-        const d = Math.sqrt(d2), push = (r - d) / d;
-        pos.x += dx * push; pos.z += dz * push;
+    for (let pass = 0; pass < 2; pass++) {
+      for (const c of this.world.colliders) {
+        const nx = Math.max(c.minX, Math.min(pos.x, c.maxX));
+        const nz = Math.max(c.minZ, Math.min(pos.z, c.maxZ));
+        const dx = pos.x - nx, dz = pos.z - nz;
+        const d2 = dx * dx + dz * dz;
+        if (d2 < r * r && pos.y + 1.5 > c.minY && pos.y + 0.3 < c.maxY) {
+          if (d2 < 1e-8) { pos.x += r; continue; }
+          const d = Math.sqrt(d2), push = (r - d) / d;
+          pos.x += dx * push; pos.z += dz * push;
+        }
       }
     }
     const B = this.world.bounds;
@@ -680,6 +748,8 @@ export class Game {
     if (!p.alive) {
       const left = p.respawnAt - this.time;
       this.el.respawnCount.textContent = Math.max(0, left).toFixed(1);
+      if (this.el.weaponPicker)
+        this.el.weaponPicker.querySelectorAll('.wpick').forEach(b => b.classList.toggle('active', b.dataset.w === p.primaryWeapon));
       if (left <= 0) this._respawnPlayer();
       this.camera.position.y = Math.max(0.5, this.camera.position.y - dt * 2);
       this.camera.rotation.z = Math.min(0.5, (this.camera.rotation.z || 0) + dt * 0.8);
@@ -696,11 +766,11 @@ export class Game {
     const sin = Math.sin(p.yaw), cos = Math.cos(p.yaw);
     // camera: forward = (-sin, -cos), right = (cos, -sin)  →  wish = right*ix + forward*(-iz)
     const wx = ix * cos + iz * sin, wz = -ix * sin + iz * cos;
-    const accel = p.grounded ? 42 : 8;
+    const accel = p.grounded ? 42 : 12;
     p.vel.x += wx * accel * dt; p.vel.z += wz * accel * dt;
     if (p.grounded) {
-      const f = Math.max(0, 1 - 9 * dt);
-      if (!ix && !iz) { p.vel.x *= f; p.vel.z *= f; }
+      const f = Math.max(0, 1 - ((ix || iz) ? 5 : 11) * dt);
+      p.vel.x *= f; p.vel.z *= f;
     }
     const sp = Math.hypot(p.vel.x, p.vel.z);
     if (sp > maxSp) { p.vel.x *= maxSp / sp; p.vel.z *= maxSp / sp; }
@@ -728,7 +798,9 @@ export class Game {
     // camera (eye drops when crouched)
     const eye = 1.62 - 0.52 * p.crouchF;
     this.camera.position.set(p.pos.x, p.pos.y + eye, p.pos.z);
-    this.camera.rotation.set(p.pitch, p.yaw, 0);
+    const rollTarget = -ix * 0.018 * (1 - p.crouchF);
+    this._camRoll = (this._camRoll || 0) + (rollTarget - (this._camRoll || 0)) * Math.min(1, dt * 10);
+    this.camera.rotation.set(p.pitch, p.yaw, this._camRoll);
     // footsteps + view bob
     const moving = sp > 0.6 && p.grounded;
     if (moving) {
@@ -754,7 +826,7 @@ export class Game {
       this.vm.reloadDip = Math.max(0, this.vm.reloadDip - dt * 6); // safety: nunca trava inclinado
       if (p.reloadUntil > 0) {
         p.reloadUntil = 0;
-        for (const k of ['awp', 'pistol']) {
+        for (const k of ['awp', 'pistol', 'shotgun', 'ak47']) {
           const am = p.ammo[k], wm = WEAPONS[k].mag;
           if (am.mag < wm && am.res > 0) { const need = wm - am.mag, take = Math.min(need, am.res); am.mag += take; am.res -= take; }
         }
@@ -763,10 +835,13 @@ export class Game {
         this.vm.reloadDip = 0;
       }
     }
+    // auto-fire for automatic weapons
+    if (this.mouseHeld && WEAPONS[p.weapon]?.auto && this._acceptInput()) this._tryShoot();
     // view model animation
     this.vm.kick = Math.max(0, this.vm.kick - dt * 6);
-    const bobY = moving ? Math.sin(p.stepPhase * 2) * 0.012 : 0;
-    this.vm.root.position.set(0, bobY - this.vm.reloadDip * 0.18 - p.crouchF * 0.02, this.vm.kick * 0.09);
+    const bobY = moving ? Math.sin(p.stepPhase * 2) * 0.016 : 0;
+    const bobX = moving ? Math.sin(p.stepPhase) * 0.007 : 0;
+    this.vm.root.position.set(bobX, bobY - this.vm.reloadDip * 0.18 - p.crouchF * 0.02, this.vm.kick * 0.09);
     this.vm.root.rotation.x = this.vm.kick * 0.12 + this.vm.reloadDip * 0.9;
   }
   // fy_pool_day ground weapons: anyone who runs over one grabs it (CS-1.6 style).
@@ -846,6 +921,10 @@ export class Game {
     p.hp = 100; p.alive = true; p.crouchF = 0;
     p.yaw = p.team === 'P' ? Math.PI : 0; p.pitch = 0;
     p.ammo.awp.mag = WEAPONS.awp.mag; p.ammo.pistol.mag = WEAPONS.pistol.mag;
+    p.ammo.shotgun.mag = WEAPONS.shotgun.mag; p.ammo.ak47.mag = WEAPONS.ak47.mag;
+    p.weapon = p.primaryWeapon;
+    ['awp','pistol','knife','shotgun','ak47'].forEach(k => this.vm[k].visible = k === p.primaryWeapon);
+    this.el.weaponName.textContent = WEAPONS[p.primaryWeapon].name;
     this.camera.rotation.z = 0;
     this.el.respawn.classList.add('hidden');
     this.sfx.respawn();

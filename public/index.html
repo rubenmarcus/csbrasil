@@ -243,6 +243,7 @@
   <div id="hud-bottom-left">
     <div id="hp-row"><span id="hp-cross">✚</span><span id="hp-num">100</span></div>
     <div id="hp-bar"><div id="hp-fill"></div></div>
+    <div id="hud-rank"></div>
   </div>
   <div id="hud-bottom-right">
     <div id="weapon-name">AWP "DELIBERADOR"</div>
@@ -257,7 +258,12 @@
   <div id="respawn-overlay" class="hidden">
     <div class="rip">💀 ELIMINADO 💀</div>
     <div>Respawn em <span id="respawn-count">3</span>s…</div>
-    <div class="rip-sub">A treta continua sem você. Por enquanto.</div>
+    <div class="rip-sub">Escolha sua arma para o próximo life:</div>
+    <div id="weapon-picker">
+      <button class="wpick active" data-w="awp">① AWP<br><small>Sniper · 1 tiro mata</small></button>
+      <button class="wpick" data-w="shotgun">② ESCOPETA<br><small>Cano duplo · 8 perdigões</small></button>
+      <button class="wpick" data-w="ak47">③ AK-47<br><small>Rifle · automática</small></button>
+    </div>
   </div>
   <div id="scoreboard" class="hidden">
     <h3>CS BRASIL — PLACAR</h3>
@@ -282,6 +288,7 @@
     <h1 id="match-title">PETISTAS VENCERAM!</h1>
     <p id="match-sub" class="big"></p>
     <div id="match-stats"></div>
+    <div id="match-rank-progress"></div>
     <button id="btn-again" class="btn btn-big">REVANCHE</button>
     <button id="btn-menu" class="btn">MENU PRINCIPAL</button>
   </div>

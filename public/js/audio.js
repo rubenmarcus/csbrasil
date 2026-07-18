@@ -105,6 +105,17 @@ export class Sfx {
   }
   shotPistol(){ const s = this._cs('pistol'); if (s) { this._sample(s); return; }
     this.ensure(); this._burst(.14, .55, 1400); this._beep('sine', 200, 70, .15, .3); }
+  shotShotgun() {
+    this.ensure();
+    this._burst(.44, .8, 480);
+    this._burst(.3, .6, 1800);
+    this._beep('sine', 85, 30, .6, .5);
+  }
+  shotAk() {
+    this.ensure();
+    this._burst(.2, .54, 1900);
+    this._beep('sine', 165, 60, .22, .18);
+  }
   knife()     { const s = this._cs('knife'); if (s) { this._sample(s); return; }
     this.ensure(); this._burst(.1, .3, 3000, 2, 'bandpass'); }
   knifeHit()  { const s = this._cs('knifehit'); if (s) { this._sample(s); return; }
