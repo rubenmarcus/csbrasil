@@ -297,12 +297,12 @@ export function buildPoolDay(scene, T) {
   /* ---------------- mais obstáculos (cover no deck) ---------------- */
   // pilares de sustentação (cover alto)
   for (const px of [-10, 10]) for (const pz of [-14, 0, 14]) {
-    addBox(1.1, 6.5, 1.1, lam({ map: T ? T.concrete : undefined, color: 0xc8c4bc }), px, 0, pz);
+    addBox(1.1, 6.5, 1.1, lam({ map: T.concrete }), px, 0, pz);
   }
   // bancos de vestiário (cover baixo em fileira)
   for (const s of [-1, 1]) for (let i = 0; i < 3; i++) {
     const bz = s * (6 + i * 5), bx = s * 4;
-    addBox(3.2, 0.45, 0.8, lam({ map: GM && GM.wood }), bx, 0, bz);
+    addBox(3.2, 0.45, 0.8, GM.wood, bx, 0, bz);
     addBox(0.15, 0.45, 0.7, lam({ color: 0x2a2a2a }), bx - 1.4, 0, bz, { collide: false });
     addBox(0.15, 0.45, 0.7, lam({ color: 0x2a2a2a }), bx + 1.4, 0, bz, { collide: false });
   }

@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.12.3] — 2026-07-18
+### Corrigido
+- **Modo de armas também filtra o mapa**: em SÓ PISTOLAS/FACA/AWP os pickups
+  incompatíveis somem do chão (não só da mão do jogador)
+- Home: RANKING/COMO JOGAR/CONFIG viraram botões laterais menores; dropdown
+  de armas agora é custom com **ícones SVG das armas** (mesmo CSS do dropdown
+  de mapa)
+
+## [1.12.2] — 2026-07-18
+### Mudado
+- **Nick obrigatório** pra jogar: sem nome, o JOGAR não deixa passar (campo
+  treme, fica vermelho e pede "DIGITE UM NICK PRIMEIRO!")
+
+## [1.12.1] — 2026-07-18
+### Adicionado
+- **Modo de armas** (dropdown ao lado do mapa): TODAS / SÓ PISTOLAS (pistola +
+  deagle nos pickups) / SÓ FACA (sem armas nem pickups) / SÓ AWP (sem pistola,
+  pickups só de AWP) — afeta loadout inicial e quais pickups o jogador pode
+  pegar com E (bots seguem no padrão AWP)
+
+## [1.12.0] — 2026-07-18
+### Adicionado
+- **Arsenal completo**: AK-47, M4A1, MP5, Escopeta M3 e Deagle jogáveis
+  (auto-fire com bloom, 8 pellets na M3, viewmodels próprios, sons reais da
+  pasta `audio/weapons/`) além da AWP, pistola e faca
+- **Captura com E** + hint `[E] PEGAR <ARMA>` (bots continuam pegando andando)
+- **M mostra a seleção de personagem** do novo time antes de trocar de lado
+- **Dropdown de mapas** na home (depois dos campos, antes do JOGAR)
+- Mais obstáculos no Piscinão (pilares, bancos, boxes de chuveiro, lixeiras)
+  e no Sítio (fardos de feno, trator, poço, bebedouro, cercas extras)
+
 ## [1.11.0] — 2026-07-18
 ### Adicionado
 - **Mapa fy_pool_day "Piscinão da Treta"** (cherry-pick do PR #3 de

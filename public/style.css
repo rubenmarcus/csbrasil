@@ -58,10 +58,29 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 #social-net{font-size:13px;cursor:pointer}
 #social-input{font-size:13px}
 #social-input:disabled{opacity:.35;cursor:not-allowed}
-#social-input.invalid{border-color:#e03232!important;animation:shake .3s}
+#nick-input.invalid,#social-input.invalid{border-color:#e03232!important;animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 #social-preview{font-size:11px;color:#5a6b3a;font-family:Consolas,monospace;min-height:14px;text-align:center}
 #avatar-row{display:flex;flex-direction:column;gap:6px;align-items:center}
+.side-actions{position:absolute;left:22px;top:38%;display:flex;flex-direction:column;gap:8px;z-index:2}
+.btn-side{font-size:11px;padding:8px 14px;letter-spacing:1px;min-width:120px;text-align:left}
+/* dropdown custom (com ícone) — mesmo visual do select de mapa */
+.dd{position:relative;width:100%}
+.dd-btn{display:flex;align-items:center;justify-content:space-between;width:100%;cursor:pointer;
+  font-family:Consolas,monospace;font-size:14px;letter-spacing:1px;
+  background:#10130c;border:2px solid #4a5a2a;border-radius:4px;color:var(--cs);padding:10px 12px;outline:none}
+.dd-btn:hover,.dd-btn.open{border-color:var(--cs)}
+.dd-arrow{font-size:12px;opacity:.7}
+.dd-list{position:absolute;left:0;right:0;z-index:30;
+  background:#0d100a;border:2px solid #4a5a2a;border-radius:4px;overflow:hidden;
+  top:calc(100% + 4px)}
+#wpn-dd .dd-list{top:auto;bottom:calc(100% + 4px)}   /* baixo na tela: abre pra cima */
+.dd-item{display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;text-align:left;
+  font-family:Consolas,monospace;font-size:13px;letter-spacing:1px;color:var(--cs);
+  background:transparent;border:0;padding:10px 12px}
+.dd-item:hover{background:#2a3018}
+.dd-item svg,.dd-cur svg{flex:0 0 auto}
+.dd-cur{display:flex;align-items:center;gap:10px}
 .map-label{display:flex;flex-direction:column;gap:6px;font-size:11px;letter-spacing:2px;color:#6b7b4a}
 #map-select{font-family:Consolas,monospace;font-size:14px;letter-spacing:1px;text-align:center;
   background:#10130c;border:2px solid #4a5a2a;border-radius:4px;color:var(--cs);padding:10px 12px;

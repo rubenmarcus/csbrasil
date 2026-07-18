@@ -9,7 +9,7 @@ import { VERSION } from './version.js';
 
 /* ---------------- settings & nickname ---------------- */
 const SETTINGS_KEY = 'awpbr_settings';
-const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP },
+const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP, wpnMode: 'all' },
   JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 const saveSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 const NICK_KEY = 'awpbr_nick';
@@ -170,6 +170,13 @@ $('avatar-file').onchange = async e => {
 
 /* ---------------- menu wiring ---------------- */
 $('btn-jogar').onclick = () => {
+  if (!(nickEl.value || '').trim()) {
+    nickEl.classList.add('invalid');
+    nickEl.placeholder = 'DIGITE UM NICK PRIMEIRO!';
+    nickEl.focus();
+    setTimeout(() => nickEl.classList.remove('invalid'), 1500);
+    return;   // sem nick, sem treta
+  }
   sfx.uiClick();
   const firstEmpty = socials.find(s => !s.handle);
   if (firstEmpty) {
@@ -194,6 +201,34 @@ mapSel.onchange = () => {
   settings.map = currentMap; saveSettings();
   rebuildMenuBackdrop();
 };
+const wpnSel = { value: settings.wpnMode || 'all' };
+// dropdown custom de modo de armas (com ícones SVG originais)
+const WPN_ICONS = {
+  all: `<svg width="22" height="14" viewBox="0 0 22 14" fill="none"><path d="M1 9l8-6 1 1-8 6-1-1zm20-2L13 1l-1 1 8 6 1-1z" fill="currentColor"/><rect x="9" y="6" width="4" height="7" fill="currentColor"/></svg>`,
+  pistols: `<svg width="20" height="14" viewBox="0 0 20 14" fill="none"><path d="M1 2h12v4H9v6H5V6H1V2z" fill="currentColor"/><rect x="9" y="1" width="4" height="3" fill="currentColor"/></svg>`,
+  knife: `<svg width="20" height="14" viewBox="0 0 20 14" fill="none"><path d="M1 12L14 1l4 1-3 11-8 2-6-3z" fill="currentColor"/><rect x="1" y="10" width="5" height="3" fill="currentColor"/></svg>`,
+  awp: `<svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="4" width="26" height="3" fill="currentColor"/><rect x="7" y="0" width="8" height="4" fill="currentColor"/><rect x="2" y="7" width="6" height="4" fill="currentColor"/></svg>`,
+};
+const WPN_MODES = [
+  { id: 'all', label: 'TODAS' },
+  { id: 'pistols', label: 'SÓ PISTOLAS' },
+  { id: 'knife', label: 'SÓ FACA' },
+  { id: 'awp', label: 'SÓ AWP' },
+];
+const wpnDdBtn = $('wpn-dd-btn'), wpnDdList = $('wpn-dd-list'), wpnDdLabel = $('wpn-dd-label');
+function wpnLabel(id) {
+  const m = WPN_MODES.find(m => m.id === id);
+  wpnDdLabel.innerHTML = `<span class="dd-cur">${WPN_ICONS[id]}<span>${m ? m.label : id}</span></span>`;
+}
+wpnDdList.innerHTML = WPN_MODES.map(m =>
+  `<button class="dd-item" data-id="${m.id}" type="button">${WPN_ICONS[m.id]}<span>${m.label}</span></button>`).join('');
+wpnLabel(wpnSel.value);
+wpnDdBtn.onclick = e => { e.stopPropagation(); wpnDdList.classList.toggle('hidden'); wpnDdBtn.classList.toggle('open'); };
+document.addEventListener('click', () => { wpnDdList.classList.add('hidden'); wpnDdBtn.classList.remove('open'); });
+wpnDdList.querySelectorAll('.dd-item').forEach(b => b.onclick = () => {
+  settings.wpnMode = b.dataset.id; saveSettings();
+  wpnLabel(settings.wpnMode); sfx.uiClick();
+});
 $('btn-howto').onclick = () => { sfx.uiClick(); show('howto-panel'); };
 $('howto-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
 $('btn-settings').onclick = () => { sfx.uiClick(); settingsReturn = 'main-menu'; show('settings-panel'); };
@@ -428,14 +463,18 @@ function pickTeam(team) {
   currentTeam = team;
   const list = $('char-list');
   list.innerHTML = '';
-  CHARACTERS.filter(c => c.team === team).forEach((c, i) => {
+  const chars = CHARACTERS.filter(c => c.team === team);
+  let firstRow = null;
+  chars.forEach((c, i) => {
     const row = document.createElement('button');
     row.className = 'char-row';
     row.innerHTML = `<img src="${pvThumb(c)}" alt="${c.name}"><span>${c.name}</span>`;
     row.onclick = () => { sfx.uiClick(); selectChar(c, row); };
     list.appendChild(row);
-    if (i === 0) selectChar(c, row);
+    if (i === 0) firstRow = row;
   });
+  // seleciona DEPOIS de gerar todos os thumbs — senão o preview fica com o último
+  if (firstRow) selectChar(chars[0], firstRow);
   show('char-select');
 }
 function selectChar(c, row) {
