@@ -31,6 +31,8 @@ O novo cliente Godot 4.7.1 é desenvolvido em paralelo em `godot/`; ele ainda
 não substitui a versão Three.js publicada. Consulte o
 [guia de desenvolvimento Godot](docs/development/godot.md) para configurar o
 VS Code, executar testes e gerar a exportação Web.
+Quem estiver preparando o ambiente pela primeira vez pode seguir o
+[runbook para testar o cliente Godot](docs/runbooks/testar-cliente-godot.md).
 
 A exportação paralela já inclui shell SEO/AEO, analytics, áudio opcional e uma
 configuração Vercel própria. O preview pode ser preparado localmente com

@@ -4,6 +4,9 @@ O port Godot é desenvolvido em `godot/` sem substituir o cliente Three.js. A
 versão fixada é Godot 4.7.1 Standard, com export templates 4.7.1, renderer
 Compatibility, GDScript e GUT 9.7.1.
 
+Para preparar uma máquina do zero e executar a validação completa, siga o
+[runbook de testes do cliente Godot](../runbooks/testar-cliente-godot.md).
+
 ## Pré-requisitos
 
 - Godot 4.7.1 Standard e export templates 4.7.1.
