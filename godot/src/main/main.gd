@@ -79,7 +79,7 @@ func _process(delta: float) -> void:
 	var procedural_state := match_controller.current_procedural_state()
 	var persisted := ui.persisted_state()
 	JavaScriptBridge.eval(
-		"window.__csbrasilPlayerState={x:%f,y:%f,z:%f,crouch:%f,captured:%s,health:%d,weaponId:'%s',ammo:%d,reserve:%d,scoped:%s,botAlive:%s,botRespawn:%f,actorCount:%d,petistasCount:%d,bolsonaristasCount:%d,round:%d,roundSeconds:%f,petistasKills:%d,bolsonaristasKills:%d,scoreboardVisible:%s,arenaSignature:'%s',arenaGeometryCount:%d,proceduralMaterialCount:%d,visualSignatureCount:%d,uiState:'%s',nickname:%s,mouseSensitivity:%f,volume:%f,quality:'%s',selectedTeam:'%s',selectedCharacter:'%s'};" % [
+		"window.__csbrasilPlayerState={x:%f,y:%f,z:%f,crouch:%f,captured:%s,health:%d,weaponId:'%s',ammo:%d,reserve:%d,scoped:%s,botAlive:%s,botRespawn:%f,actorCount:%d,petistasCount:%d,bolsonaristasCount:%d,round:%d,roundSeconds:%f,petistasKills:%d,bolsonaristasKills:%d,scoreboardVisible:%s,arenaSignature:'%s',arenaGeometryCount:%d,proceduralMaterialCount:%d,visualSignatureCount:%d,uiState:'%s',nickname:%s,mouseSensitivity:%f,volume:%f,quality:'%s',fps:%d,selectedTeam:'%s',selectedCharacter:'%s'};" % [
 			player.position.x,
 			player.position.y,
 			player.position.z,
@@ -109,6 +109,7 @@ func _process(delta: float) -> void:
 			float(persisted.mouse_sensitivity),
 			float(persisted.volume),
 			String(persisted.quality),
+			Engine.get_frames_per_second(),
 			String(ui.flow.selected_team),
 			String(ui.flow.selected_character),
 		]

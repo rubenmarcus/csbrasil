@@ -12,7 +12,8 @@
 	"test:web:audio": "playwright test tests/web/audio.spec.mjs",
 	"test:web:shell": "playwright test tests/web/shell.spec.mjs",
 	"test:web:analytics": "playwright test tests/web/analytics.spec.mjs",
-    "test:web": "playwright test tests/web"
+    "test:web:performance": "playwright test tests/web/performance.spec.mjs --headed",
+    "test:web": "playwright test tests/web --grep-invert @performance"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1"

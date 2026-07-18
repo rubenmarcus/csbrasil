@@ -48,7 +48,22 @@
       "command": "${workspaceFolder}/scripts/serve-godot-web.sh",
       "isBackground": true,
       "problemMatcher": []
+    },
+    {
+      "label": "Godot: Test Web",
+      "type": "process",
+      "command": "npm",
+      "args": ["run", "test:web"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Godot: Test Web Performance",
+      "type": "process",
+      "command": "npm",
+      "args": ["run", "test:web:performance"],
+      "group": "test",
+      "problemMatcher": []
     }
   ]
 }
-

@@ -13,6 +13,8 @@ func test_vscode_exposes_required_godot_tasks() -> void:
 	assert_has(labels, "Godot: Test")
 	assert_has(labels, "Godot: Export Web")
 	assert_has(labels, "Godot: Serve Web")
+	assert_has(labels, "Godot: Test Web")
+	assert_has(labels, "Godot: Test Web Performance")
 
 
 func test_vscode_declares_godot_debugger_and_extension() -> void:

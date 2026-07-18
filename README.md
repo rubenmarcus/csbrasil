@@ -37,6 +37,8 @@ configuração Vercel própria. O preview pode ser preparado localmente com
 `scripts/build-vercel.sh`; `vercel.json` continua servindo o cliente legado até
 o gate explícito de corte. Quando autorizado, a configuração de preview pode
 ser usada pela CLI com `--local-config vercel.godot-preview.json`.
+Os resultados da matriz funcional e das partidas de cinco minutos estão no
+[relatório de paridade Godot Web](docs/reports/2026-07-18-godot-web-parity.md).
 
 ## Controles
 
