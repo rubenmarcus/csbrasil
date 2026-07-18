@@ -99,20 +99,11 @@ function badgeSvg(p: any, avatarUri: string | null, charId: string | null): stri
     ['SEQUÊNCIA', `${p.best_streak}×`], ['ROUNDS', String(p.rounds)], ['TEMPO', displayTime(p)],
   ];
   const grid = cells.map(([label, v], i) => {
-    const x = 46 + (i % 3) * 260, y = 246 + Math.floor(i / 3) * 66;
-    return `<rect x="${x}" y="${y}" width="248" height="58" rx="10" fill="#12160e" stroke="#2a2e20"/>
-    <text x="${x + 16}" y="${y + 36}" font-size="26" font-weight="bold" fill="#ffd23f" font-family="DejaVu Sans">${v}</text>
-    <text x="${x + 16}" y="${y + 50}" font-size="11" fill="#8a8064" font-family="DejaVu Sans" letter-spacing="1">${label}</text>`;
+    const x = 46 + (i % 3) * 260, y = 228 + Math.floor(i / 3) * 70;
+    return `<rect x="${x}" y="${y}" width="248" height="62" rx="10" fill="#12160e" stroke="#2a2e20"/>
+    <text x="${x + 16}" y="${y + 38}" font-size="27" font-weight="bold" fill="#ffd23f" font-family="DejaVu Sans">${v}</text>
+    <text x="${x + 16}" y="${y + 53}" font-size="11" fill="#8a8064" font-family="DejaVu Sans" letter-spacing="1">${label}</text>`;
   }).join('');
-
-  // skyline fictional Brasília no rodapé
-  const skyline = `<g fill="#161a20">
-    <rect x="0" y="418" width="840" height="22"/>
-    <rect x="596" y="398" width="10" height="24"/><rect x="612" y="398" width="10" height="24"/>
-    <path d="M 560 418 a 16 16 0 0 1 32 0 z"/>
-    <path d="M 632 402 a 16 16 0 0 0 32 0 z"/>
-    <rect x="180" y="404" width="34" height="18"/><rect x="230" y="396" width="26" height="26"/><rect x="90" y="408" width="40" height="14"/>
-  </g>`;
 
   const avatar = avatarUri
     ? `<defs><clipPath id="cav"><circle cx="748" cy="96" r="56"/></clipPath></defs>
@@ -125,15 +116,14 @@ function badgeSvg(p: any, avatarUri: string | null, charId: string | null): stri
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="840" height="440" viewBox="0 0 840 440">
   <rect width="840" height="440" fill="#0c0e11"/>
-  <circle cx="748" cy="96" r="210" fill="${sideColor}" opacity="0.07"/>
+  <circle cx="748" cy="96" r="200" fill="${sideColor}" opacity="0.07"/>
   <rect width="840" height="6" fill="#e03232"/><rect y="434" width="840" height="6" fill="#1faa4d"/>
-  ${skyline}
-  <text x="56" y="66" font-size="24" font-weight="bold" fill="#ffd23f" font-family="DejaVu Sans" letter-spacing="5">CS BRASIL</text>
-  <text x="660" y="66" font-size="17" fill="${sideColor}" font-family="DejaVu Sans" text-anchor="end" font-weight="bold">${sideLabel} · ${p.matches_p}P × ${p.matches_b}B</text>
-  <text x="56" y="148" font-size="56" font-weight="bold" fill="#f2ead8" font-family="DejaVu Sans">${esc(p.nick)}</text>
-  ${p.social ? `<text x="56" y="184" font-size="19" fill="#b8d94a" font-family="DejaVu Sans">${esc(p.social)}</text>` : ''}
-  ${cName ? `<text x="56" y="212" font-size="17" fill="#8a8064" font-family="DejaVu Sans">joga de ${esc(cName)}</text>` : ''}
-  <rect x="46" y="234" width="748" height="1.5" fill="#3a3325"/>
+  <text x="56" y="60" font-size="22" font-weight="bold" fill="#ffd23f" font-family="DejaVu Sans" letter-spacing="5">CS BRASIL</text>
+  <text x="660" y="60" font-size="16" fill="${sideColor}" font-family="DejaVu Sans" text-anchor="end" font-weight="bold">${sideLabel} · ${p.matches_p}P × ${p.matches_b}B</text>
+  <text x="56" y="132" font-size="54" font-weight="bold" fill="#f2ead8" font-family="DejaVu Sans">${esc(p.nick)}</text>
+  ${p.social ? `<text x="56" y="166" font-size="18" fill="#b8d94a" font-family="DejaVu Sans">${esc(p.social)}</text>` : ''}
+  ${cName ? `<text x="56" y="194" font-size="16" fill="#8a8064" font-family="DejaVu Sans">joga de ${esc(cName)}</text>` : ''}
+  <rect x="46" y="212" width="748" height="1.5" fill="#3a3325"/>
   ${avatar}
   ${grid}
 </svg>`;

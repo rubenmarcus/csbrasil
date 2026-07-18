@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.5] — 2026-07-18
+### Corrigido
+- Proporções do card de badge: cabeçalho compacto, grade 3×3 com margem real,
+  skyline removida (colidia com a última linha de stats)
+
 ## [1.7.4] — 2026-07-18
 ### Adicionado
 - **Mortes (deaths)** no ranking, perfil, painel local e badge (agora em grade
