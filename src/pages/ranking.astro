@@ -9,9 +9,12 @@ import { sideOf } from '../lib/side';
 export const prerender = false;
 
 let players: any[] = [], configured = !!supabaseAdmin;
+let onlineNicks = new Set<string>();
 if (supabaseAdmin) {
   const { data } = await supabaseAdmin.from('leaderboard').select('*');
   players = data ?? [];
+  const { data: on } = await supabaseAdmin.from('online_now').select('nick');
+  onlineNicks = new Set((on ?? []).map((r: any) => r.nick));
 }
 const PAGE_SIZE = 25;
 const page = Math.max(1, parseInt(Astro.url.searchParams.get('page') || '1', 10) || 1);
@@ -48,6 +51,7 @@ const rows = players.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE);
                 }
                 return null;
               })()}
+              {onlineNicks.has(p.nick) && <span title="online agora" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3fdd57;box-shadow:0 0 6px #3fdd57;margin-right:6px;vertical-align:1px"></span>}
               <a href={p.id ? `/u/${p.id}/${encodeURIComponent(p.nick)}` : `/u/${encodeURIComponent(p.nick)}`} style="color:inherit">{p.nick}</a>
               {(p.socials?.length ? p.socials : (p.social_link ? [{ net: socialNet(p.social_link), url: p.social_link }] : [])).map((s: any) => {
                 const net = s.net || socialNet(s.url), info = NET_INFO[net] || NET_INFO.site;
