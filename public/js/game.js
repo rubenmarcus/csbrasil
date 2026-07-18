@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { MAPS, resolveMapId } from './maps.js';
 import { buildCharacter, poseCharacter, byId, CHARACTERS, buildRifle } from './characters.js';
+import { buildCharacterModel } from './glbchars.js';
 
 export const WEAPONS = {
   awp:    { name: 'AWP "DELIBERADOR"', short: 'AWP', dmg: 400, mag: 5, reserve: 25, rate: 1.7, reload: 3.1, spreadHip: 0.075, spreadScope: 0.0008, recoil: 0.055, scope: true },
@@ -76,7 +77,7 @@ export class Game {
     const allyDefs = CHARACTERS.filter(c => c.team === playerTeam && c.id !== playerCharId).slice(0, 3);
     const enemyDefs = CHARACTERS.filter(c => c.team === this.enemyTeam).slice(0, 4);
     const mkBot = (def, team, i) => {
-      const c = buildCharacter(def);
+      const c = buildCharacterModel(def) || buildCharacter(def);
       c.group.traverse(o => { o.userData.botOwner = null; });
       const bot = {
         isPlayer: false, name: def.name, def, team,
@@ -85,6 +86,7 @@ export class Game {
         target: null, reactAt: 0, nextShotAt: 0, skill: 0.85 + Math.random() * 0.35, weapon: 'awp',
         path: null, pathIdx: 0, repathAt: 0, roamIdx: 0, phase: 0, think: Math.random() * 0.2,
         deadT: 0, strafeT: Math.random() * 10, revealedAt: -99,
+        crouchBias: Math.random() < 0.45, // ~half the bots hold angles crouched (AWPer style)
       };
       c.group.traverse(o => { o.userData.botOwner = bot; });
       this.scene.add(c.group);
@@ -381,6 +383,7 @@ export class Game {
       b.mesh.group.rotation.set(0, b.yaw, 0);
       b.mesh.group.position.copy(b.pos);
       b.mesh.group.visible = true;
+      if (b.mesh.isGLB) b.mesh.ctrl.revive();
     }
   }
 
@@ -482,8 +485,9 @@ export class Game {
       const newDef = defs[(Math.random() * defs.length) | 0];
       swapBot.def = newDef; swapBot.name = newDef.name;
       this.scene.remove(swapBot.mesh.group);
-      swapBot.mesh.group.traverse(o => { if (o.geometry) o.geometry.dispose(); });
-      swapBot.mesh = buildCharacter(newDef);
+      // GLB clones share geometry with the cached template — never dispose it here.
+      if (!swapBot.mesh.isGLB) swapBot.mesh.group.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+      swapBot.mesh = buildCharacterModel(newDef) || buildCharacter(newDef);
       swapBot.mesh.group.traverse(o => { o.userData.botOwner = swapBot; });
       this.scene.add(swapBot.mesh.group);
       swapBot.target = null; swapBot.path = null; swapBot.hp = 100; swapBot.alive = true;
@@ -952,17 +956,27 @@ export class Game {
     const g = b.mesh.group;
     if (!b.alive) {
       b.deadT += dt;
-      g.rotation.x = Math.max(-Math.PI / 2, g.rotation.x - dt * 5);
-      g.position.y = b.pos.y + Math.max(-0.6, 0 - b.deadT * 0.3);
+      if (b.mesh.isGLB) {
+        b.mesh.ctrl.die();
+        b.mesh.ctrl.update(dt, 0, false);
+      } else {
+        g.rotation.x = Math.max(-Math.PI / 2, g.rotation.x - dt * 5);
+        g.position.y = b.pos.y + Math.max(-0.6, 0 - b.deadT * 0.3);
+      }
       if (this.time >= b.respawnAt && (this.state === 'live')) {
         const s = this.world.spawns[b.team][(Math.random() * 4) | 0];
         b.pos.set(s.x, 0, s.z); b.hp = 100; b.alive = true;
         b.target = null; b.path = null; b.yaw = b.team === 'P' ? 0 : Math.PI;
         g.rotation.set(0, b.yaw, 0); g.position.copy(b.pos); g.visible = true;
+        if (b.mesh.isGLB) b.mesh.ctrl.revive();
       }
       return;
     }
-    if (this.state !== 'live') { poseCharacter(b.mesh.parts, 0, 0, this.time); return; }
+    if (this.state !== 'live') {
+      if (b.mesh.isGLB) b.mesh.ctrl.update(dt, 0, false);
+      else poseCharacter(b.mesh.parts, 0, 0, this.time);
+      return;
+    }
 
     // --- think: target acquisition
     b.think -= dt;
@@ -1025,6 +1039,7 @@ export class Game {
         this._tracer(from.clone().add(dir.clone().multiplyScalar(0.7)), end);
         this._flash(from.clone().add(dir.clone().multiplyScalar(0.85)));
         this.sfx.shotAwp();
+        if (b.mesh.isGLB) b.mesh.ctrl.shoot();
       }
     } else {
       // --- roam toward enemy half
@@ -1061,10 +1076,15 @@ export class Game {
       }
     }
     b.pos.y = this.world.groundHeightAt(b.pos.x, b.pos.z);
-    b.phase += dt * (moving ? 9 : 0);
     g.position.copy(b.pos);
     g.rotation.set(0, b.yaw, 0);
-    poseCharacter(b.mesh.parts, b.phase, moving, this.time);
+    if (b.mesh.isGLB) {
+      b.mesh.ctrl.setCrouch(!!b.target && b.crouchBias);
+      b.mesh.ctrl.update(dt, moving, !!b.target);
+    } else {
+      b.phase += dt * (moving ? 9 : 0);
+      poseCharacter(b.mesh.parts, b.phase, moving, this.time);
+    }
   }
 
   /* ================= radar (CS-style) ================= */

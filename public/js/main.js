@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { initTextures } from './textures.js';
 import { CHARACTERS, buildCharacter } from './characters.js';
+import { preloadCharacterAssets, GLB_CHARS } from './glbchars.js';
 import { MAPS, MAP_IDS, DEFAULT_MAP, resolveMapId } from './maps.js';
 import { Sfx } from './audio.js';
 import { Game } from './game.js';
@@ -104,6 +105,9 @@ async function startGame(team, charId) {
   if (game) game.dispose();
   show(null);
   await sfxReady;   // make sure voice/CS samples are registered before round 1 sounds
+  // Preload real GLB character models + shared animation clips (bots). Falls back to
+  // procedural box meshes for any archetype that isn't modeled yet.
+  await preloadCharacterAssets([...GLB_CHARS]);
   game = new Game({
     renderer, textures, sfx, settings,
     playerCharId: charId, playerTeam: team, mapId: currentMap,
