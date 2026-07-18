@@ -17,22 +17,22 @@ func test_movement_match_composes_arena_and_player_scenes() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
 	assert_not_null(match_scene.get_node_or_null("Arena"))
-	assert_true(match_scene.get_node("Player") is CharacterBody3D)
-	assert_eq(match_scene.get_node("Player").position, Vector3(0.0, 0.1, 8.0))
+	assert_true(match_scene.get_node("Actors/Player") is CharacterBody3D)
+	assert_eq(match_scene.get_node("Actors/Player").position, Vector3(0.0, 0.1, 8.0))
 
 
 func test_main_hosts_the_playable_movement_match() -> void:
 	var main := (load(MAIN_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(main)
 	assert_not_null(main.get_node_or_null("WorldHost/Match"))
-	assert_not_null(main.get_node_or_null("WorldHost/Match/Player"))
+	assert_not_null(main.get_node_or_null("WorldHost/Match/Actors/Player"))
 	assert_eq(main.get_node("GuiHost/BootPanel/Status").text, "CLIQUE PARA CAPTURAR O MOUSE · WASD PARA MOVER")
 
 
 func test_player_walks_and_center_obstacle_blocks_forward_motion() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
-	var player := match_scene.get_node("Player") as CharacterBody3D
+	var player := match_scene.get_node("Actors/Player") as CharacterBody3D
 	await wait_physics_frames(10)
 
 	Input.action_press("move_forward")
@@ -47,7 +47,7 @@ func test_player_walks_and_center_obstacle_blocks_forward_motion() -> void:
 func test_player_jumps_and_crouch_lowers_the_camera() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
-	var player := match_scene.get_node("Player") as CharacterBody3D
+	var player := match_scene.get_node("Actors/Player") as CharacterBody3D
 	await wait_physics_frames(10)
 
 	Input.action_press("crouch")
@@ -66,7 +66,7 @@ func test_player_jumps_and_crouch_lowers_the_camera() -> void:
 func test_player_climbs_steps_within_legacy_height_limit() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
-	var player := match_scene.get_node("Player") as CharacterBody3D
+	var player := match_scene.get_node("Actors/Player") as CharacterBody3D
 	player.position = Vector3(6.0, 0.1, 6.0)
 	await wait_physics_frames(10)
 

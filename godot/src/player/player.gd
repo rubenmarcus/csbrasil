@@ -6,7 +6,7 @@ signal health_changed(current: int)
 signal weapon_state_changed(weapon_name: String, ammo: int, reserve: int)
 signal shot_fired(result: Dictionary)
 signal scope_changed(active: bool)
-signal died
+signal died(source: Node, headshot: bool)
 signal respawned
 
 const MovementConfigScript := preload("res://src/player/movement_config.gd")
@@ -14,6 +14,9 @@ const MovementMotorScript := preload("res://src/player/movement_motor.gd")
 
 @export var movement_config: Resource = MovementConfigScript.new()
 @export var accepts_input: bool = true
+@export var actor_id: StringName = &"player"
+@export var display_name: String = "Jogador"
+@export var team: StringName = &"P"
 
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var camera: Camera3D = $CameraPivot/Camera3D
@@ -26,9 +29,12 @@ var scoped: bool = false
 var input_session_active: bool = false
 var respawn_delay: float = 2.5
 var respawn_remaining: float = 0.0
+var alive: bool = true
+var kills: int = 0
+var deaths: int = 0
+var spawn_position: Vector3
 var _pitch: float = 0.0
 var _motor: RefCounted
-var _spawn_position: Vector3
 
 var weapon: Node3D:
 	get:
@@ -40,7 +46,7 @@ func _ready() -> void:
 	# The scene resource is shared; each actor must own its mutable crouch shape.
 	collision_shape.shape = collision_shape.shape.duplicate()
 	camera.fov = movement_config.base_fov
-	_spawn_position = global_position
+	spawn_position = global_position
 	health.damaged.connect(_on_health_damaged)
 	health.died.connect(_on_health_died)
 	weapon_inventory.ammo_changed.connect(_on_ammo_changed)
@@ -133,7 +139,8 @@ func switch_weapon(weapon_id: StringName) -> bool:
 
 func respawn() -> void:
 	health.reset()
-	global_position = _spawn_position
+	alive = true
+	global_position = spawn_position
 	velocity = Vector3.ZERO
 	accepts_input = true
 	visible = true
@@ -141,6 +148,15 @@ func respawn() -> void:
 	set_scoped(false)
 	health_changed.emit(health.current_health)
 	respawned.emit()
+
+
+func reset_for_round() -> void:
+	respawn_remaining = 0.0
+	respawn()
+
+
+func target_point() -> Vector3:
+	return camera.global_position
 
 
 func capture_pointer() -> void:
@@ -183,13 +199,15 @@ func _on_health_damaged(_amount: int, current: int, _source: Node, _headshot: bo
 	health_changed.emit(current)
 
 
-func _on_health_died(_source: Node, _headshot: bool) -> void:
+func _on_health_died(source: Node, headshot: bool) -> void:
+	alive = false
+	deaths += 1
 	respawn_remaining = respawn_delay
 	accepts_input = false
 	release_pointer()
 	set_scoped(false)
 	collision_shape.set_deferred("disabled", true)
-	died.emit()
+	died.emit(source, headshot)
 
 
 func _on_ammo_changed(ammo: int, reserve: int) -> void:

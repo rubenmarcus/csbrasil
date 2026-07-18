@@ -50,7 +50,7 @@
   - tests: unitários por arma; integração de inventário e HUD.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:weapons`
 
-- [~] **Entregar partida 4×4 completa** (test-type: both)
+- [x] **Entregar partida 4×4 completa** (test-type: both)
   - blocked-by: inventário com pistola e faca
   - summary: instanciar sete bots, portar IA/waypoints, spawns, pontuação,
     rounds, scoreboard, killfeed e condição de vitória.
@@ -60,7 +60,7 @@
     round de 99 segundos, empate, respawn e vitória por três rounds verificados.
   - tests: unitários para regras/seleção de alvo/path; integração de partida
     acelerada e smoke test Web.
-  - verification: `godot --headless --path godot --script res://tests/test_runner.gd -- match && npm run test:web:match`
+  - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:match`; `npm run test:web`
 
 - [ ] **Portar arena e personagens procedurais completos** (test-type: both)
   - blocked-by: partida 4×4 completa
