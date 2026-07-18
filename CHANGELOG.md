@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.11.0] — 2026-07-18
+### Adicionado
+- **Mapa fy_pool_day "Piscinão da Treta"** (cherry-pick do PR #3 de
+  [@daltonfontes](https://github.com/daltonfontes) 🎉) + registro de mapas
+  (`js/maps.js`) e seletor MAPA no menu — estilo "full weapons" com 22
+  pickups de arma no chão
+- **Weapon drop**: morto larga a arma no chão (CS clássico); passar por cima
+  pega + munição cheia — drops somem ao ser pegos, pickups do mapa respawnam
+- **Dificuldade 1.5x**: precisão ×1.5 (c/ bônus de posição parada), reação e
+  cadência dos bots 1.5× mais rápidas, dano 42→63; jogador com troca de arma
+  e scope mais responsivos
+- **Bots mais espertos**: caçam quem atirou neles mesmo sem ver o atacante
+- **+2 personagens**: Jovem Místico (P — faixa, cristal, aura calibrada) e
+  Coach Quântico (B — blazer, headset, "DESPROGRAME-SE"); roster 5×5, 4×4
+  mantido em campo
+
 ## [1.10.0] — 2026-07-18
 ### Adicionado
 - **Anti-trainer (servidor)**: consistência física no RPC — kills ≤ 45/round

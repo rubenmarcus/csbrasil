@@ -1,7 +1,7 @@
 // Core game: FPS controller, weapons, bots, rounds, HUD.
 import * as THREE from 'three';
 import { MAPS, resolveMapId } from './maps.js';
-import { buildCharacter, poseCharacter, byId, CHARACTERS } from './characters.js';
+import { buildCharacter, poseCharacter, byId, CHARACTERS, buildRifle } from './characters.js';
 
 export const WEAPONS = {
   awp:    { name: 'AWP "DELIBERADOR"', short: 'AWP', dmg: 400, mag: 5, reserve: 25, rate: 1.7, reload: 3.1, spreadHip: 0.075, spreadScope: 0.0008, recoil: 0.055, scope: true },
@@ -59,8 +59,8 @@ export class Game {
 
     // ---- bots ----
     this.bots = [];
-    const allyDefs = CHARACTERS.filter(c => c.team === playerTeam && c.id !== playerCharId);
-    const enemyDefs = CHARACTERS.filter(c => c.team === this.enemyTeam);
+    const allyDefs = CHARACTERS.filter(c => c.team === playerTeam && c.id !== playerCharId).slice(0, 3);
+    const enemyDefs = CHARACTERS.filter(c => c.team === this.enemyTeam).slice(0, 4);
     const mkBot = (def, team, i) => {
       const c = buildCharacter(def);
       c.group.traverse(o => { o.userData.botOwner = null; });
@@ -88,6 +88,7 @@ export class Game {
     this.tracers = [];
     this.puffs = [];
     this.flashes = [];
+    this.drops = [];
     this.puffTex = this._makePuffTexture();
     this.ray = new THREE.Raycaster();
 
@@ -303,6 +304,8 @@ export class Game {
     this.player.ammo.awp = { mag: WEAPONS.awp.mag, res: WEAPONS.awp.reserve };
     this.player.ammo.pistol = { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve };
     this.player.weapon = 'awp'; this.player.scoped = false; this.player.reloadUntil = 0;
+    for (const d of this.drops) this.scene.remove(d.mesh);
+    this.drops = [];
     this.vm.awp.visible = true; this.vm.pistol.visible = false; this.vm.knife.visible = false;
     this.el.weaponName.textContent = WEAPONS.awp.name;
     const slots = { P: 1, B: 0 };
@@ -438,7 +441,7 @@ export class Game {
   _switchWeapon(w) {
     const p = this.player;
     if (p.weapon === w || !p.alive) return;
-    p.weapon = w; p.reloadUntil = 0; p.drawUntil = this.time + 0.35;
+    p.weapon = w; p.reloadUntil = 0; p.drawUntil = this.time + 0.28;
     this.vm.reloadDip = 0;   // evita arma travada inclinada ao trocar no meio da recarga
     this._scope(false, true);
     this.vm.awp.visible = w === 'awp';
@@ -551,11 +554,15 @@ export class Game {
     } else if (attacker === this.player) {
       this._hitmarker(ent.hp <= 0);
     }
+    if (!ent.isPlayer && attacker && attacker.team !== ent.team && !ent.target && attacker.alive)
+      ent.target = attacker;   // bot caça quem o atingiu
     if (ent.hp <= 0) this._kill(ent, attacker, weap, head);
   }
   _kill(ent, attacker, weap = 'AWP', head = false) {
     ent.alive = false; ent.hp = 0; ent.deaths++;
     ent.respawnAt = this.time + RESPAWN_DELAY;
+    // CS: larga a arma no chão onde morreu
+    this._dropWeapon(ent.pos.x, ent.pos.z, ent.isPlayer ? (ent.weapon === 'knife' ? 'awp' : ent.weapon) : 'awp');
     if (attacker) {
       attacker.kills++; this.roundKills[attacker.team]++;
       this.sfx.voice(attacker.team);   // killer's side celebrates (meme audio)
@@ -732,7 +739,7 @@ export class Game {
     // FOV: scope / sprint
     const targetFov = p.scoped ? 24 : sprint && moving ? 76 : 70;
     if (Math.abs(this.camera.fov - targetFov) > 0.2) {
-      this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, dt * 12);
+      this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, dt * 16);
       this.camera.updateProjectionMatrix();
     }
     this.el.crosshair.style.display = p.scoped ? 'none' : 'block';
@@ -766,8 +773,7 @@ export class Game {
   // The gun vanishes and respawns after PICKUP_RESPAWN. No-op on maps without
   // pickups (e.g. awp_map). Called once per frame from update().
   _updatePickups() {
-    const list = this.world.pickups;
-    if (!list) return;
+    const list = this.world.pickups || [];
     for (const pk of list) {
       // respawn a taken weapon
       if (pk.mesh && !pk.mesh.visible && this.time >= pk.readyAt) pk.mesh.visible = true;
@@ -785,19 +791,53 @@ export class Game {
         if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, b, false); break; }
       }
     }
+    // drops de quem morreu (some de vez ao ser pego — não respawna)
+    for (let i = this.drops.length - 1; i >= 0; i--) {
+      const pk = this.drops[i];
+      const p = this.player;
+      let taken = false;
+      if (p.alive) {
+        const dx = pk.x - p.pos.x, dz = pk.z - p.pos.z;
+        if (dx * dx + dz * dz <= 1.7 * 1.7) taken = this._grabPickup(pk, p, true) || true;
+      }
+      if (!taken) for (const b of this.bots) {
+        if (!b.alive) continue;
+        const dx = pk.x - b.pos.x, dz = pk.z - b.pos.z;
+        if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, b, false); taken = true; break; }
+      }
+      if (taken) { this.scene.remove(pk.mesh); this.drops.splice(i, 1); }
+    }
   }
   _grabPickup(pk, who, isPlayer) {
     const w = pk.weapon;                           // 'awp' or 'pistol'
     if (isPlayer) {
       who.ammo[w].mag = WEAPONS[w].mag;
       who.ammo[w].res = WEAPONS[w].reserve;
-      this._switchWeapon(w);                       // equips (updates vm + label); no-op if already held
-      this.sfx.reloadEnd();
+      if (who.weapon !== w) { this._switchWeapon(w); this.sfx.reloadEnd(); }
+      else this.sfx.uiClick();                     // mesma arma = só munição
     } else {
       who.weapon = w;                              // bot grabs it
     }
     if (pk.mesh) pk.mesh.visible = false;           // taken off the ground
-    pk.readyAt = this.time + PICKUP_RESPAWN;        // respawns later
+    pk.readyAt = this.time + PICKUP_RESPAWN;        // respawns later (map pickups)
+    return true;
+  }
+  // CS: morto larga a arma no chão
+  _dropWeapon(x, z, weapon) {
+    let mesh;
+    if (weapon === 'awp') {
+      mesh = buildRifle();
+    } else {
+      mesh = new THREE.Group();
+      mesh.add(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.28), new THREE.MeshLambertMaterial({ color: 0x333333 })));
+      const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.08), new THREE.MeshLambertMaterial({ color: 0x3a2a1e }));
+      grip.position.set(0, -0.09, 0.09); grip.rotation.x = 0.25; mesh.add(grip);
+    }
+    mesh.position.set(x, 0.08, z);
+    mesh.rotation.set(0, Math.random() * Math.PI * 2, Math.PI / 2 * 0.12);
+    mesh.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    this.scene.add(mesh);
+    this.drops.push({ x, z, weapon, readyAt: 0, mesh });
   }
   _respawnPlayer() {
     const p = this.player;
@@ -849,7 +889,7 @@ export class Game {
           if (this._losClear(eye, teye)) { best = e; bd = d; }
         }
       }
-      if (best && b.target !== best) { b.target = best; b.reactAt = this.time + 0.3 + Math.random() * 0.5 / b.skill; }
+      if (best && b.target !== best) { b.target = best; b.reactAt = this.time + (0.3 + Math.random() * 0.5) / (b.skill * 1.5); }
       else if (!best) b.target = null;
     }
 
@@ -870,12 +910,13 @@ export class Game {
       moving = Math.abs(strafe) * 0.5;
       // fire
       if (this.time > b.reactAt && this.time > b.nextShotAt && Math.abs(dy) < 0.3) {
-        b.nextShotAt = this.time + (2.1 + Math.random() * 1.4) / b.skill;
+        b.nextShotAt = this.time + (2.1 + Math.random() * 1.4) / (b.skill * 1.5);
         b.revealedAt = this.time;
         const dist = Math.hypot(dx, dz);
         const eSpeed = e.isPlayer ? Math.hypot(e.vel.x, e.vel.z) : BOT_SPEED;
-        let chance = 0.72 * b.skill - dist * 0.006 - eSpeed * 0.035;
-        chance = Math.max(0.07, Math.min(0.85, chance));
+        const crouchBonus = dist > 25 ? 1.18 : 1;   // bot parado em posição = mais preciso
+        let chance = (0.72 * b.skill - dist * 0.006 - eSpeed * 0.035) * 1.5 * crouchBonus;
+        chance = Math.max(0.07, Math.min(0.92, chance));
         const hit = Math.random() < chance;
         const from = this._botEye(b);
         const teye = (e.isPlayer ? this.camera.position.clone() : this._botEye(e));
@@ -890,7 +931,7 @@ export class Game {
         let end = hitsW ? hitsW.point : from.clone().add(dir.clone().multiplyScalar(120));
         if (hit) {
           end = teye;
-          const dmg = e.isPlayer ? 42 : 100;
+          const dmg = e.isPlayer ? 63 : 100;   // 1.5x dano
           this._damage(e, dmg, b, 'AWP');
         } else if (hitsW && Math.random() < 0.5) this._puff(hitsW.point, hitsW.face ? hitsW.face.normal : null);
         this._tracer(from.clone().add(dir.clone().multiplyScalar(0.7)), end);

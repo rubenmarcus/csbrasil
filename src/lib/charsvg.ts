@@ -8,6 +8,8 @@ export const CHARS: Record<string, { name: string; skin: string; shirt: string; 
   influencer: { name: 'Influencer de Dubai', skin: '#f2c9a4', shirt: '#f0f0f0', hair: '#f5d76e', feat: 'blonde-shades' },
   sertanejo: { name: 'Cantor Sertanejo', skin: '#c98d5e', shirt: '#8a2f2f', hair: '#2a1e14', feat: 'cowboy-stache' },
   senhora: { name: 'Tia Zilá', skin: '#eec39a', shirt: '#1faa4d', hair: '#d8d8d8', feat: 'bun-shades' },
+  mistico: { name: 'Jovem Místico', skin: '#e8b98a', shirt: '#9b59b6', hair: '#4a3428', feat: 'headband-beard' },
+  coach: { name: 'Coach Quântico', skin: '#f2c9a4', shirt: '#1a2a4a', hair: '#2a2a2a', feat: 'blazer-headset' },
 };
 export const charName = (id?: string | null) => (id && CHARS[id] ? CHARS[id].name : null);
 
@@ -34,6 +36,10 @@ function charInner(id: string, sideColor: string, clipId: string): string {
       feat = `<rect x="712" y="52" width="72" height="8" fill="#7a5230"/><rect x="728" y="30" width="40" height="24" fill="#7a5230"/><rect x="734" y="78" width="28" height="6" fill="#3a2a1e"/>` + eyes; break;
     case 'bun-shades':
       feat = `<circle cx="748" cy="34" r="9" fill="${c.hair}"/><rect x="724" y="40" width="48" height="10" fill="${c.hair}"/><rect x="724" y="58" width="48" height="12" fill="#1a1a1a"/>`; break;
+    case 'headband-beard':
+      feat = `<rect x="724" y="46" width="48" height="6" fill="#e8bd25"/><rect x="728" y="72" width="40" height="20" fill="#3a2a1e"/>` + eyes; break;
+    case 'blazer-headset':
+      feat = eyes + `<path d="M 724 52 a 24 24 0 0 1 48 0" stroke="#1a1a1a" stroke-width="4" fill="none"/><rect x="770" y="62" width="4" height="14" fill="#1a1a1a"/>`; break;
   }
   return `<defs><clipPath id="${clipId}"><circle cx="748" cy="96" r="56"/></clipPath></defs>
   <g clip-path="url(#${clipId})">

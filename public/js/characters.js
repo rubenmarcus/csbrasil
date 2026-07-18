@@ -14,6 +14,9 @@ export const CHARACTERS = [
   { id: 'doutora', team: 'P', name: 'Doutora do SUS',
     blurb: 'Jaleco, estetoscópio e plantão de 24h. Receita tiro certeiro, na veia.',
     pal: { skin: 0xd9a580, shirt: 0xf0f0f0, pants: 0x3a4a5a, hair: 0x3a2a1e, boots: 0x6b6b6b } },
+  { id: 'mistico', team: 'P', name: 'Jovem Místico',
+    blurb: 'Faixa na testa, cristal no peito e aura calibrada. Só atira quando Mercúrio permite.',
+    pal: { skin: 0xe8b98a, shirt: 0x9b59b6, pants: 0x3a4a5a, hair: 0x4a3428, boots: 0x5a3d1e } },
   { id: 'caminhoneiro', team: 'B', name: 'Caminhoneiro',
     blurb: 'Camisa do Brasil, luva de estrada e 40h de BR na semana. Freia pra ninguém.',
     pal: { skin: 0xd9a066, shirt: 0xffd23f, pants: 0x2e3d55, hair: 0x3a2a1e, boots: 0x3a3a3a } },
@@ -26,6 +29,9 @@ export const CHARACTERS = [
   { id: 'senhora', team: 'B', name: 'Tia Zilá',
     blurb: '60 anos, 300 grupos de mensagem e um quadro de pistas nas costas. Ela SABE de tudo.',
     pal: { skin: 0xeec39a, shirt: 0x1faa4d, pants: 0xffd23f, hair: 0xd8d8d8, boots: 0xf0f0f0 } },
+  { id: 'coach', team: 'B', name: 'Coach Quântico',
+    blurb: 'Blazer, headset e 47 técnicas de manifestação. Já venceu antes de começar — no quântico.',
+    pal: { skin: 0xf2c9a4, shirt: 0xf0f0f0, pants: 0x2a2a2a, hair: 0x2a2a2a, boots: 0x1a1a1a } },
 ];
 export const byId = id => CHARACTERS.find(c => c.id === id);
 
@@ -182,6 +188,20 @@ function addAccessories(def, parts, torsoW) {
       torso.add(box(0.08, 0.06, 0.02, 0xf2ecd8, 0.04, 0.26, -0.215)); // note
       torso.add(box(0.02, 0.2, 0.02, 0xd33, -0.04, 0.33, -0.215));    // red string
       parts.armR.add(box(0.1, 0.02, 0.15, 0x2b4d8f, 0, -0.44, 0.02)); // stickered phone
+      break;
+    case 'mistico':
+      head.add(box(0.29, 0.05, 0.29, 0xe8bd25, 0, 0.22, 0));          // headband
+      head.add(box(0.24, 0.22, 0.06, p.hair, 0, -0.02, 0.13));        // barba comprida
+      { const cry = new THREE.Mesh(new THREE.OctahedronGeometry(0.045), M(0x2fd3c0));
+        cry.position.set(0, 0.42, 0.15); torso.add(cry); }            // cristal
+      break;
+    case 'coach':
+      torso.add(box(torsoW + 0.05, 0.5, 0.30, 0x1a2a4a, 0, 0.28, 0)); // blazer navy
+      { const band = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.015, 6, 12, Math.PI), M(0x1a1a1a));
+        band.rotation.z = Math.PI; band.position.set(0, 0.24, 0); head.add(band); } // headset arco
+      head.add(box(0.015, 0.015, 0.14, 0x1a1a1a, 0.14, 0.08, 0.1));   // mic
+      torso.add(box(0.16, 0.22, 0.03, 0xf0f0f0, -torsoW / 2 - 0.1, 0.12, 0.08)); // livro
+      torso.add(box(0.12, 0.03, 0.035, 0xe03232, -torsoW / 2 - 0.1, 0.14, 0.09)); // título do livro
       break;
   }
 }
