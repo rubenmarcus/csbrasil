@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.12.0] — 2026-07-18
+### Adicionado
+- **Arsenal completo**: AK-47, M4A1, MP5, Escopeta M3 e Deagle jogáveis
+  (auto-fire com bloom, 8 pellets na M3, viewmodels próprios, sons reais da
+  pasta `audio/weapons/`) além da AWP, pistola e faca
+- **Captura com E** + hint `[E] PEGAR <ARMA>` (bots continuam pegando andando)
+- **M mostra a seleção de personagem** do novo time antes de trocar de lado
+- **Dropdown de mapas** na home (depois dos campos, antes do JOGAR)
+- Mais obstáculos no Piscinão (pilares, bancos, boxes de chuveiro, lixeiras)
+  e no Sítio (fardos de feno, trator, poço, bebedouro, cercas extras)
+
 ## [1.11.0] — 2026-07-18
 ### Adicionado
 - **Mapa fy_pool_day "Piscinão da Treta"** (cherry-pick do PR #3 de

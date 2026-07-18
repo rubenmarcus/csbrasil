@@ -5,6 +5,11 @@ import { buildCharacter, poseCharacter, byId, CHARACTERS, buildRifle } from './c
 
 export const WEAPONS = {
   awp:    { name: 'AWP "DELIBERADOR"', short: 'AWP', dmg: 400, mag: 5, reserve: 25, rate: 1.7, reload: 3.1, spreadHip: 0.075, spreadScope: 0.0008, recoil: 0.055, scope: true },
+  ak:     { name: 'AK-47 "BATE-ESTACA"', short: 'AK', dmg: 33, mag: 30, reserve: 90, rate: 0.1, reload: 2.5, spreadHip: 0.024, recoil: 0.008, auto: true },
+  m4:     { name: 'M4A1 "REQUINTE"', short: 'M4', dmg: 31, mag: 30, reserve: 90, rate: 0.09, reload: 2.4, spreadHip: 0.02, recoil: 0.007, auto: true },
+  mp5:    { name: 'MP5 "VASSOURA"', short: 'MP5', dmg: 26, mag: 30, reserve: 120, rate: 0.075, reload: 2.2, spreadHip: 0.03, recoil: 0.005, auto: true },
+  shotgun:{ name: 'M3 "CONVERSA FIADA"', short: 'M3', dmg: 12, pellets: 8, mag: 7, reserve: 32, rate: 0.9, reload: 3.0, spreadHip: 0.06, recoil: 0.045 },
+  deagle: { name: 'DEAGLE "MARTELO"', short: 'DE', dmg: 53, mag: 7, reserve: 35, rate: 0.28, reload: 2.0, spreadHip: 0.012, recoil: 0.03 },
   pistol: { name: 'PT-38 "APITO"', short: 'PT-38', dmg: 34, mag: 12, reserve: 48, rate: 0.24, reload: 1.6, spreadHip: 0.02, recoil: 0.014, scope: false },
   knife:  { name: 'FACA "CONVERSA FIADA"', short: 'FACA', dmg: 55, rate: 0.55, range: 2.4, reload: 0, recoil: 0.02, scope: false },
 };
@@ -129,6 +134,7 @@ export class Game {
       pause: $('pause-menu'), radar: $('radar'),
       radioMenu: $('radio-menu'), radioLog: $('radio-log'), mkBanner: $('mk-banner'),
       lockHint: $('lock-hint'), hudSpeech: $('hud-speech'), hudSettings: $('hud-settings'),
+      pickupHint: $('pickup-hint'),
     };
   }
 
@@ -148,6 +154,30 @@ export class Game {
     const handR = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.09, 0.11), skin); handR.position.set(0, -0.085, 0.02); awp.add(handR);
     const handL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); handL.position.set(0.005, -0.04, -0.3); awp.add(handL);
     awp.position.set(0.26, -0.23, -0.5); awp.rotation.y = 0.03;
+    // rifles genéricos (ak / m4 / mp5 / shotgun / deagle)
+    const mkRifle = (bodyC, woodC, len, magH) => {
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.09, len), bodyC));
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.4, 6), dark(0x1a1a1a));
+      b.rotation.x = Math.PI / 2; b.position.set(0, 0.01, -len / 2 - 0.18); g.add(b);
+      const stock = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.18), woodC); stock.position.set(0, -0.04, len / 2 - 0.05); g.add(stock);
+      const mag = new THREE.Mesh(new THREE.BoxGeometry(0.045, magH, 0.07), dark(0x2a2a2a));
+      mag.position.set(0, -0.06 - magH / 2, -0.05); g.add(mag);
+      const hR = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.09, 0.11), skin); hR.position.set(0, -0.085, 0.1); g.add(hR);
+      const hL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); hL.position.set(0.005, -0.04, -len / 3); g.add(hL);
+      g.position.set(0.26, -0.23, -0.5); g.rotation.y = 0.03;
+      return g;
+    };
+    const ak = mkRifle(dark(0x2a2a2a), dark(0x6b4f2c), 0.55, 0.16);
+    const m4 = mkRifle(dark(0x333333), dark(0x2a2a2a), 0.52, 0.13);
+    const mp5 = mkRifle(dark(0x2e2e2e), dark(0x2e2e2e), 0.4, 0.14);
+    const shotgun = mkRifle(dark(0x1a1a1a), dark(0x7a5230), 0.5, 0.08);
+    const deagle = new THREE.Group();
+    deagle.add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.11, 0.26), dark(0x8a8a8a)));
+    const dgrip = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.12, 0.07), dark(0xc9a227));
+    dgrip.position.set(0, -0.1, 0.09); dgrip.rotation.x = 0.25; deagle.add(dgrip);
+    const handD = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.1, 0.08), skin); handD.position.set(0, -0.1, 0.09); deagle.add(handD);
+    deagle.position.set(0.24, -0.2, -0.42);
     // pistol
     const pistol = new THREE.Group();
     pistol.add(new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.09, 0.22), dark(0x333333)));
@@ -161,8 +191,10 @@ export class Game {
     knife.add(new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.12), dark(0x2a1e14)));
     const handK = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.08, 0.08), skin); handK.position.set(0, -0.02, 0.03); knife.add(handK);
     knife.position.set(0.28, -0.22, -0.4); knife.rotation.set(-0.2, 0.25, -0.15);
-    root.add(awp, pistol, knife);
-    return { root, awp, pistol, knife, kick: 0, bobPhase: 0, reloadDip: 0 };
+    root.add(awp, ak, m4, mp5, shotgun, deagle, pistol, knife);
+    const models = { awp, ak, m4, mp5, shotgun, deagle, pistol, knife };
+    for (const k in models) models[k].visible = k === 'awp';
+    return { root, models, awp, pistol, knife, kick: 0, bobPhase: 0, reloadDip: 0 };
   }
 
   _makePuffTexture() {
@@ -195,7 +227,13 @@ export class Game {
       if (e.code === 'Digit1') this._switchWeapon('awp');
       if (e.code === 'Digit2') this._switchWeapon('pistol');
       if (e.code === 'Digit3') this._switchWeapon('knife');
-      if (e.code === 'KeyM') this._switchTeam();
+      if (e.code === 'KeyE' && this.nearPickup) {
+        const { pk, dropIdx } = this.nearPickup;
+        this._grabPickup(pk, this.player, true);
+        if (dropIdx >= 0) { this.scene.remove(pk.mesh); this.drops.splice(dropIdx, 1); }
+        this.nearPickup = null;
+      }
+      if (e.code === 'KeyM') { if (this.onRequestSwitch) this.onRequestSwitch(); else this._switchTeam(); }
       if (e.code === 'KeyR') this._startReload();
       if (e.code === 'Space') e.preventDefault();
     };
@@ -211,10 +249,13 @@ export class Game {
           this._requestLock();
         return;
       }
-      if (e.button === 0) this._tryShoot();
+      if (e.button === 0) { this.mouseDown0 = true; this._tryShoot(); }
       if (e.button === 2) this._scope(true);
     };
-    this._mu = e => { if (e.button === 2) this._scope(false); };
+    this._mu = e => {
+      if (e.button === 0) this.mouseDown0 = false;
+      if (e.button === 2) this._scope(false);
+    };
     this._mm = e => {
       if (!this._acceptInput()) return;
       const s = this.settings.sens * 0.0021 * (this.player.scoped ? 0.45 : 1);
@@ -400,9 +441,10 @@ export class Game {
   }
 
   /* ================= team switch (M) ================= */
-  _switchTeam() {
+  _switchTeam(charId) {
     if (!this.player.alive || (this.state !== 'live' && this.state !== 'countdown')) return;
     const p = this.player;
+    if (charId) { this.playerDef = byId(charId); p.def = this.playerDef; }   // personagem do novo lado
     const oldTeam = this.playerTeam;
     const newTeam = oldTeam === 'P' ? 'B' : 'P';
     this.playerTeam = newTeam; this.enemyTeam = oldTeam;
@@ -440,13 +482,13 @@ export class Game {
   /* ================= weapons ================= */
   _switchWeapon(w) {
     const p = this.player;
-    if (p.weapon === w || !p.alive) return;
+    if (p.weapon === w || !p.alive || !WEAPONS[w]) return;
+    if (w !== 'knife' && !p.ammo[w]) p.ammo[w] = { mag: WEAPONS[w].mag, res: WEAPONS[w].reserve };
     p.weapon = w; p.reloadUntil = 0; p.drawUntil = this.time + 0.28;
     this.vm.reloadDip = 0;   // evita arma travada inclinada ao trocar no meio da recarga
+    this.bloom = 0;
     this._scope(false, true);
-    this.vm.awp.visible = w === 'awp';
-    this.vm.pistol.visible = w === 'pistol';
-    this.vm.knife.visible = w === 'knife';
+    for (const k in this.vm.models) this.vm.models[k].visible = k === w;
     this.el.weaponName.textContent = WEAPONS[w].name;
     this.el.reloadNote.classList.add('hidden');
     if (w === 'knife') this.sfx.knifeDeploy(); else this.sfx.uiClick();
@@ -486,15 +528,20 @@ export class Game {
     p.nextShotAt = this.time + w.rate;
     p.revealedAt = this.time;
     if (p.weapon === 'awp') setTimeout(() => this.sfx.bolt(), 420);
-    this.sfx[p.weapon === 'awp' ? 'shotAwp' : 'shotPistol']();
-    // spread & direction — crouching tightens it up
+    this.sfx.shotWeapon(p.weapon);
+    // spread & direction — crouching tightens it up; autos dão bloom
     const crouchMul = 1 - 0.5 * p.crouchF;
-    const spread = (p.weapon === 'awp' ? (p.scoped ? w.spreadScope : w.spreadHip) : w.spreadHip) * crouchMul;
-    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
-    dir.x += (Math.random() - .5) * spread; dir.y += (Math.random() - .5) * spread; dir.z += (Math.random() - .5) * spread;
-    dir.normalize();
+    this.bloom = Math.min(1.6, (this.bloom || 0) + (w.auto ? 0.22 : 0));
+    const spreadBase = (p.weapon === 'awp' ? (p.scoped ? w.spreadScope : w.spreadHip) : w.spreadHip) * crouchMul;
     const from = this.camera.getWorldPosition(new THREE.Vector3());
-    this._fireHitscan(this.player, from, dir, w.dmg, true, w.short);
+    const pellets = w.pellets || 1;
+    for (let i = 0; i < pellets; i++) {
+      const sp = spreadBase * (1 + this.bloom) * (pellets > 1 ? 1 : 1);
+      const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+      dir.x += (Math.random() - .5) * sp; dir.y += (Math.random() - .5) * sp; dir.z += (Math.random() - .5) * sp;
+      dir.normalize();
+      this._fireHitscan(this.player, from, dir, w.dmg, true, w.short);
+    }
     // recoil + muzzle flash
     p.pitch += w.recoil * (1 - 0.25 * p.crouchF); this.vm.kick = 1;
     this._flash(this.camera.localToWorld(new THREE.Vector3(0.26, -0.2, -1.1)));
@@ -689,7 +736,8 @@ export class Game {
     const wantCrouch = (this.keys.ControlLeft || this.keys.ControlRight || this.keys.KeyC) && p.grounded;
     p.crouchF = Math.max(0, Math.min(1, p.crouchF + (wantCrouch ? dt * 7 : -dt * 7)));
     const sprint = (this.keys.ShiftLeft || this.keys.ShiftRight) && p.crouchF < 0.3;
-    const maxSp = (sprint ? 6.6 : 4.7) * (p.scoped ? 0.5 : 1) * (1 - 0.5 * p.crouchF);
+    const slowMul = this.world.slowAt && this.world.slowAt(p.pos.x, p.pos.z) ? 0.45 : 1;  // água/lago
+    const maxSp = (sprint && slowMul === 1 ? 6.6 : 4.7) * (p.scoped ? 0.5 : 1) * (1 - 0.5 * p.crouchF) * slowMul;
     let ix = (this.keys.KeyD ? 1 : 0) - (this.keys.KeyA ? 1 : 0);
     let iz = (this.keys.KeyS ? 1 : 0) - (this.keys.KeyW ? 1 : 0);
     const il = Math.hypot(ix, iz) || 1; ix /= il; iz /= il;
@@ -725,6 +773,9 @@ export class Game {
       if (!p.grounded && p.vel.y < -6) this.sfx.land();
       p.pos.y = g2; p.vel.y = 0; p.grounded = true;
     } else if (p.pos.y > g2 + 0.05) p.grounded = false;
+    // auto-fire (ak/m4/mp5) enquanto o botão está segurado
+    if (WEAPONS[p.weapon].auto && this.mouseDown0 && p.alive) this._tryShoot();
+    this.bloom = Math.max(0, (this.bloom || 0) - dt * 1.8);
     // camera (eye drops when crouched)
     const eye = 1.62 - 0.52 * p.crouchF;
     this.camera.position.set(p.pos.x, p.pos.y + eye, p.pos.z);
@@ -754,7 +805,7 @@ export class Game {
       this.vm.reloadDip = Math.max(0, this.vm.reloadDip - dt * 6); // safety: nunca trava inclinado
       if (p.reloadUntil > 0) {
         p.reloadUntil = 0;
-        for (const k of ['awp', 'pistol']) {
+        for (const k of Object.keys(p.ammo)) {
           const am = p.ammo[k], wm = WEAPONS[k].mag;
           if (am.mag < wm && am.res > 0) { const need = wm - am.mag, take = Math.min(need, am.res); am.mag += take; am.res -= take; }
         }
@@ -774,49 +825,55 @@ export class Game {
   // pickups (e.g. awp_map). Called once per frame from update().
   _updatePickups() {
     const list = this.world.pickups || [];
+    // jogador: captura manual com E (bots pegam andando mesmo)
+    let near = null, nearDrop = -1, nearDist = 1.9 * 1.9;
+    const consider = (pk, isDrop, idx) => {
+      if (this.time < pk.readyAt) return;
+      const dx = pk.x - this.player.pos.x, dz = pk.z - this.player.pos.z;
+      const d2 = dx * dx + dz * dz;
+      if (d2 < nearDist) { nearDist = d2; near = pk; nearDrop = isDrop ? idx : -1; }
+    };
+    list.forEach((pk, i) => consider(pk, false, i));
+    this.drops.forEach((pk, i) => consider(pk, true, i));
+    this.nearPickup = near && this.player.alive ? { pk: near, dropIdx: nearDrop } : null;
+    if (this.el.pickupHint) {
+      if (this.nearPickup && this.state === 'live') {
+        this.el.pickupHint.textContent = `[E] PEGAR ${WEAPONS[this.nearPickup.pk.weapon].short}`;
+        this.el.pickupHint.classList.remove('hidden');
+      } else this.el.pickupHint.classList.add('hidden');
+    }
     for (const pk of list) {
       // respawn a taken weapon
       if (pk.mesh && !pk.mesh.visible && this.time >= pk.readyAt) pk.mesh.visible = true;
       if (this.time < pk.readyAt) continue;        // still taken
-      // player grab
-      const p = this.player;
-      if (p.alive) {
-        const dx = pk.x - p.pos.x, dz = pk.z - p.pos.z;
-        if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, p, true); continue; }
-      }
-      // bot grab
+      // bot grab (andando por cima)
       for (const b of this.bots) {
         if (!b.alive) continue;
         const dx = pk.x - b.pos.x, dz = pk.z - b.pos.z;
         if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, b, false); break; }
       }
     }
-    // drops de quem morreu (some de vez ao ser pego — não respawna)
+    // drops: bots pegam andando (jogador só com E, acima)
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const pk = this.drops[i];
-      const p = this.player;
-      let taken = false;
-      if (p.alive) {
-        const dx = pk.x - p.pos.x, dz = pk.z - p.pos.z;
-        if (dx * dx + dz * dz <= 1.7 * 1.7) taken = this._grabPickup(pk, p, true) || true;
-      }
-      if (!taken) for (const b of this.bots) {
+      for (const b of this.bots) {
         if (!b.alive) continue;
         const dx = pk.x - b.pos.x, dz = pk.z - b.pos.z;
-        if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, b, false); taken = true; break; }
+        if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, b, false); this.scene.remove(pk.mesh); this.drops.splice(i, 1); break; }
       }
-      if (taken) { this.scene.remove(pk.mesh); this.drops.splice(i, 1); }
     }
   }
   _grabPickup(pk, who, isPlayer) {
-    const w = pk.weapon;                           // 'awp' or 'pistol'
+    const w = pk.weapon;                           // qualquer arma de WEAPONS
+    if (!WEAPONS[w]) return false;
     if (isPlayer) {
+      if (!who.ammo[w]) who.ammo[w] = { mag: 0, res: 0 };
       who.ammo[w].mag = WEAPONS[w].mag;
       who.ammo[w].res = WEAPONS[w].reserve;
       if (who.weapon !== w) { this._switchWeapon(w); this.sfx.reloadEnd(); }
       else this.sfx.uiClick();                     // mesma arma = só munição
     } else {
-      who.weapon = w;                              // bot grabs it
+      who.weapon = w === 'knife' ? 'awp' : w;      // bot grabs it
     }
     if (pk.mesh) pk.mesh.visible = false;           // taken off the ground
     pk.readyAt = this.time + PICKUP_RESPAWN;        // respawns later (map pickups)
@@ -964,8 +1021,9 @@ export class Game {
           let dy = wantYaw - b.yaw;
           while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
           b.yaw += dy * Math.min(1, dt * 8);
-          b.pos.x += Math.sin(b.yaw) * BOT_SPEED * dt;
-          b.pos.z += Math.cos(b.yaw) * BOT_SPEED * dt;
+          const bSlow = this.world.slowAt && this.world.slowAt(b.pos.x, b.pos.z) ? 0.5 : 1;  // bots também vadear
+          b.pos.x += Math.sin(b.yaw) * BOT_SPEED * bSlow * dt;
+          b.pos.z += Math.cos(b.yaw) * BOT_SPEED * bSlow * dt;
           this._collide(b.pos, 0.38);
           moving = 1;
         }

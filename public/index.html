@@ -104,11 +104,13 @@
         <input id="avatar-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
         <span id="avatar-note"></span>
       </div>
+      <label class="map-label">MAPA
+        <select id="map-select"></select>
+      </label>
     </div>
     <button id="btn-jogar" class="btn btn-big">JOGAR</button>
     <div class="menu-secondary">
       <button id="btn-ranking" class="btn">RANKING</button>
-      <button id="btn-map" class="btn">MAPA: —</button>
       <button id="btn-howto" class="btn">COMO JOGAR</button>
       <button id="btn-settings" class="btn">CONFIGURAÇÕES</button>
     </div>
@@ -254,6 +256,7 @@
     <div class="lh-title">🖱️ CLIQUE PARA ATIVAR A MIRA</div>
     <div class="lh-sub">Se o navegador bloquear, clique de novo. Em iframe/preview, abra o jogo em aba própria.</div>
   </div>
+  <div id="pickup-hint" class="hidden"></div>
   <div id="respawn-overlay" class="hidden">
     <div class="rip">💀 ELIMINADO 💀</div>
     <div>Respawn em <span id="respawn-count">3</span>s…</div>

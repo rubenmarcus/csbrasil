@@ -17,27 +17,91 @@
     ]
   },
   "round": {
-    "P": ["audio/petista/round/ta-na-hora-do-jair-ja-ir-embora.mp3"],
-    "B": ["audio/bolsonaro/round/nos-vai-descer-vai-descer-hd-completo.mp3"]
+    "P": [
+      "audio/petista/round/ta-na-hora-do-jair-ja-ir-embora.mp3"
+    ],
+    "B": [
+      "audio/bolsonaro/round/nos-vai-descer-vai-descer-hd-completo.mp3"
+    ]
   },
   "general": {
-    "doublekill": ["audio/game/ut-double-kill.mp3"],
-    "triplekill": ["audio/game/ut-triple-kill.mp3"],
-    "multikill": ["audio/game/ut-multi-kill.mp3"],
-    "megakill": ["audio/game/ut-mega-kill.mp3"],
-    "killingspree": ["audio/game/ut-killing-spree.mp3"],
-    "godlike": ["audio/game/ut-godlike.mp3"],
-    "headshot": ["audio/game/headshot-02.mp3"]
+    "doublekill": [
+      "audio/game/ut-double-kill.mp3"
+    ],
+    "triplekill": [
+      "audio/game/ut-triple-kill.mp3"
+    ],
+    "multikill": [
+      "audio/game/ut-multi-kill.mp3"
+    ],
+    "megakill": [
+      "audio/game/ut-mega-kill.mp3"
+    ],
+    "killingspree": [
+      "audio/game/ut-killing-spree.mp3"
+    ],
+    "godlike": [
+      "audio/game/ut-godlike.mp3"
+    ],
+    "headshot": [
+      "audio/game/headshot-02.mp3"
+    ]
   },
   "cs": {
-    "awp": ["audio/game/awp-cs-1-6.mp3"],
-    "pistol": ["audio/game/usp_unsil-1.wav"],
-    "reload": ["audio/game/awp_clipout.wav"],
-    "reloadend": ["audio/game/awp_clipin.wav"],
-    "scope": ["audio/game/awp-zoom-sound-effect-cs-go_P7m17g5.mp3"],
-    "roundstart": ["audio/game/weapon-gun-pickup-sound-half-life-counter-strike.mp3"],
-    "knife": ["audio/game/knife_slash1.wav", "audio/game/knife_slash2.wav"],
-    "knifehit": ["audio/game/knife_hit1.wav", "audio/game/knife_hit2.wav", "audio/game/knife_hit3.wav", "audio/game/knife_hit4.wav", "audio/game/knife_stab.wav"],
-    "knifedeploy": ["audio/game/knife_deploy1.wav"]
+    "awp": [
+      "audio/game/awp-cs-1-6.mp3"
+    ],
+    "pistol": [
+      "audio/game/usp_unsil-1.wav"
+    ],
+    "reload": [
+      "audio/game/awp_clipout.wav"
+    ],
+    "reloadend": [
+      "audio/game/awp_clipin.wav"
+    ],
+    "scope": [
+      "audio/game/awp-zoom-sound-effect-cs-go_P7m17g5.mp3"
+    ],
+    "roundstart": [
+      "audio/game/weapon-gun-pickup-sound-half-life-counter-strike.mp3"
+    ],
+    "knife": [
+      "audio/game/knife_slash1.wav",
+      "audio/game/knife_slash2.wav"
+    ],
+    "knifehit": [
+      "audio/game/knife_hit1.wav",
+      "audio/game/knife_hit2.wav",
+      "audio/game/knife_hit3.wav",
+      "audio/game/knife_hit4.wav",
+      "audio/game/knife_stab.wav"
+    ],
+    "knifedeploy": [
+      "audio/game/knife_deploy1.wav"
+    ]
+  },
+  "weapons": {
+    "ak": [
+      "audio/weapons/ak47-2.wav"
+    ],
+    "m4": [
+      "audio/weapons/m4a1_unsil-1.wav",
+      "audio/weapons/m4a1_unsil-2.wav"
+    ],
+    "mp5": [
+      "audio/weapons/mp5-2.wav"
+    ],
+    "shotgun": [
+      "audio/weapons/m3-1.wav",
+      "audio/weapons/xm1014-1.wav"
+    ],
+    "deagle": [
+      "audio/weapons/deagle-1.wav",
+      "audio/weapons/deagle-2.wav"
+    ],
+    "reload": [
+      "audio/weapons/generic_reload.wav"
+    ]
   }
 }

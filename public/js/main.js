@@ -113,6 +113,7 @@ async function startGame(team, charId) {
   window.__game = game;
   submitted = false;
   retryPending();
+  armSwitchHook();
   game.onOpenSettings = () => { game.setPaused(true); settingsReturn = 'pause-menu'; show('settings-panel'); };
   game.onToggleSpeech = () => {
     settings.speech = !settings.speech;
@@ -179,17 +180,20 @@ $('btn-jogar').onclick = () => {
 };
 $('btn-ranking').onclick = () => { sfx.uiClick(); showRanking(); };
 $('ranking-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
-const mapBtn = $('btn-map');
-function updateMapLabel() { mapBtn.textContent = `MAPA: ${MAPS[currentMap].name}`; }
-mapBtn.onclick = () => {
+// dropdown de mapas (depois dos campos do usuário, antes do JOGAR)
+const mapSel = $('map-select');
+for (const id of MAP_IDS) {
+  const o = document.createElement('option');
+  o.value = id; o.textContent = MAPS[id].name;
+  mapSel.appendChild(o);
+}
+mapSel.value = currentMap;
+mapSel.onchange = () => {
   sfx.uiClick();
-  const i = MAP_IDS.indexOf(currentMap);
-  currentMap = MAP_IDS[(i + 1) % MAP_IDS.length];
+  currentMap = resolveMapId(mapSel.value);
   settings.map = currentMap; saveSettings();
-  updateMapLabel();
   rebuildMenuBackdrop();
 };
-updateMapLabel();
 $('btn-howto').onclick = () => { sfx.uiClick(); show('howto-panel'); };
 $('howto-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
 $('btn-settings').onclick = () => { sfx.uiClick(); settingsReturn = 'main-menu'; show('settings-panel'); };
@@ -213,7 +217,26 @@ $('btn-quit').onclick = () => {
 };
 $('btn-again').onclick = () => { sfx.uiClick(); startGame(currentTeam, currentChar); };
 $('btn-menu').onclick = () => { sfx.uiClick(); quitToMenu(); };
-$('char-confirm').onclick = () => { sfx.uiClick(); if (selChar) startGame(currentTeam, selChar.id); };
+// M in-game: escolhe o personagem do novo time antes de trocar
+let switchMode = false;
+function armSwitchHook() {
+  game.onRequestSwitch = () => {
+    if (document.pointerLockElement) document.exitPointerLock();
+    switchMode = true;
+    pickTeam(game.enemyTeam);
+  };
+}
+$('char-confirm').onclick = () => {
+  sfx.uiClick();
+  if (!selChar) return;
+  if (switchMode) {
+    switchMode = false;
+    currentChar = selChar.id;
+    show(null);
+    game._switchTeam(selChar.id);
+    if (!testMode) renderer.domElement.requestPointerLock();
+  } else startGame(currentTeam, selChar.id);
+};
 
 const nickEl = $('nick-input');
 nickEl.value = localStorage.getItem(NICK_KEY) || '';

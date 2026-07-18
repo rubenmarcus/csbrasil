@@ -91,6 +91,17 @@ export class Sfx {
     o.start(t); o.stop(t + dur + 0.05);
   }
 
+  // tiro por arma: pack "weapons" por id, senão fallback por classe
+  shotWeapon(w) {
+    const f = this._pick(this.pack?.weapons?.[w]);
+    if (f) { this._sample(f); return; }
+    if (w === 'awp') return this.shotAwp();
+    if (w === 'pistol' || w === 'deagle') return this.shotPistol();
+    if (w === 'knife') return this.knife();
+    // rifles/escopeta: rajada genérica
+    this._burst(.14, .5, 1600); this._beep('sine', 160, 60, .13, .25);
+  }
+
   uiClick()   { this.ensure(); this._beep('square', 880, 660, .06, .12); }
   scopeIn()   { const s = this._cs('scope'); if (s) { this._sample(s); return; }
     this.ensure(); this._beep('sine', 500, 900, .09, .15); }
