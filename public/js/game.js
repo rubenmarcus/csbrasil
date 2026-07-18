@@ -1153,6 +1153,7 @@ export class Game {
     }
     this._updatePlayer(dt);
     for (const b of this.bots) this._updateBot(b, dt);
+    if (this.world.tick) this.world.tick(this, dt);   // coisas vivas do mapa (pombos, trem...)
     this._updatePickups();
     this._updateFx(dt);
     this._updateHud();
