@@ -71,3 +71,21 @@ func test_hud_presents_radar_hit_damage_death_and_round_feedback() -> void:
 	assert_true(main.death_overlay.visible)
 	main.match_controller.rounds.advance(99.0)
 	assert_true(main.round_banner.visible)
+
+
+func test_radio_menu_logs_selection_and_routes_team_voice() -> void:
+	var main := MAIN_SCENE.instantiate()
+	add_child_autofree(main)
+	await wait_process_frames(2)
+	main.ui.choose_team(&"P")
+	main.ui.confirm_selection()
+	await wait_process_frames(2)
+
+	main._open_radio(&"z")
+	assert_true(main.radio_menu.visible)
+	assert_true(main.player.input_overlay_active)
+	main._select_radio_message(1)
+	assert_false(main.radio_menu.visible)
+	assert_true(main.radio_log.visible)
+	assert_string_contains(main.radio_log.text, "(RÁDIO): Bora, bora, bora!")
+	assert_eq(main.audio.latest_event().event, &"radio")

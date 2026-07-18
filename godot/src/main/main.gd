@@ -1,6 +1,7 @@
 extends Node
 
 const MATCH_SCENE := preload("res://src/match/movement_match.tscn")
+const RADIO_SCRIPT := preload("res://src/audio/radio_controller.gd")
 const BASE_MOUSE_SENSITIVITY := 0.002
 
 @onready var world_host: Node3D = $WorldHost
@@ -22,6 +23,9 @@ const BASE_MOUSE_SENSITIVITY := 0.002
 @onready var round_banner: Label = $GuiHost/HUD/RoundBanner
 @onready var multikill_label: Label = $GuiHost/HUD/Multikill
 @onready var death_overlay: Label = $GuiHost/HUD/DeathOverlay
+@onready var radio_menu: Label = $GuiHost/HUD/RadioMenu
+@onready var radio_log: Label = $GuiHost/HUD/RadioLog
+@onready var audio: Node = $AudioService
 
 var player: PlayerController
 var match_controller: CombatMatch
@@ -33,6 +37,9 @@ var _banner_remaining: float = 0.0
 var _multikill_remaining: float = 0.0
 var _multikill_count: int = 0
 var _last_health: int = 100
+var _radio: RefCounted = RADIO_SCRIPT.new()
+var _last_radio_message: String = ""
+var _radio_log_remaining: float = 0.0
 
 
 func _ready() -> void:
@@ -43,6 +50,8 @@ func _ready() -> void:
 	ui.resume_requested.connect(_resume_game)
 	ui.quit_requested.connect(_return_to_menu)
 	ui.rematch_requested.connect(_rematch)
+	ui.settings_saved.connect(_apply_settings)
+	audio.set_volume(ui.settings.volume)
 	hud.visible = false
 	crosshair.visible = false
 	if OS.has_feature("web"):
@@ -103,11 +112,26 @@ func _process(delta: float) -> void:
 			String(ui.flow.selected_character),
 		]
 	)
+	var last_audio: Dictionary = audio.latest_event()
+	JavaScriptBridge.eval(
+		"Object.assign(window.__csbrasilPlayerState,{radioOpen:'%s',lastRadio:%s,audioEvent:'%s',audioSource:'%s',audioVolume:%f});" % [
+			String(_radio.current_category), JSON.stringify(_last_radio_message),
+			String(last_audio.get("event", "")), String(last_audio.get("source", "")), audio.volume
+		]
+	)
 
 
 func _input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed:
 		return
+	if _radio.is_open():
+		var number := {KEY_1: 1, KEY_2: 2, KEY_3: 3}.get(event.keycode, 0) as int
+		if number > 0:
+			_select_radio_message(number)
+			return
+		if event.keycode == KEY_ESCAPE:
+			_close_radio()
+			return
 	if event.keycode == KEY_TAB and ui.state == &"playing":
 		set_scoreboard_visible(true)
 	elif event.keycode == KEY_ESCAPE:
@@ -115,6 +139,10 @@ func _input(event: InputEvent) -> void:
 			pause_game()
 		elif ui.state == &"paused":
 			_resume_game()
+	elif ui.state == &"playing" and player.alive:
+		var category := {KEY_Z: &"z", KEY_X: &"x", KEY_C: &"c"}.get(event.keycode, &"") as StringName
+		if not category.is_empty():
+			_open_radio(category)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -126,6 +154,7 @@ func pause_game() -> void:
 	if ui.state != &"playing":
 		return
 	player.release_pointer()
+	_close_radio()
 	ui.show_pause()
 	hud.visible = false
 	crosshair.visible = false
@@ -151,11 +180,13 @@ func _start_game(team: StringName, character_id: StringName, nickname: String) -
 	world_host.add_child(match_root)
 	_bind_match(controller)
 	_apply_settings()
+	audio.unlock()
 	ui.flow.selected_team = team
 	ui.flow.selected_character = character_id
 	ui.mark_playing()
 	hud.visible = true
 	crosshair.visible = true
+	audio.play_event(&"roundstart")
 
 
 func _bind_match(controller: CombatMatch) -> void:
@@ -169,9 +200,12 @@ func _bind_match(controller: CombatMatch) -> void:
 	match_controller.rounds.round_started.connect(_on_round_started)
 	match_controller.rounds.round_ended.connect(_on_round_ended)
 	player.shot_fired.connect(_on_player_shot_fired)
+	player.scope_changed.connect(_on_scope_audio)
 	player.health_changed.connect(_on_player_health_changed)
 	player.died.connect(_on_player_died)
 	player.respawned.connect(_on_player_respawned)
+	player.weapon_inventory.reload_started.connect(_on_reload_started)
+	player.weapon_inventory.weapon_changed.connect(_on_weapon_audio_changed)
 	_last_health = player.health.current_health
 	var current_hud := match_controller.current_hud()
 	_on_hud_updated(
@@ -187,6 +221,9 @@ func _bind_match(controller: CombatMatch) -> void:
 
 
 func _apply_settings() -> void:
+	audio.set_volume(ui.settings.volume)
+	if player == null or match_controller == null:
+		return
 	player.movement_config.mouse_sensitivity = (
 		BASE_MOUSE_SENSITIVITY * ui.settings.mouse_sensitivity
 	)
@@ -206,6 +243,7 @@ func _resume_game() -> void:
 func _return_to_menu() -> void:
 	get_tree().paused = false
 	player.release_pointer()
+	_close_radio()
 	ui.show_main_menu()
 	hud.visible = false
 	crosshair.visible = false
@@ -221,6 +259,7 @@ func _rematch() -> void:
 
 
 func _on_match_ended(winner: StringName) -> void:
+	audio.play_event(&"matchwin")
 	player.release_pointer()
 	hud.visible = false
 	crosshair.visible = false
@@ -260,15 +299,23 @@ func _on_match_state_changed(state: Dictionary) -> void:
 func _on_killfeed_event(killer_name: String, victim_name: String, headshot: bool) -> void:
 	killfeed_label.text = "%s  %s  %s" % [killer_name, "🎯" if headshot else "✦", victim_name]
 	if killer_name == player.display_name:
+		if headshot:
+			audio.play_event(&"headshot")
+		audio.play_voice(player.team)
 		_multikill_count = _multikill_count + 1 if _multikill_remaining > 0.0 else 1
 		_multikill_remaining = 4.0
 		if _multikill_count >= 2:
+			var tiers := [&"", &"", &"doublekill", &"triplekill", &"multikill"]
+			audio.play_event(tiers[mini(_multikill_count, 4)])
 			multikill_label.text = ["", "", "DUPLO!", "TRIPLO!", "QUADRA!"][mini(_multikill_count, 4)]
 			multikill_label.visible = true
 	_refresh_scoreboard()
 
 
 func _on_player_shot_fired(result: Dictionary) -> void:
+	if bool(result.get("fired", false)):
+		var weapon_id: StringName = player.weapon.definition.weapon_id
+		audio.play_event(&"knifehit" if weapon_id == &"knife" and bool(result.get("hit", false)) else weapon_id)
 	if not bool(result.get("hit", false)):
 		return
 	hitmarker.visible = true
@@ -278,27 +325,34 @@ func _on_player_shot_fired(result: Dictionary) -> void:
 
 func _on_player_health_changed(current: int) -> void:
 	if current < _last_health:
+		audio.play_event(&"hurt")
 		damage_vignette.visible = true
 		_damage_remaining = 0.3
 	_last_health = current
 
 
 func _on_player_died(_source: Node, _headshot: bool) -> void:
+	audio.play_event(&"death")
 	death_overlay.visible = true
 
 
 func _on_player_respawned() -> void:
+	audio.play_event(&"respawn")
 	death_overlay.visible = false
 	_last_health = player.health.current_health
 
 
 func _on_round_started(round_number: int, _seconds: float) -> void:
+	if ui.state == &"playing":
+		audio.play_event(&"roundstart")
 	round_banner.text = "ROUND %d" % round_number
 	round_banner.visible = true
 	_banner_remaining = 2.0
 
 
 func _on_round_ended(winner: StringName, petistas_kills: int, bolsonaristas_kills: int) -> void:
+	if not winner.is_empty():
+		audio.play_round(winner)
 	round_banner.text = (
 		"EMPATE · %d × %d" % [petistas_kills, bolsonaristas_kills]
 		if winner.is_empty()
@@ -332,8 +386,56 @@ func _update_feedback(delta: float) -> void:
 	if _multikill_remaining <= 0.0:
 		_multikill_count = 0
 		multikill_label.visible = false
+	_radio_log_remaining = maxf(0.0, _radio_log_remaining - delta)
+	if _radio_log_remaining <= 0.0:
+		radio_log.visible = false
 	if not player.alive:
 		death_overlay.text = "ELIMINADO · RESPAWN EM %.1f" % player.respawn_remaining
+
+
+func _open_radio(category: StringName) -> void:
+	if not _radio.open(category):
+		return
+	player.input_overlay_active = true
+	var lines: Array[String] = [_radio.title()]
+	var items: Array = _radio.current_items()
+	for index in items.size():
+		lines.append("%d. %s" % [index + 1, items[index]])
+	radio_menu.text = "\n".join(lines)
+	radio_menu.visible = true
+	audio.play_event(&"ui")
+
+
+func _select_radio_message(number: int) -> void:
+	var selection: Dictionary = _radio.select(number)
+	if selection.is_empty():
+		return
+	_last_radio_message = String(selection.message)
+	radio_log.text = "%s (RÁDIO): %s" % [player.display_name, _last_radio_message]
+	radio_log.visible = true
+	_radio_log_remaining = 4.2
+	audio.play_radio(player.team)
+	_close_radio()
+
+
+func _close_radio() -> void:
+	_radio.close()
+	radio_menu.visible = false
+	if player != null:
+		(func() -> void: player.input_overlay_active = false).call_deferred()
+
+
+func _on_scope_audio(active: bool) -> void:
+	audio.play_event(&"scope" if active else &"scopeout")
+
+
+func _on_reload_started(_weapon_id: StringName) -> void:
+	audio.play_event(&"reload")
+
+
+func _on_weapon_audio_changed(weapon_id: StringName, _name: String, _ammo: int, _reserve: int) -> void:
+	if weapon_id == &"knife":
+		audio.play_event(&"knifedeploy")
 
 
 func _refresh_scoreboard() -> void:
