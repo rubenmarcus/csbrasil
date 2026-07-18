@@ -59,52 +59,66 @@ export function buildRifle(color = 0x2e4a2e) {
   return g;
 }
 
-// Humanoid ~1.8m, origin at feet, faces +Z.
+// Humanoid v2 ~1.8m, origin at feet, faces +Z. Proporções humanas:
+// pernas afuniladas, torso em duas partes (cintura < peito), cabeça esférica.
 export function buildCharacter(def) {
   const p = def.pal, g = new THREE.Group();
   const parts = {};
   const bulky = def.id === 'caminhoneiro';
 
-  // legs (pivot at hip)
+  // pernas: coxa + canela afunilada (pivot no quadril)
   for (const s of [-1, 1]) {
-    const geo = new THREE.BoxGeometry(0.15, 0.78, 0.17); geo.translate(0, -0.39, 0);
-    const leg = new THREE.Mesh(geo, M(p.pants)); leg.castShadow = true;
-    leg.position.set(0.11 * s, 0.78, 0);
-    leg.add(box(0.16, 0.1, 0.26, p.boots, 0, -0.73, 0.04));           // boot
+    const leg = new THREE.Group(); leg.position.set(0.105 * s, 0.86, 0);
+    const thigh = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.44, 0.16), M(p.pants));
+    thigh.position.y = -0.22; thigh.castShadow = true; leg.add(thigh);
+    const shin = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.42, 0.13), M(p.pants));
+    shin.position.y = -0.65; shin.castShadow = true; leg.add(shin);
+    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.09, 0.26), M(p.boots));
+    boot.position.set(0, -0.84, 0.05); leg.add(boot);
     g.add(leg); parts[s < 0 ? 'legL' : 'legR'] = leg;
   }
-  // torso
-  const torsoW = bulky ? 0.52 : 0.44;
-  const torso = new THREE.Group(); torso.position.y = 0.78;
-  const chest = box(torsoW, 0.6, 0.26, p.shirt, 0, 0.3, 0);
+  // quadril
+  const hip = box(0.34, 0.18, 0.22, p.pants, 0, 0.92, 0);
+  g.add(hip);
+
+  // torso em duas partes: cintura fina + peito (ombros)
+  const torso = new THREE.Group(); torso.position.y = 1.0;
+  const waist = box(0.32, 0.22, 0.2, p.shirt, 0, 0.0, 0);
+  torso.add(waist);
+  const chestW = bulky ? 0.52 : 0.46;
+  const chest = box(chestW, 0.34, 0.26, p.shirt, 0, 0.32, 0);
   torso.add(chest);
   g.add(torso); parts.torso = torso; parts.chest = chest;
 
-  // head (pivot at neck)
+  // cabeça: ESFERA low-poly (pivot no pescoço)
   const head = new THREE.Group(); head.position.y = 1.38;
-  head.add(box(0.26, 0.28, 0.26, p.skin, 0, 0.14, 0));
+  const skull = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), M(p.skin));
+  skull.position.y = 0.13; skull.castShadow = true; head.add(skull);
   g.add(head); parts.head = head;
 
-  // arms holding rifle forward (pivot at shoulder)
+  // braços: ombro + antebraço segurando o rifle (duas mãos)
   for (const s of [-1, 1]) {
-    const geo = new THREE.BoxGeometry(0.11, 0.5, 0.13); geo.translate(0, -0.25, 0);
-    const arm = new THREE.Mesh(geo, M(def.id === 'senhora' ? 0xffd23f : p.shirt));
-    arm.castShadow = true;
-    arm.position.set((torsoW / 2 + 0.06) * s, 0.52, 0);
-    arm.rotation.x = -1.35;                                            // forward hold
-    arm.rotation.z = -0.12 * s;
-    torso.add(arm); parts[s < 0 ? 'armL' : 'armR'] = arm;
+    const shoulder = new THREE.Group();
+    shoulder.position.set((chestW / 2 + 0.045) * s, 0.42, 0.02);
+    const upper = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.26, 0.12), M(def.id === 'senhora' ? 0xffd23f : p.shirt));
+    upper.position.y = -0.13; upper.castShadow = true; shoulder.add(upper);
+    const fore = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.3), M(def.id === 'senhora' ? 0xffd23f : p.shirt));
+    fore.position.set(0, -0.3, 0.12); fore.castShadow = true; shoulder.add(fore);
+    shoulder.rotation.x = s < 0 ? -1.15 : -0.95;     // esquerdo na forend, direito no grip
+    shoulder.rotation.z = -0.18 * s;
+    torso.add(shoulder); parts[s < 0 ? 'armL' : 'armR'] = shoulder;
   }
-  // rifle in front of chest
+  // rifle na altura do ombro (duas mãos alcançam)
   const gun = buildRifle();
-  gun.position.set(0.10, 0.34, 0.30);
+  gun.position.set(0.10, 0.18, 0.30);
+  gun.rotation.x = -0.05;
   torso.add(gun); parts.gun = gun;
 
   // team armband
   const band = def.team === 'P' ? 0xe03232 : 0x1faa4d;
-  parts.armL.add(box(0.13, 0.08, 0.15, band, 0, -0.12, 0));
+  parts.armL.add(box(0.12, 0.08, 0.14, band, 0, -0.18, 0));
 
-  addAccessories(def, parts, torsoW);
+  addAccessories(def, parts, chestW);
   return { group: g, parts, def };
 }
 
@@ -212,7 +226,7 @@ export function poseCharacter(parts, phase, moving, t) {
   parts.legL.rotation.x = s * 0.6 * moving;
   parts.legR.rotation.x = -s * 0.6 * moving;
   const breathe = Math.sin(t * 2.2) * 0.012;
-  parts.torso.position.y = 0.78 + Math.abs(c) * 0.045 * moving + breathe;
+  parts.torso.position.y = 1.0 + Math.abs(c) * 0.045 * moving + breathe;
   parts.torso.rotation.y = s * 0.05 * moving;
   parts.head.rotation.z = Math.sin(t * 1.7) * 0.02;
   parts.head.rotation.x = Math.sin(t * 1.3) * 0.02;
