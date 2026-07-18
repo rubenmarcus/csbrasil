@@ -1,5 +1,6 @@
 // Core game: FPS controller, weapons, bots, rounds, HUD.
 import * as THREE from 'three';
+import { loadObjGun } from './objgun.js';
 import { MAPS, resolveMapId } from './maps.js';
 import { buildCharacter, poseCharacter, byId, CHARACTERS, buildRifle } from './characters.js';
 
@@ -97,6 +98,7 @@ export class Game {
     // ---- view model ----
     this.vm = this._buildViewModels();
     this.camera.add(this.vm.root);
+    this._loadWeaponModels();
 
     // ---- fx pools ----
     this.tracers = [];
@@ -205,6 +207,77 @@ export class Game {
     for (const k in models) models[k].visible = k === 'awp';
     return { root, models, awp, pistol, knife, kick: 0, bobPhase: 0, reloadDip: 0 };
   }
+
+  // carrega os modelos .obj (Quaternius CC0) e troca os viewmodels de caixa.
+  _loadWeaponModels() {
+    const MAP = {
+      awp:     { f: 'SniperRifle_1',   len: 0.78 },
+      ak:      { f: 'AssaultRifle_1',  len: 0.64 },
+      m4:      { f: 'AssaultRifle2_1', len: 0.62 },
+      mp5:     { f: 'SubmachineGun_1', len: 0.52 },
+      shotgun: { f: 'Shotgun_1',       len: 0.64 },
+      pistol:  { f: 'Pistol_1',        len: 0.32 },
+    };
+    // chute inicial de rotação/posição (afinável em ?vmtune=1)
+    const mk = (px, py, pz) => ({ s: 1, rx: 0, ry: Math.PI / 2, rz: 0, px, py, pz });
+    const TUNE = {
+      awp: mk(0.26, -0.23, -0.55), ak: mk(0.26, -0.23, -0.5), m4: mk(0.26, -0.23, -0.5),
+      mp5: mk(0.26, -0.23, -0.48), shotgun: mk(0.26, -0.23, -0.5), pistol: mk(0.24, -0.2, -0.42),
+    };
+    this._vmTune = TUNE;
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xc79a6f, roughness: 0.85, flatShading: true });
+    this._vmHandMat = skinMat;
+    const base = '/models/weapons/';
+    for (const key in MAP) {
+      const cfg = MAP[key], tn = TUNE[key];
+      loadObjGun(base + cfg.f + '.obj', base + cfg.f + '.mtl').then(gun => {
+        const wrap = new THREE.Group();
+        gun.scale.multiplyScalar(cfg.len);            // gun já vem normalizado (maior lado = 1)
+        wrap.userData.baseS = gun.scale.x;
+        gun.rotation.set(tn.rx, tn.ry, tn.rz);
+        wrap.add(gun);
+        const hR = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.09, 0.11), skinMat); hR.position.set(0, -0.085, 0.12); wrap.add(hR);
+        const hL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skinMat); hL.position.set(0.01, -0.05, -cfg.len * 0.42); wrap.add(hL);
+        wrap.position.set(tn.px, tn.py, tn.pz);
+        wrap.userData.gun = gun;
+        const old = this.vm.models[key];
+        wrap.visible = old ? old.visible : (this.player.weapon === key);
+        if (old) this.vm.root.remove(old);
+        this.vm.root.add(wrap);
+        this.vm.models[key] = wrap;
+        if (key === 'awp') this.vm.awp = wrap;
+        if (key === 'pistol') this.vm.pistol = wrap;
+      }).catch(e => console.warn('[vm] falha ao carregar', key, e));
+    }
+    if (new URLSearchParams(location.search).get('vmtune')) this._vmTuner();
+  }
+
+  // painel de ajuste (só com ?vmtune=1): mexe escala/rotação/posição da arma ATUAL e loga o config.
+  _vmTuner() {
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;right:8px;top:8px;z-index:99999;background:rgba(0,0,0,.82);color:#fff;font:11px monospace;padding:8px;border:1px solid #555;width:210px';
+    const F = [['s', 0.2, 3, 0.01], ['rx', -3.2, 3.2, 0.02], ['ry', -3.2, 3.2, 0.02], ['rz', -3.2, 3.2, 0.02], ['px', -1, 1, 0.01], ['py', -1, 1, 0.01], ['pz', -1.2, 0, 0.01]];
+    let html = '<div>arma: <b id="vt-w"></b> <button id="vt-r">↻</button></div>';
+    F.forEach(f => html += '<div>' + f[0] + ' <input type="range" id="vt-' + f[0] + '" min="' + f[1] + '" max="' + f[2] + '" step="' + f[3] + '" style="width:120px"><span id="vt-' + f[0] + 'v"></span></div>');
+    html += '<button id="vt-copy" style="margin-top:5px">copiar config →console</button><div id="vt-out" style="font-size:10px;word-break:break-all;margin-top:3px"></div>';
+    box.innerHTML = html; document.body.appendChild(box);
+    const applyOne = (k) => {
+      const tn = this._vmTune[k], wrap = this.vm.models[k]; if (!tn || !wrap || !wrap.userData.gun) return;
+      wrap.userData.gun.rotation.set(tn.rx, tn.ry, tn.rz);
+      wrap.userData.gun.scale.setScalar(wrap.userData.baseS * tn.s);
+      wrap.position.set(tn.px, tn.py, tn.pz);
+    };
+    const refresh = () => {
+      const k = this.player.weapon, tn = this._vmTune[k]; if (!tn) return;
+      document.getElementById('vt-w').textContent = k;
+      F.forEach(f => { const el = document.getElementById('vt-' + f[0]); el.value = tn[f[0]]; document.getElementById('vt-' + f[0] + 'v').textContent = (+tn[f[0]]).toFixed(2); });
+    };
+    F.forEach(f => { document.getElementById('vt-' + f[0]).oninput = (e) => { const k = this.player.weapon; if (!this._vmTune[k]) return; this._vmTune[k][f[0]] = +e.target.value; document.getElementById('vt-' + f[0] + 'v').textContent = (+e.target.value).toFixed(2); applyOne(k); }; });
+    document.getElementById('vt-r').onclick = refresh;
+    document.getElementById('vt-copy').onclick = () => { const out = JSON.stringify(this._vmTune, null, 0); document.getElementById('vt-out').textContent = out; console.log('[vmtune]', out); };
+    refresh();
+  }
+
 
   _makePuffTexture() {
     const c = document.createElement('canvas'); c.width = c.height = 64;
