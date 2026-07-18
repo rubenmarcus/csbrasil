@@ -371,8 +371,8 @@ export class Game {
     this.player.scoped = false; this.player.reloadUntil = 0;
     for (const d of this.drops) this.scene.remove(d.mesh);
     this.drops = [];
-    this.vm.awp.visible = true; this.vm.pistol.visible = false; this.vm.knife.visible = false;
-    this.el.weaponName.textContent = WEAPONS.awp.name;
+    for (const k in this.vm.models) this.vm.models[k].visible = k === this.player.weapon;
+    this.el.weaponName.textContent = WEAPONS[this.player.weapon].name;
     const slots = { P: 1, B: 0 };
     for (const b of this.bots) {
       place(b, b.team, slots[b.team]++);

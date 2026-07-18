@@ -71,8 +71,10 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
   background:#10130c;border:2px solid #4a5a2a;border-radius:4px;color:var(--cs);padding:10px 12px;outline:none}
 .dd-btn:hover,.dd-btn.open{border-color:var(--cs)}
 .dd-arrow{font-size:12px;opacity:.7}
-.dd-list{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:30;
-  background:#0d100a;border:2px solid #4a5a2a;border-radius:4px;overflow:hidden}
+.dd-list{position:absolute;left:0;right:0;z-index:30;
+  background:#0d100a;border:2px solid #4a5a2a;border-radius:4px;overflow:hidden;
+  top:calc(100% + 4px)}
+#wpn-dd .dd-list{top:auto;bottom:calc(100% + 4px)}   /* baixo na tela: abre pra cima */
 .dd-item{display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;text-align:left;
   font-family:Consolas,monospace;font-size:13px;letter-spacing:1px;color:var(--cs);
   background:transparent;border:0;padding:10px 12px}

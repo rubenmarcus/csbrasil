@@ -463,14 +463,18 @@ function pickTeam(team) {
   currentTeam = team;
   const list = $('char-list');
   list.innerHTML = '';
-  CHARACTERS.filter(c => c.team === team).forEach((c, i) => {
+  const chars = CHARACTERS.filter(c => c.team === team);
+  let firstRow = null;
+  chars.forEach((c, i) => {
     const row = document.createElement('button');
     row.className = 'char-row';
     row.innerHTML = `<img src="${pvThumb(c)}" alt="${c.name}"><span>${c.name}</span>`;
     row.onclick = () => { sfx.uiClick(); selectChar(c, row); };
     list.appendChild(row);
-    if (i === 0) selectChar(c, row);
+    if (i === 0) firstRow = row;
   });
+  // seleciona DEPOIS de gerar todos os thumbs — senão o preview fica com o último
+  if (firstRow) selectChar(chars[0], firstRow);
   show('char-select');
 }
 function selectChar(c, row) {
