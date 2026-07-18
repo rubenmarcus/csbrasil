@@ -55,8 +55,7 @@ smoke test Web.
 
 ### 5. Conteúdo procedural e apresentação
 
-Status: conteúdo procedural concluído e verificado em 2026-07-18; apresentação
-em andamento.
+Status: concluído e verificado em 2026-07-18.
 
 Portar arena completa, props, skyline, oito personagens, armas visuais,
 texturas, animações e efeitos. Implementar seed determinística, factories e
@@ -67,7 +66,14 @@ primitivas, imagens geradas em runtime e caches de materiais/meshes. A seed
 2026 produz uma assinatura verificável; spawns, bloqueios e waypoints derivam
 da geometria procedural, e screenshots Web são exercitados nos dois browsers.
 
+Menus, seleção de time e personagem, preview 3D, settings persistentes, pause,
+HUD, radar, banners e fim de partida completam o fluxo publicado. A navegação
+por teclado e a persistência foram verificadas em Chromium e Firefox.
+
 ### 6. Áudio, persistência e integração Web
+
+Status: áudio, rádio e fallbacks em andamento; persistência concluída no marco
+anterior.
 
 Portar pacotes de áudio e fallbacks, rádio, anúncios, settings e nick. Integrar
 o shell HTML, SEO/AEO, analytics e eventos Web. Escolher fallback de áudio que

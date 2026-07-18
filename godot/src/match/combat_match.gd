@@ -9,7 +9,8 @@ signal match_state_changed(state: Dictionary)
 const BOT_SCENE := preload("res://src/actors/combat_bot.tscn")
 const TARGET_SELECTOR := preload("res://src/ai/bot_target_selector.gd")
 const CHARACTER_FACTORY := preload("res://src/procedural/character_visual_factory.gd")
-const BOT_DEFINITIONS := [
+const ACTOR_DEFINITIONS := [
+	{"id": &"esquerdomacho", "name": "Esquerdomacho", "team": &"P", "spawn": Vector3(-9.0, 1.4, -42.0)},
 	{"id": &"sindicato", "name": "Líder do Sindicato", "team": &"P", "spawn": Vector3(-3.0, 1.4, -42.0)},
 	{ "id": &"mst", "name": "Líder do MST", "team": &"P", "spawn": Vector3(3.0, 1.4, -42.0) },
 	{ "id": &"doutora", "name": "Doutora do SUS", "team": &"P", "spawn": Vector3(9.0, 1.4, -42.0) },
@@ -35,10 +36,14 @@ var _think_remaining: float = 0.0
 var _next_round_remaining: float = -1.0
 var _combat_session_active: bool = false
 var _engagement_grace_remaining: float = 0.0
+var _selected_team: StringName = &"P"
+var _selected_character: StringName = &"esquerdomacho"
+var _selected_nickname: String = "Jogador"
 
 
 func _ready() -> void:
 	_graph = arena.create_waypoint_graph()
+	_apply_player_selection()
 	_build_rosters()
 	_connect_actor(player)
 	player.health_changed.connect(_on_player_health_changed)
@@ -52,6 +57,16 @@ func _ready() -> void:
 	rounds.start_match()
 	_publish_hud()
 	_publish_match_state()
+
+
+func configure_player_selection(
+	team: StringName, character_id: StringName, nickname: String
+) -> void:
+	_selected_team = team if team in [&"P", &"B"] else &"P"
+	_selected_character = character_id
+	_selected_nickname = nickname if not nickname.strip_edges().is_empty() else "Jogador"
+	if is_node_ready():
+		_apply_player_selection()
 
 
 func _process(delta: float) -> void:
@@ -151,8 +166,22 @@ func current_procedural_state() -> Dictionary:
 	}
 
 
+func current_radar_state() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for actor in actors():
+		result.append({
+			"position": actor.global_position,
+			"team": actor.get("team"),
+			"alive": actor.get("alive"),
+			"player": actor == player,
+		})
+	return result
+
+
 func _build_rosters() -> void:
-	for definition in BOT_DEFINITIONS:
+	for definition in ACTOR_DEFINITIONS:
+		if StringName(definition.id) == _selected_character:
+			continue
 		var actor_bot := BOT_SCENE.instantiate() as CombatBot
 		actor_bot.name = String(definition.id)
 		actor_bot.actor_id = definition.id
@@ -168,6 +197,22 @@ func _build_rosters() -> void:
 		if bot == null and actor_bot.team == &"B":
 			bot = actor_bot
 	_assign_targets()
+
+
+func _apply_player_selection() -> void:
+	var selected := ACTOR_DEFINITIONS[0]
+	for definition in ACTOR_DEFINITIONS:
+		if StringName(definition.id) == _selected_character and StringName(definition.team) == _selected_team:
+			selected = definition
+			break
+	_selected_character = selected.id
+	_selected_team = selected.team
+	player.actor_id = selected.id
+	player.team = selected.team
+	player.display_name = _selected_nickname
+	player.global_position = selected.spawn + Vector3(0.0, 0.1, 0.0)
+	player.rotation.y = PI if player.team == &"P" else 0.0
+	player.spawn_position = player.global_position
 
 
 func _connect_actor(actor: Node3D) -> void:

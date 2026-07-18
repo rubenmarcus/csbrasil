@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('captures pointer, moves forward, and releases safely', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?auto=P,esquerdomacho');
   await expect.poll(() => page.evaluate(() => window.__csbrasilGodotReady), { timeout: 15_000 }).toBe(true);
   await expect.poll(() => page.evaluate(() => window.__csbrasilPlayerState?.z), { timeout: 15_000 }).toBe(-42);
 

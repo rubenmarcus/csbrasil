@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('scopes, kills the bot with the AWP, and observes respawn', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?auto=P,esquerdomacho');
   await expect.poll(() => page.evaluate(() => window.__csbrasilPlayerState?.botAlive), { timeout: 15_000 }).toBe(true);
 
   const canvas = page.locator('canvas');
