@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('switches between independent AWP, pistol, and knife slots', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?auto=P,esquerdomacho');
   await expect.poll(() => page.evaluate(() => window.__csbrasilPlayerState?.weaponId), { timeout: 15_000 }).toBe('awp');
 
   const canvas = page.locator('canvas');

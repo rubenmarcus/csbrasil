@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('boots an eight-actor match and advances the round while playing', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?auto=P,esquerdomacho');
   await expect.poll(() => page.evaluate(() => window.__csbrasilPlayerState?.actorCount), {
     timeout: 15_000,
   }).toBe(8);

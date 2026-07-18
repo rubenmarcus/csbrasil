@@ -75,7 +75,7 @@
     visual e screenshots nos navegadores suportados.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:visual`; `npm run test:web`
 
-- [~] **Completar menus, HUD, radar e persistência** (test-type: both)
+- [x] **Completar menus, HUD, radar e persistência** (test-type: both)
   - blocked-by: arena e personagens procedurais completos
   - summary: portar todos os fluxos UI, preview, nick, settings, qualidade,
     pause, radar, banners, scope, hitmarker, multikill e fim de partida.
@@ -85,9 +85,9 @@
     foco e todos os elementos de HUD verificados.
   - tests: unitários de modelos de apresentação/persistência; integração de UI;
     smoke test Web ponta a ponta.
-  - verification: `godot --headless --path godot --script res://tests/test_runner.gd -- ui && npm run test:web:ui`
+  - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:ui`; `npm run test:web`
 
-- [ ] **Completar áudio, rádio e fallbacks Web** (test-type: both)
+- [~] **Completar áudio, rádio e fallbacks Web** (test-type: both)
   - blocked-by: menus, HUD, radar e persistência
   - summary: portar manifest, samples, rádio, anúncios, eventos de armas e
     fallbacks que funcionem com ou sem o pacote opcional.
