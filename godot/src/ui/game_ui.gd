@@ -5,6 +5,7 @@ signal start_requested(team: StringName, character_id: StringName, nickname: Str
 signal resume_requested
 signal quit_requested
 signal rematch_requested
+signal settings_saved
 
 const FLOW_SCRIPT := preload("res://src/ui/menu_flow.gd")
 const SETTINGS_SCRIPT := preload("res://src/ui/game_settings.gd")
@@ -176,6 +177,7 @@ func _on_volume_changed(value: float) -> void:
 func _save_settings_and_close() -> void:
 	settings.quality = StringName(quality.get_item_metadata(quality.selected))
 	settings.save()
+	settings_saved.emit()
 	flow.close_settings()
 
 

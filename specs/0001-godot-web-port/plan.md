@@ -72,12 +72,18 @@ por teclado e a persistência foram verificadas em Chromium e Firefox.
 
 ### 6. Áudio, persistência e integração Web
 
-Status: áudio, rádio e fallbacks em andamento; persistência concluída no marco
-anterior.
+Status: áudio, rádio e fallbacks concluídos e verificados em 2026-07-18;
+integração do shell Web em andamento.
 
 Portar pacotes de áudio e fallbacks, rádio, anúncios, settings e nick. Integrar
 o shell HTML, SEO/AEO, analytics e eventos Web. Escolher fallback de áudio que
 funcione sem depender de geração procedural incompatível com playback Web.
+
+O pacote de samples permanece opcional e externo ao PCK. O serviço de áudio
+usa o manifest embarcado para seleção, respeita o volume persistido e sintetiza
+um fallback com Web Audio quando uma faixa ou todo o pacote estiver ausente.
+Rádio Z/X/C, eventos de arma, dano, respawn, multikill e rounds foram ligados
+aos sinais do domínio e verificados em Chromium e Firefox.
 
 ### 7. Paridade, desempenho e corte
 

@@ -7,8 +7,11 @@ REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 OUTPUT_DIR="$REPO_ROOT/build/web"
 
 mkdir -p "$OUTPUT_DIR"
-exec "$SCRIPT_DIR/godot.sh" \
+"$SCRIPT_DIR/godot.sh" \
   --headless \
   --path "$REPO_ROOT/godot" \
   --export-release Web "$OUTPUT_DIR/index.html"
 
+# Samples stay outside the PCK so hosting can omit or replace the optional pack.
+mkdir -p "$OUTPUT_DIR/audio"
+cp -R "$REPO_ROOT/audio/." "$OUTPUT_DIR/audio/"

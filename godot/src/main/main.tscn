@@ -1,12 +1,16 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/match/movement_match.tscn" id="2_match"]
 [ext_resource type="PackedScene" path="res://src/ui/game_ui.tscn" id="3_ui"]
 [ext_resource type="Script" path="res://src/ui/radar_control.gd" id="4_radar"]
+[ext_resource type="Script" path="res://src/audio/audio_service.gd" id="5_audio"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
+
+[node name="AudioService" type="Node" parent="."]
+script = ExtResource("5_audio")
 
 [node name="WorldHost" type="Node3D" parent="."]
 
@@ -312,3 +316,25 @@ theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
 theme_override_font_sizes/font_size = 24
 text = "ELIMINADO · RESPAWN EM 2.5"
 horizontal_alignment = 1
+
+[node name="RadioMenu" type="Label" parent="GuiHost/HUD"]
+visible = false
+layout_mode = 0
+offset_left = 28.0
+offset_top = 190.0
+offset_right = 330.0
+offset_bottom = 320.0
+theme_override_colors/font_color = Color(1, 0.8235, 0.2471, 1)
+theme_override_font_sizes/font_size = 17
+text = "COMANDOS\n1. Bora, bora, bora!"
+
+[node name="RadioLog" type="Label" parent="GuiHost/HUD"]
+visible = false
+layout_mode = 0
+offset_left = 28.0
+offset_top = 610.0
+offset_right = 560.0
+offset_bottom = 642.0
+theme_override_colors/font_color = Color(0.5, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 17
+text = "Jogador (RÁDIO): Recebido!"

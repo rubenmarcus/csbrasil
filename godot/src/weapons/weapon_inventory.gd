@@ -5,6 +5,7 @@ signal weapon_changed(weapon_id: StringName, display_name: String, ammo: int, re
 signal ammo_changed(ammo: int, reserve: int)
 signal scope_changed(active: bool)
 signal fired(result: Dictionary)
+signal reload_started(weapon_id: StringName)
 
 @export var initial_weapon: StringName = &"awp"
 
@@ -64,7 +65,10 @@ func attack(origin: Vector3, direction: Vector3, source: Node = null) -> Diction
 func reload() -> bool:
 	if active_weapon == null or active_weapon.definition.melee:
 		return false
-	return active_weapon.reload()
+	var started: bool = active_weapon.reload()
+	if started:
+		reload_started.emit(active_weapon.definition.weapon_id)
+	return started
 
 
 func set_scoped(active: bool) -> bool:

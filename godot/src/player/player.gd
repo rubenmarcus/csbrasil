@@ -30,6 +30,7 @@ var input_session_active: bool = false
 var respawn_delay: float = 2.5
 var respawn_remaining: float = 0.0
 var alive: bool = true
+var input_overlay_active: bool = false
 var kills: int = 0
 var deaths: int = 0
 var spawn_position: Vector3
@@ -63,6 +64,8 @@ func _input(event: InputEvent) -> void:
 		set_scoped(not scoped)
 	elif event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed:
 		release_pointer()
+	elif event is InputEventKey and input_overlay_active and event.pressed and event.keycode in [KEY_R, KEY_1, KEY_2, KEY_3]:
+		return
 	elif event is InputEventKey and event.keycode == KEY_R and event.pressed:
 		weapon_inventory.reload()
 	elif event is InputEventKey and event.keycode == KEY_1 and event.pressed:

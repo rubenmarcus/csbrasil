@@ -87,7 +87,7 @@
     smoke test Web ponta a ponta.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:ui`; `npm run test:web`
 
-- [~] **Completar áudio, rádio e fallbacks Web** (test-type: both)
+- [x] **Completar áudio, rádio e fallbacks Web** (test-type: both)
   - blocked-by: menus, HUD, radar e persistência
   - summary: portar manifest, samples, rádio, anúncios, eventos de armas e
     fallbacks que funcionem com ou sem o pacote opcional.
@@ -96,9 +96,9 @@
   - acceptance criteria: pacote presente/ausente, faixa ausente, volume zero,
     rádio e anúncios são testados nos dois navegadores.
   - tests: unitários para seleção/throttle; integração Web com e sem pacote.
-  - verification: `godot --headless --path godot --script res://tests/test_runner.gd -- audio && npm run test:web:audio`
+  - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:audio`; `npm run test:web`
 
-- [ ] **Integrar shell Vercel, SEO/AEO e analytics** (test-type: integration)
+- [~] **Integrar shell Vercel, SEO/AEO e analytics** (test-type: integration)
   - blocked-by: áudio, rádio e fallbacks Web
   - summary: produzir shell customizado, preservar metadados e ligar eventos
     `game_start`/`match_end` via integração Web.
