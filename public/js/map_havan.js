@@ -115,33 +115,36 @@ export function buildHavan(scene, T) {
   /* ---------------- A ESTÁTUA (ícone da loja, paródia) ---------------- */
   {
     const zx = 0, zz = -30;
-    addBox(5, 3.2, 5, lam({ map: T.concrete }), zx, 0, zz);      // pedestal
-    addBox(5.8, 0.5, 5.8, lam({ map: T.concreteDark }), zx, 3.2, zz, { collide: false });
+    // praça escalonada + pedestal alto: a estátua domina o horizonte do estacionamento
+    addBox(10, 0.7, 10, lam({ map: T.concreteDark }), zx, 0, zz);
+    addBox(8.4, 0.7, 8.4, lam({ map: T.concrete }), zx, 0.7, zz);
+    addBox(6.4, 5.6, 6.4, lam({ map: T.concrete }), zx, 1.4, zz); // pedestal
+    addBox(7.2, 0.6, 7.2, lam({ map: T.concreteDark }), zx, 7.0, zz, { collide: false });
     const patina = lam({ color: 0x63a58c }), patinaD = lam({ color: 0x4a7a68 });
-    const robe = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1.3, 3.6, 10), patina);
-    robe.position.set(zx, 3.7 + 1.8, zz); robe.castShadow = true; root.add(robe); occluders.push(robe);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 8), patina);
-    head.position.set(zx, 7.6, zz); head.castShadow = true; root.add(head);
+    const robe = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 2.9, 8.2, 12), patina);
+    robe.position.set(zx, 7.6 + 4.1, zz); robe.castShadow = true; root.add(robe); occluders.push(robe);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(1.05, 12, 10), patina);
+    head.position.set(zx, 16.7, zz); head.castShadow = true; root.add(head);
     // coroa com 7 pontas
     for (let i = 0; i < 7; i++) {
       const a = (i / 7) * Math.PI * 2;
-      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.55, 5), patinaD);
-      spike.position.set(zx + Math.cos(a) * 0.48, 8.05, zz + Math.sin(a) * 0.48);
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.2, 1.3, 5), patinaD);
+      spike.position.set(zx + Math.cos(a) * 1.05, 17.6, zz + Math.sin(a) * 1.05);
       spike.rotation.z = -Math.cos(a) * 0.5; spike.rotation.x = Math.sin(a) * 0.5;
       root.add(spike);
     }
     // braço da tocha (direito, erguido)
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 2.2, 8), patina);
-    arm.position.set(zx + 0.9, 7.3, zz); arm.rotation.z = -0.5; arm.castShadow = true; root.add(arm);
-    const torch = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.7, 8), patinaD);
-    torch.position.set(zx + 1.45, 8.6, zz); root.add(torch);
-    const flame = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6),
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.44, 5.0, 8), patina);
+    arm.position.set(zx + 1.9, 15.9, zz); arm.rotation.z = -0.5; arm.castShadow = true; root.add(arm);
+    const torch = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.42, 1.6, 8), patinaD);
+    torch.position.set(zx + 3.1, 18.5, zz); root.add(torch);
+    const flame = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 6),
       new THREE.MeshBasicMaterial({ color: 0xffb23f }));
-    flame.position.set(zx + 1.45, 9.15, zz); root.add(flame);
+    flame.position.set(zx + 3.1, 19.6, zz); root.add(flame);
     // braço da tábua (esquerdo) — a tábua das OFERTAS
-    const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 1.6, 8), patina);
-    arm2.position.set(zx - 0.85, 6.4, zz + 0.3); arm2.rotation.z = 0.9; root.add(arm2);
-    addBox(0.9, 1.2, 0.15, patinaD, zx - 1.5, 6.2, zz + 0.6, { collide: false });
+    const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, 3.4, 8), patina);
+    arm2.position.set(zx - 1.8, 13.3, zz + 0.65); arm2.rotation.z = 0.9; root.add(arm2);
+    addBox(1.9, 2.5, 0.3, patinaD, zx - 3.2, 12.6, zz + 1.3, { collide: false });
   }
 
   /* ---------------- CARROS (cover do estacionamento) ---------------- */
