@@ -65,6 +65,49 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
   <p><strong style="color:#9dff9d">{online.length}</strong> jogadores online agora · em amarelo, o histórico total de partidas por cidade (localização aproximada, nível cidade — sem IP).</p>
   {!configured && <p>Mapa ainda não configurado.</p>}
   <div id="map" style="height:520px;border-radius:10px;border:1px solid #3a3325;background:#10130c"></div>
+
+  {configured && cities.length > 0 && (
+    <div style="margin-top:24px;font-family:Consolas,monospace">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <h2 style="margin:0;color:var(--yellow);font-size:18px">🏆 RANKING DE CIDADES</h2>
+        <input id="ct-filter" placeholder="filtrar cidade ou país…" autocomplete="off"
+          style="flex:1;min-width:180px;background:#10130c;border:1px solid #3a3325;color:#d8e0b0;padding:6px 10px;border-radius:6px;font-family:inherit;font-size:13px" />
+        <select id="ct-country" style="background:#10130c;border:1px solid #3a3325;color:#d8e0b0;padding:6px 10px;border-radius:6px;font-family:inherit;font-size:13px">
+          <option value="">todos os países</option>
+          {[...new Set(cities.map(c => c.country).filter(Boolean))].sort().map(co => <option value={co}>{co}</option>)}
+        </select>
+      </div>
+      <div style="overflow-x:auto;border:1px solid #3a3325;border-radius:8px">
+        <table id="ct-table" style="width:100%;border-collapse:collapse;font-size:13px;color:#c9bfa4">
+          <thead>
+            <tr style="background:#161a10;color:#9dff9d;text-align:left">
+              <th style="padding:8px 10px">#</th>
+              <th data-k="city" style="padding:8px 10px;cursor:pointer">CIDADE ⇅</th>
+              <th data-k="country" style="padding:8px 10px;cursor:pointer">PAÍS ⇅</th>
+              <th data-k="players" style="padding:8px 10px;cursor:pointer;text-align:right">JOGADORES ⇅</th>
+              <th data-k="matches" style="padding:8px 10px;cursor:pointer;text-align:right">PARTIDAS ⇅</th>
+              <th data-k="rounds" style="padding:8px 10px;cursor:pointer;text-align:right">ROUNDS ⇅</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cities.map((c, i) => (
+              <tr style="border-top:1px solid #262b1c"
+                data-city={(c.city || '').toLowerCase()} data-country={(c.country || '').toLowerCase()}
+                data-players={c.players.length} data-matches={c.matches} data-rounds={c.rounds}>
+                <td class="ct-rank" style="padding:7px 10px;color:var(--yellow)">{i + 1}</td>
+                <td style="padding:7px 10px;color:#d8e0b0">{c.city}</td>
+                <td style="padding:7px 10px">{c.country}</td>
+                <td style="padding:7px 10px;text-align:right">{c.players.length}</td>
+                <td style="padding:7px 10px;text-align:right">{c.matches}</td>
+                <td style="padding:7px 10px;text-align:right">{c.rounds}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p id="ct-empty" style="display:none;color:#c9bfa4;margin-top:8px">nenhuma cidade com esse filtro.</p>
+    </div>
+  )}
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" is:inline></script>
   <script is:inline define:vars={{ mapData }}>
     const map = L.map('map', { scrollWheelZoom: true }).setView([-14.5, -52.5], 4);
@@ -91,5 +134,45 @@ const mapData = { online: online.filter(o => o.lat && o.lon), cities: cities.fil
         radius: 5, color: '#9dff9d', weight: 2, fillColor: '#9dff9d', fillOpacity: 0.9,
       }).addTo(map).bindPopup(`<b>${o.nick}</b> online agora${o.city ? ' · ' + o.city : ''}`);
     }
+  </script>
+  <script is:inline>
+    (() => {
+      const table = document.getElementById('ct-table');
+      if (!table) return;
+      const tbody = table.querySelector('tbody');
+      const rows = [...tbody.querySelectorAll('tr')];
+      const fEl = document.getElementById('ct-filter');
+      const cEl = document.getElementById('ct-country');
+      const empty = document.getElementById('ct-empty');
+      let sortKey = 'matches', sortDir = -1;
+      const num = new Set(['players', 'matches', 'rounds']);
+      function apply() {
+        const q = (fEl.value || '').trim().toLowerCase();
+        const co = cEl.value.toLowerCase();
+        let visible = 0;
+        const sorted = [...rows].sort((a, b) => {
+          let va = a.dataset[sortKey], vb = b.dataset[sortKey];
+          if (num.has(sortKey)) { va = +va; vb = +vb; return (va - vb) * sortDir; }
+          return String(va).localeCompare(String(vb)) * sortDir;
+        });
+        let rank = 0;
+        for (const r of sorted) {
+          const show = (!q || r.dataset.city.includes(q) || r.dataset.country.includes(q)) &&
+                       (!co || r.dataset.country === co);
+          r.style.display = show ? '' : 'none';
+          if (show) { rank++; r.querySelector('.ct-rank').textContent = rank; visible++; }
+          tbody.appendChild(r);
+        }
+        empty.style.display = visible ? 'none' : '';
+      }
+      fEl.addEventListener('input', apply);
+      cEl.addEventListener('change', apply);
+      table.querySelectorAll('th[data-k]').forEach(th => th.addEventListener('click', () => {
+        const k = th.dataset.k;
+        if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = num.has(k) ? -1 : 1; }
+        apply();
+      }));
+      apply();
+    })();
   </script>
 </Layout>
