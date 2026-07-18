@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1] — 2026-07-18
+### Adicionado
+- **Modo de armas** (dropdown ao lado do mapa): TODAS / SÓ PISTOLAS (pistola +
+  deagle nos pickups) / SÓ FACA (sem armas nem pickups) / SÓ AWP (sem pistola,
+  pickups só de AWP) — afeta loadout inicial e quais pickups o jogador pode
+  pegar com E (bots seguem no padrão AWP)
+
 ## [1.12.0] — 2026-07-18
 ### Adicionado
 - **Arsenal completo**: AK-47, M4A1, MP5, Escopeta M3 e Deagle jogáveis

@@ -9,7 +9,7 @@ import { VERSION } from './version.js';
 
 /* ---------------- settings & nickname ---------------- */
 const SETTINGS_KEY = 'awpbr_settings';
-const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP },
+const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP, wpnMode: 'all' },
   JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 const saveSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 const NICK_KEY = 'awpbr_nick';
@@ -194,6 +194,9 @@ mapSel.onchange = () => {
   settings.map = currentMap; saveSettings();
   rebuildMenuBackdrop();
 };
+const wpnSel = $('wpn-mode');
+wpnSel.value = settings.wpnMode || 'all';
+wpnSel.onchange = () => { settings.wpnMode = wpnSel.value; saveSettings(); sfx.uiClick(); };
 $('btn-howto').onclick = () => { sfx.uiClick(); show('howto-panel'); };
 $('howto-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
 $('btn-settings').onclick = () => { sfx.uiClick(); settingsReturn = 'main-menu'; show('settings-panel'); };

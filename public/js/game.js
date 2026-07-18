@@ -344,7 +344,22 @@ export class Game {
     this.player.pitch = 0; this.player.vel.set(0, 0, 0); this.player.crouchF = 0;
     this.player.ammo.awp = { mag: WEAPONS.awp.mag, res: WEAPONS.awp.reserve };
     this.player.ammo.pistol = { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve };
-    this.player.weapon = 'awp'; this.player.scoped = false; this.player.reloadUntil = 0;
+    // modo de armas: aplica o loadout inicial
+    const mode = this.settings.wpnMode || 'all';
+    if (mode === 'pistols') {
+      this.player.weapon = 'pistol';
+      this.player.ammo.awp = { mag: 0, res: 0 };
+    } else if (mode === 'knife') {
+      this.player.weapon = 'knife';
+      this.player.ammo.awp = { mag: 0, res: 0 };
+      this.player.ammo.pistol = { mag: 0, res: 0 };
+    } else if (mode === 'awp') {
+      this.player.weapon = 'awp';
+      this.player.ammo.pistol = { mag: 0, res: 0 };
+    } else {
+      this.player.weapon = 'awp';
+    }
+    this.player.scoped = false; this.player.reloadUntil = 0;
     for (const d of this.drops) this.scene.remove(d.mesh);
     this.drops = [];
     this.vm.awp.visible = true; this.vm.pistol.visible = false; this.vm.knife.visible = false;
@@ -835,7 +850,7 @@ export class Game {
     };
     list.forEach((pk, i) => consider(pk, false, i));
     this.drops.forEach((pk, i) => consider(pk, true, i));
-    this.nearPickup = near && this.player.alive ? { pk: near, dropIdx: nearDrop } : null;
+    this.nearPickup = near && this.player.alive && this._pickupAllowed(near.weapon) ? { pk: near, dropIdx: nearDrop } : null;
     if (this.el.pickupHint) {
       if (this.nearPickup && this.state === 'live') {
         this.el.pickupHint.textContent = `[E] PEGAR ${WEAPONS[this.nearPickup.pk.weapon].short}`;
@@ -862,6 +877,13 @@ export class Game {
         if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, b, false); this.scene.remove(pk.mesh); this.drops.splice(i, 1); break; }
       }
     }
+  }
+  _pickupAllowed(w) {
+    const mode = this.settings.wpnMode || 'all';
+    if (mode === 'pistols') return w === 'pistol' || w === 'deagle';
+    if (mode === 'knife') return false;
+    if (mode === 'awp') return w === 'awp';
+    return true; // all
   }
   _grabPickup(pk, who, isPlayer) {
     const w = pk.weapon;                           // qualquer arma de WEAPONS
