@@ -7,9 +7,9 @@ const MAIN_SCENE_PATH := "res://src/main/main.tscn"
 func test_match_composes_player_awp_bot_and_combat_hud() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
-	assert_not_null(match_scene.get_node_or_null("Player/CameraPivot/Camera3D/Inventory/AWP"))
-	assert_not_null(match_scene.get_node_or_null("Bot"))
-	assert_eq(match_scene.get_node("Bot").position, Vector3(0.0, 0.0, 1.0))
+	assert_not_null(match_scene.get_node_or_null("Actors/Player/CameraPivot/Camera3D/Inventory/AWP"))
+	assert_not_null(match_scene.get_node_or_null("Actors/Bots/caminhoneiro"))
+	assert_eq(match_scene.get_node("Actors/Bots/caminhoneiro").position, Vector3(0.0, 0.0, 1.0))
 
 	var main := (load(MAIN_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(main)
@@ -35,8 +35,8 @@ func test_bot_respawns_after_legacy_delay() -> void:
 func test_player_awp_completes_headshot_death_cycle() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
-	var player := match_scene.get_node("Player")
-	var bot := match_scene.get_node("Bot")
+	var player := match_scene.get_node("Actors/Player")
+	var bot: CombatBot = match_scene.get_node("MatchController").bot
 	await wait_physics_frames(3)
 	player.set_scoped(true)
 	var origin: Vector3 = player.camera.global_position
@@ -52,9 +52,9 @@ func test_player_awp_completes_headshot_death_cycle() -> void:
 func test_player_death_restores_health_and_movement_after_respawn() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
-	var player := match_scene.get_node("Player")
+	var player := match_scene.get_node("Actors/Player")
 	player.respawn_delay = 0.05
-	assert_true(player.take_damage(400, match_scene.get_node("Bot"), false))
+	assert_true(player.take_damage(400, match_scene.get_node("MatchController").bot, false))
 	assert_false(player.accepts_input)
 	await wait_seconds(0.08)
 	assert_eq(player.health.current_health, 100)
@@ -65,8 +65,25 @@ func test_player_death_restores_health_and_movement_after_respawn() -> void:
 func test_bot_reacts_and_applies_legacy_damage_to_exposed_player() -> void:
 	var match_scene := (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(match_scene)
-	var player := match_scene.get_node("Player")
+	var player := match_scene.get_node("Actors/Player")
+	var controller: CombatMatch = match_scene.get_node("MatchController")
+	var exposed_bot: CombatBot = controller.bot
+	exposed_bot.movement_speed = 0.0
+	for actor in controller.actors():
+		if actor is CombatBot:
+			actor.movement_speed = 0.0
+			if actor != exposed_bot:
+				actor.reaction_seconds = 100.0
 	player.input_session_active = true
+	await wait_physics_frames(1)
+	assert_eq(exposed_bot.target_actor, player)
+	var sight_query := PhysicsRayQueryParameters3D.create(
+		exposed_bot.target_point(), player.target_point()
+	)
+	sight_query.exclude = [exposed_bot.get_rid(), exposed_bot.head_hitbox.get_rid()]
+	sight_query.collide_with_areas = true
+	var sight: Dictionary = exposed_bot.get_world_3d().direct_space_state.intersect_ray(sight_query)
+	assert_eq(sight.get("collider"), player)
 	await wait_physics_frames(65)
 	assert_eq(player.health.current_health, 58)
 	assert_true(player.accepts_input)

@@ -42,9 +42,16 @@ estado independente, draw delay e controllers separados para hitscan e melee.
 
 ### 4. Partida 4×4
 
+Status: concluído e verificado em 2026-07-18.
+
 Expandir para os sete bots, portar grafo de waypoints/IA, round de 99 segundos,
 pontuação, respawn e vitória por três rounds. O grafo atual será preservado no
 primeiro port; `NavigationMesh` só poderá substituí-lo com evidência equivalente.
+
+O marco entregue usa a composição `Match/Arena`, `Actors`, `Effects`,
+`MatchController` e `RoundController`, com rosters 4×4, seleção de alvo, rotas
+ao redor de bloqueios, killfeed, scoreboard e estado de partida exposto ao
+smoke test Web.
 
 ### 5. Conteúdo procedural e apresentação
 
