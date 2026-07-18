@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.12.2] — 2026-07-18
+### Mudado
+- **Nick obrigatório** pra jogar: sem nome, o JOGAR não deixa passar (campo
+  treme, fica vermelho e pede "DIGITE UM NICK PRIMEIRO!")
+
 ## [1.12.1] — 2026-07-18
 ### Adicionado
 - **Modo de armas** (dropdown ao lado do mapa): TODAS / SÓ PISTOLAS (pistola +
