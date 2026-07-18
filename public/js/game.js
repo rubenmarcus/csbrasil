@@ -689,7 +689,8 @@ export class Game {
     const wantCrouch = (this.keys.ControlLeft || this.keys.ControlRight || this.keys.KeyC) && p.grounded;
     p.crouchF = Math.max(0, Math.min(1, p.crouchF + (wantCrouch ? dt * 7 : -dt * 7)));
     const sprint = (this.keys.ShiftLeft || this.keys.ShiftRight) && p.crouchF < 0.3;
-    const maxSp = (sprint ? 6.6 : 4.7) * (p.scoped ? 0.5 : 1) * (1 - 0.5 * p.crouchF);
+    const slowMul = this.world.slowAt && this.world.slowAt(p.pos.x, p.pos.z) ? 0.45 : 1;  // água/lago
+    const maxSp = (sprint && slowMul === 1 ? 6.6 : 4.7) * (p.scoped ? 0.5 : 1) * (1 - 0.5 * p.crouchF) * slowMul;
     let ix = (this.keys.KeyD ? 1 : 0) - (this.keys.KeyA ? 1 : 0);
     let iz = (this.keys.KeyS ? 1 : 0) - (this.keys.KeyW ? 1 : 0);
     const il = Math.hypot(ix, iz) || 1; ix /= il; iz /= il;
@@ -964,8 +965,9 @@ export class Game {
           let dy = wantYaw - b.yaw;
           while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
           b.yaw += dy * Math.min(1, dt * 8);
-          b.pos.x += Math.sin(b.yaw) * BOT_SPEED * dt;
-          b.pos.z += Math.cos(b.yaw) * BOT_SPEED * dt;
+          const bSlow = this.world.slowAt && this.world.slowAt(b.pos.x, b.pos.z) ? 0.5 : 1;  // bots também vadear
+          b.pos.x += Math.sin(b.yaw) * BOT_SPEED * bSlow * dt;
+          b.pos.z += Math.cos(b.yaw) * BOT_SPEED * bSlow * dt;
           this._collide(b.pos, 0.38);
           moving = 1;
         }
