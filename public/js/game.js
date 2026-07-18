@@ -54,7 +54,7 @@ export class Game {
       isPlayer: true, name: (nickname || '').trim().slice(0, 14) || 'VOCÊ', def: this.playerDef, team: playerTeam,
       pos: new THREE.Vector3(), vel: new THREE.Vector3(),
       yaw: 0, pitch: 0, hp: 100, alive: true, respawnAt: 0, crouchF: 0,
-      weapon: 'awp', primaryWeapon: 'awp', scoped: false, reloadUntil: 0, nextShotAt: 0, drawUntil: 0,
+      weapon: 'awp', scoped: false, reloadUntil: 0, nextShotAt: 0, drawUntil: 0,
       ammo: { awp: { mag: WEAPONS.awp.mag, res: WEAPONS.awp.reserve }, pistol: { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve }, shotgun: { mag: WEAPONS.shotgun.mag, res: WEAPONS.shotgun.reserve }, ak47: { mag: WEAPONS.ak47.mag, res: WEAPONS.ak47.reserve } },
       kills: 0, deaths: 0, headshots: 0, grounded: true, stepPhase: 0, revealedAt: -99,
     };
@@ -105,13 +105,6 @@ export class Game {
     this._dom();
     this._input();
     this._applyQuality();
-    this.el.weaponPicker?.addEventListener('click', e => {
-      const w = e.target.closest('[data-w]')?.dataset.w;
-      if (w && WEAPONS[w]) {
-        this.player.primaryWeapon = w;
-        this.el.weaponPicker.querySelectorAll('.wpick').forEach(b => b.classList.toggle('active', b.dataset.w === w));
-      }
-    });
     this.radarCtx = this.el.radar ? this.el.radar.getContext('2d') : null;
     // botões do HUD: configurações + liga/desliga falas (memes)
     this.el.hudSettings.onclick = () => this.onOpenSettings?.();
@@ -139,7 +132,6 @@ export class Game {
       pause: $('pause-menu'), radar: $('radar'),
       radioMenu: $('radio-menu'), radioLog: $('radio-log'), mkBanner: $('mk-banner'),
       lockHint: $('lock-hint'), hudSpeech: $('hud-speech'), hudSettings: $('hud-settings'),
-      weaponPicker: $('weapon-picker'),
     };
   }
 
@@ -244,7 +236,7 @@ export class Game {
       if (e.code === 'KeyZ') { this._radioShow('z'); return; }
       if (e.code === 'KeyX') { this._radioShow('x'); return; }
       if (e.code === 'KeyV') { this._radioShow('c'); return; }
-      if (e.code === 'Digit1') this._switchWeapon(this.player.primaryWeapon);
+      if (e.code === 'Digit1') this._switchWeapon('awp');
       if (e.code === 'Digit2') this._switchWeapon('pistol');
       if (e.code === 'Digit3') this._switchWeapon('knife');
       if (e.code === 'KeyM') this._switchTeam();
@@ -357,12 +349,11 @@ export class Game {
     this.player.ammo.pistol = { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve };
     this.player.ammo.shotgun = { mag: WEAPONS.shotgun.mag, res: WEAPONS.shotgun.reserve };
     this.player.ammo.ak47 = { mag: WEAPONS.ak47.mag, res: WEAPONS.ak47.reserve };
-    const pw = this.player.primaryWeapon;
-    this.player.weapon = pw; this.player.scoped = false; this.player.reloadUntil = 0;
+    this.player.weapon = 'awp'; this.player.scoped = false; this.player.reloadUntil = 0;
     for (const d of this.drops) this.scene.remove(d.mesh);
     this.drops = [];
-    ['awp','pistol','knife','shotgun','ak47'].forEach(k => this.vm[k].visible = k === pw);
-    this.el.weaponName.textContent = WEAPONS[pw].name;
+    ['awp','pistol','knife','shotgun','ak47'].forEach(k => this.vm[k].visible = k === 'awp');
+    this.el.weaponName.textContent = WEAPONS['awp'].name;
     const slots = { P: 1, B: 0 };
     for (const b of this.bots) {
       place(b, b.team, slots[b.team]++);
@@ -496,7 +487,7 @@ export class Game {
   _switchWeapon(w) {
     const p = this.player;
     if (p.weapon === w || !p.alive) return;
-    if (w !== p.primaryWeapon && w !== 'pistol' && w !== 'knife') return;
+    if (!WEAPONS[w]) return;
     p.weapon = w; p.reloadUntil = 0; p.drawUntil = this.time + 0.28;
     this.vm.reloadDip = 0;   // evita arma travada inclinada ao trocar no meio da recarga
     this._scope(false, true);
@@ -748,8 +739,6 @@ export class Game {
     if (!p.alive) {
       const left = p.respawnAt - this.time;
       this.el.respawnCount.textContent = Math.max(0, left).toFixed(1);
-      if (this.el.weaponPicker)
-        this.el.weaponPicker.querySelectorAll('.wpick').forEach(b => b.classList.toggle('active', b.dataset.w === p.primaryWeapon));
       if (left <= 0) this._respawnPlayer();
       this.camera.position.y = Math.max(0.5, this.camera.position.y - dt * 2);
       this.camera.rotation.z = Math.min(0.5, (this.camera.rotation.z || 0) + dt * 0.8);
@@ -922,9 +911,9 @@ export class Game {
     p.yaw = p.team === 'P' ? Math.PI : 0; p.pitch = 0;
     p.ammo.awp.mag = WEAPONS.awp.mag; p.ammo.pistol.mag = WEAPONS.pistol.mag;
     p.ammo.shotgun.mag = WEAPONS.shotgun.mag; p.ammo.ak47.mag = WEAPONS.ak47.mag;
-    p.weapon = p.primaryWeapon;
-    ['awp','pistol','knife','shotgun','ak47'].forEach(k => this.vm[k].visible = k === p.primaryWeapon);
-    this.el.weaponName.textContent = WEAPONS[p.primaryWeapon].name;
+    p.weapon = 'awp';
+    ['awp','pistol','knife','shotgun','ak47'].forEach(k => this.vm[k].visible = k === 'awp');
+    this.el.weaponName.textContent = WEAPONS['awp'].name;
     this.camera.rotation.z = 0;
     this.el.respawn.classList.add('hidden');
     this.sfx.respawn();
