@@ -50,6 +50,43 @@ function concreteBase(w = 256, h = 256, base = '#9a938a', dark = '#7d766d') {
   return c;
 }
 
+function shd(hex, amt) {
+  const n = parseInt(hex.slice(1), 16); let r = (n>>16)&255, g = (n>>8)&255, b = n&255;
+  r = Math.max(0, Math.min(255, r + amt*255)); g = Math.max(0, Math.min(255, g + amt*255)); b = Math.max(0, Math.min(255, b + amt*255));
+  return `rgb(${r|0},${g|0},${b|0})`;
+}
+function pixelWall(w, h, base, dark) {
+  const c = canvas(w, h), x = c.getContext('2d'); x.fillStyle = base; x.fillRect(0, 0, w, h);
+  const bw = w/4, bh = h/8;
+  for (let ry = 0; ry < 8; ry++) for (let cx = 0; cx < 5; cx++) {
+    const off = (ry%2) * bw/2; x.fillStyle = shd(base, (Math.random()-.5)*0.10);
+    x.fillRect(cx*bw - off, ry*bh, bw-2, bh-2);
+  }
+  x.fillStyle = dark;
+  for (let ry = 0; ry <= 8; ry++) x.fillRect(0, ry*bh-1, w, 2);
+  for (let cx = 0; cx <= 4; cx++) { const off=(cx*bw); x.fillRect(off-1, 0, 2, h); }
+  return c;
+}
+function pixelGround(sz) {
+  const c = canvas(sz, sz), x = c.getContext('2d'); const base = '#9a9187'; x.fillStyle = base; x.fillRect(0, 0, sz, sz);
+  const t = sz/8;
+  for (let a = 0; a < 8; a++) for (let b = 0; b < 8; b++) { x.fillStyle = shd(base, (Math.random()-.5)*0.09); x.fillRect(a*t, b*t, t-2, t-2); }
+  x.fillStyle = 'rgba(55,50,44,0.55)';
+  for (let i = 0; i <= 8; i++) { x.fillRect(i*t-1, 0, 2, sz); x.fillRect(0, i*t-1, sz, 2); }
+  return c;
+}
+function pixelMetal(sz) {
+  const c = canvas(sz, sz), x = c.getContext('2d'); const base = '#5a5f66'; x.fillStyle = base; x.fillRect(0, 0, sz, sz);
+  for (let i = 0; i < sz; i += 3) { x.fillStyle = shd(base, (Math.random()-.5)*0.16); x.fillRect(i, 0, 2, sz); }
+  return c;
+}
+function pixelWood(sz) {
+  const c = canvas(sz, sz), x = c.getContext('2d');
+  for (let i = 0; i < 6; i++) { x.fillStyle = shd('#a97f4e', (i%2 ? -0.05 : 0.04) + (Math.random()-.5)*0.04); x.fillRect(0, i*(sz/6), sz, sz/6 - 1); }
+  x.fillStyle = '#6b4f2c'; x.fillRect(2,2,sz-4,3); x.fillRect(2,sz-5,sz-4,3); x.fillRect(2,2,3,sz-4); x.fillRect(sz-5,2,3,sz-4);
+  return c;
+}
+
 export function initTextures() {
   const T = {};
 
@@ -67,10 +104,10 @@ export function initTextures() {
     x.beginPath(); x.moveTo(120, -20); x.bezierCurveTo(340, 300, 180, 700, 520, 1050); x.stroke();
     x.beginPath(); x.moveTo(760, -20); x.bezierCurveTo(620, 380, 880, 640, 700, 1050); x.stroke();
   }
-  T.ground = tex(gc, 10, 10);
+  T.ground = tex(pixelGround(512), 10, 10);
 
-  T.concrete = tex(concreteBase(), 1, 1);
-  T.concreteDark = tex(concreteBase(256, 256, '#6f6a62', '#57534c'), 1, 1);
+  T.concrete = tex(pixelWall(256, 256, '#9a938a', '#7d766d'), 1, 1);
+  T.concreteDark = tex(pixelWall(256, 256, '#6f6a62', '#4f4b44'), 1, 1);
 
   { // asphalt for central lane
     const c = canvas(256, 256), x = c.getContext('2d');
@@ -91,16 +128,7 @@ export function initTextures() {
     noiseOver(x, 128, 128, 0.4, ['#4c682e', '#73924a', '#87a355']);
     T.grass = tex(c, 2, 2);
   }
-  { // crate wood + stencil
-    const c = canvas(128, 128), x = c.getContext('2d');
-    x.fillStyle = '#a97f4e'; x.fillRect(0, 0, 128, 128);
-    for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? '#9c7343' : '#b08657'; x.fillRect(0, i * 32, 128, 30); }
-    x.strokeStyle = '#6b4f2c'; x.lineWidth = 4; x.strokeRect(3, 3, 122, 122);
-    x.beginPath(); x.moveTo(4, 4); x.lineTo(124, 124); x.moveTo(124, 4); x.lineTo(4, 124); x.stroke();
-    x.fillStyle = 'rgba(40,25,10,0.8)'; x.font = 'bold 17px Arial Black,sans-serif';
-    x.textAlign = 'center'; x.fillText('FRÁGIL', 64, 60); x.fillText('TRETA®', 64, 82);
-    T.crate = tex(c);
-  }
+  T.crate = tex(pixelWood(128));
 
   // --- graffiti walls (3 variants) ---
   T.graffiti = [0, 1, 2].map(v => {
@@ -264,7 +292,7 @@ export function initTextures() {
     T.corkboard = tex(c);
   }
   // metal
-  T.metal = tex(concreteBase(128, 128, '#5a5f66', '#464b52'));
+  T.metal = tex(pixelMetal(128));
 
   // --- soft sprites (sun / cloud / muzzle flash) ---
   const clampTex = t => { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.magFilter = THREE.LinearFilter; return t; };
