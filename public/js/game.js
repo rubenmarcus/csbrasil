@@ -677,7 +677,9 @@ export class Game {
     const row = document.createElement('div');
     row.className = 'kf-row';
     const cn = e => `<span class="${e.team === 'P' ? 'kp' : 'kb'}">${e.name}</span>`;
-    row.innerHTML = attacker && attacker !== victim
+    row.innerHTML = weap === 'METRÔ'
+      ? `${cn(victim)} <span class="kx">🚇 atropelado pelo metrô</span>`
+      : attacker && attacker !== victim
       ? `${cn(attacker)} <span class="kx">[${weap}${head ? ' 💀' : ''}]</span> ${cn(victim)}`
       : `${cn(victim)} <span class="kx">tropeçou na treta</span>`;
     this.el.killfeed.prepend(row);
@@ -792,6 +794,13 @@ export class Game {
     tryAxis(p.vel.x * dt, 0); tryAxis(0, p.vel.z * dt);
     this._collide(p.pos, 0.38);
     p.pos.y += p.vel.y * dt;
+    // movers (trem): atropelo letal + transporte quando porta aberta/fechando
+    if (this.world.movers) for (const m of this.world.movers) {
+      if (p.pos.x > m.minX && p.pos.x < m.maxX && p.pos.y + 1.6 > m.minY && p.pos.y < m.maxY && p.pos.z > m.minZ && p.pos.z < m.maxZ) {
+        if (m.lethal) this._damage(p, 1000, null, 'METRÔ');
+        else if (m.carry) p.pos.z += m.carry * dt;
+      }
+    }
     const g2 = this.world.groundHeightAt(p.pos.x, p.pos.z);
     if (p.pos.y <= g2) {
       if (!p.grounded && p.vel.y < -6) this.sfx.land();
@@ -1061,6 +1070,13 @@ export class Game {
       }
     }
     b.pos.y = this.world.groundHeightAt(b.pos.x, b.pos.z);
+    // movers (trem): bots também são atropelados/transportados
+    if (this.world.movers) for (const m of this.world.movers) {
+      if (b.pos.x > m.minX && b.pos.x < m.maxX && b.pos.y + 1.6 > m.minY && b.pos.y < m.maxY && b.pos.z > m.minZ && b.pos.z < m.maxZ) {
+        if (m.lethal) this._damage(b, 1000, null, 'METRÔ');
+        else if (m.carry) b.pos.z += m.carry * dt;
+      }
+    }
     b.phase += dt * (moving ? 9 : 0);
     g.position.copy(b.pos);
     g.rotation.set(0, b.yaw, 0);
@@ -1153,6 +1169,7 @@ export class Game {
     }
     this._updatePlayer(dt);
     for (const b of this.bots) this._updateBot(b, dt);
+    if (this.world.tick) this.world.tick(this, dt);   // trem em movimento (mapas com movers)
     this._updatePickups();
     this._updateFx(dt);
     this._updateHud();
