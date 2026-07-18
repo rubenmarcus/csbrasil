@@ -29,6 +29,7 @@ var _navigation_path: Array[int] = []
 var _path_cursor: int = 0
 var _path_refresh_remaining: float = 0.0
 var _target_visible_for: float = 0.0
+var _visual_phase: float = 0.0
 
 
 func _ready() -> void:
@@ -38,6 +39,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_animate_visual(delta)
 	if not alive:
 		respawn_remaining = maxf(0.0, respawn_remaining - delta)
 		if respawn_remaining <= 0.0:
@@ -170,3 +172,21 @@ func _collider_belongs_to_target(collider: Object) -> bool:
 	if collider == target_actor:
 		return true
 	return collider is Node and target_actor != null and target_actor.is_ancestor_of(collider)
+
+
+func _animate_visual(delta: float) -> void:
+	if visuals.get_child_count() == 0:
+		return
+	var generated := visuals.get_child(0) as Node3D
+	var left_leg := generated.get_node_or_null("Body/LegLeft") as MeshInstance3D
+	var right_leg := generated.get_node_or_null("Body/LegRight") as MeshInstance3D
+	var torso := generated.get_node_or_null("Body/Torso") as MeshInstance3D
+	if left_leg == null or right_leg == null or torso == null:
+		return
+	var moving := clampf(
+		Vector2(velocity.x, velocity.z).length() / maxf(movement_speed, 0.001), 0.0, 1.0
+	)
+	_visual_phase += delta * (8.0 if moving > 0.05 else 2.0)
+	left_leg.rotation.x = sin(_visual_phase) * 0.45 * moving
+	right_leg.rotation.x = -left_leg.rotation.x
+	torso.position.y = 1.08 + sin(_visual_phase * 0.5) * 0.015

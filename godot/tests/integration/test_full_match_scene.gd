@@ -22,9 +22,14 @@ func test_match_uses_godot_scene_composition_and_builds_complete_rosters() -> vo
 	assert_eq(controller.team_members(&"P").size(), 4)
 	assert_eq(controller.team_members(&"B").size(), 4)
 	var actor_ids: Dictionary = {}
+	var visual_signatures: Dictionary = {}
 	for actor in actors:
 		actor_ids[actor.actor_id] = true
+		if actor is CombatBot:
+			var generated_visual: Node3D = actor.visuals.get_child(0)
+			visual_signatures[generated_visual.get_meta("procedural_signature")] = true
 	assert_eq(actor_ids.size(), 8, "Every roster entry needs a stable unique id")
+	assert_eq(visual_signatures.size(), 7, "Every bot must use its distinct procedural visual")
 
 
 func test_death_updates_round_score_player_stats_and_killfeed() -> void:

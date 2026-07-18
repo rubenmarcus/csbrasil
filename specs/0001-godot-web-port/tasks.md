@@ -62,7 +62,7 @@
     acelerada e smoke test Web.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:match`; `npm run test:web`
 
-- [ ] **Portar arena e personagens procedurais completos** (test-type: both)
+- [~] **Portar arena e personagens procedurais completos** (test-type: both)
   - blocked-by: partida 4×4 completa
   - summary: portar mapa, props, skyline, oito personagens, acessórios, armas
     visuais, animações, texturas e caches com seed.

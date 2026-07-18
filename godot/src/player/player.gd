@@ -14,7 +14,7 @@ const MovementMotorScript := preload("res://src/player/movement_motor.gd")
 
 @export var movement_config: Resource = MovementConfigScript.new()
 @export var accepts_input: bool = true
-@export var actor_id: StringName = &"player"
+@export var actor_id: StringName = &"esquerdomacho"
 @export var display_name: String = "Jogador"
 @export var team: StringName = &"P"
 

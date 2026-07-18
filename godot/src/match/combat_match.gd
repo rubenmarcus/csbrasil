@@ -9,14 +9,15 @@ signal match_state_changed(state: Dictionary)
 const BOT_SCENE := preload("res://src/actors/combat_bot.tscn")
 const TARGET_SELECTOR := preload("res://src/ai/bot_target_selector.gd")
 const WAYPOINT_GRAPH := preload("res://src/ai/waypoint_graph.gd")
+const CHARACTER_FACTORY := preload("res://src/procedural/character_visual_factory.gd")
 const BOT_DEFINITIONS := [
-	{"id": &"sindicato", "name": "Sindicato", "team": &"P", "spawn": Vector3(-6.0, 0.0, 8.0)},
-	{ "id": &"mst", "name": "MST", "team": &"P", "spawn": Vector3(3.0, 0.0, 8.0) },
-	{ "id": &"doutora", "name": "Doutora", "team": &"P", "spawn": Vector3(6.0, 0.0, 8.0) },
+	{"id": &"sindicato", "name": "Líder do Sindicato", "team": &"P", "spawn": Vector3(-6.0, 0.0, 8.0)},
+	{ "id": &"mst", "name": "Líder do MST", "team": &"P", "spawn": Vector3(3.0, 0.0, 8.0) },
+	{ "id": &"doutora", "name": "Doutora do SUS", "team": &"P", "spawn": Vector3(6.0, 0.0, 8.0) },
 	{ "id": &"caminhoneiro", "name": "Caminhoneiro", "team": &"B", "spawn": Vector3(0.0, 0.0, 1.0) },
 	{ "id": &"influencer", "name": "Influencer", "team": &"B", "spawn": Vector3(-6.0, 0.0, -8.0) },
 	{ "id": &"sertanejo", "name": "Sertanejo", "team": &"B", "spawn": Vector3(0.0, 0.0, -8.0) },
-	{ "id": &"tia_zila", "name": "Tia Zilá", "team": &"B", "spawn": Vector3(6.0, 0.0, -8.0) },
+	{ "id": &"senhora", "name": "Tia Zilá", "team": &"B", "spawn": Vector3(6.0, 0.0, -8.0) },
 ]
 
 @onready var player: PlayerController = $"../Actors/Player"
@@ -27,6 +28,7 @@ var bot: CombatBot
 var _bots: Array[CombatBot] = []
 var _selector: BotTargetSelector = TARGET_SELECTOR.new()
 var _graph: WaypointGraph = WAYPOINT_GRAPH.new()
+var _character_factory: CharacterVisualFactory = CHARACTER_FACTORY.new()
 var _think_remaining: float = 0.0
 var _next_round_remaining: float = -1.0
 
@@ -131,6 +133,7 @@ func _build_rosters() -> void:
 		actor_bot.team = definition.team
 		actor_bot.position = definition.spawn
 		bots_host.add_child(actor_bot)
+		_character_factory.build_into(actor_bot.visuals, actor_bot.actor_id)
 		actor_bot.set_navigation_graph(_graph)
 		_connect_actor(actor_bot)
 		_bots.append(actor_bot)
