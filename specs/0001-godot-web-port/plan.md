@@ -88,8 +88,9 @@ aos sinais do domínio e verificados em Chromium e Firefox.
 
 ### 7. Paridade, desempenho e corte
 
-Status: validação de paridade e desempenho em andamento; corte de produção
-aguarda aprovação explícita.
+Status: paridade e desempenho concluídos e verificados em 2026-07-18; relatório
+publicado em `docs/reports/2026-07-18-godot-web-parity.md`. O corte de produção
+aguarda preview e aprovação explícita.
 
 Executar matriz completa de testes nos dois engines e navegadores suportados,
 corrigir divergências, medir uma partida roteirizada de cinco minutos e produzir

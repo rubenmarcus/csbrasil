@@ -25,7 +25,10 @@ Execute `Tasks: Run Task` e escolha:
 - `Godot: Run`: executa a main scene nativa;
 - `Godot: Test`: executa toda a suíte GUT em modo headless;
 - `Godot: Export Web`: gera `build/web/index.html`;
-- `Godot: Serve Web`: serve a exportação em `http://127.0.0.1:8177`.
+- `Godot: Serve Web`: serve a exportação em `http://127.0.0.1:8177`;
+- `Godot: Test Web`: executa a matriz funcional headless em Chromium/Firefox;
+- `Godot: Test Web Performance`: abre os dois navegadores com aceleração por
+  GPU e mede uma partida roteirizada de cinco minutos em 1920×1080.
 
 O editor Godot precisa permanecer aberto para completion e debugging no VS
 Code. O LSP usa a porta padrão 6005 e o DAP usa 6006; a configuração de debug
@@ -98,11 +101,14 @@ npm run test:web:audio
 npm run test:web:shell
 npm run test:web:analytics
 npm run test:web
+npm run test:web:performance
 ```
 
 Os smoke tests sobem o cliente Godot em `8177` e o cliente legado em `8176`,
 validando ambos em Chromium e Firefox. A porta histórica `8123` não é ocupada
-por essa automação.
+por essa automação. O teste de performance é separado porque precisa de janelas
+visíveis para usar a GPU real; execução headless usa renderização WebGL por
+software e não representa o computador de referência.
 
 ## Saídas locais
 

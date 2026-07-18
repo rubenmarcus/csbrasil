@@ -109,7 +109,7 @@
   - tests: validação HTML/headers e smoke test Web com analytics interceptado.
   - verification: `sh -n scripts/build-vercel.sh scripts/install-godot-ci.sh scripts/export-godot-web.sh`; `scripts/build-vercel.sh`; `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors` (72/72); `npm run test:web:shell`; `npm run test:web:analytics`; `npm run test:web` (28/28)
 
-- [~] **Validar paridade, performance e preparar gate de corte** (test-type: both)
+- [x] **Validar paridade, performance e preparar gate de corte** (test-type: both)
   - blocked-by: shell Vercel, SEO/AEO e analytics
   - summary: executar toda a matriz, comparar com legado, medir cinco minutos
     de partida e documentar resultados sem alterar ainda o deploy principal.
@@ -119,7 +119,7 @@
     relatório de hardware/browser e árvore de trabalho reconciliada.
   - tests: suite GDScript, Playwright Chromium/Firefox, partida de performance e
     revisão manual de paridade.
-  - verification: `godot --headless --path godot --script res://tests/test_runner.gd && npm run test:web && npm run test:web:performance`
+  - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors` (72/72, 686 assertions); `npm run test:web` (28/28); `npm run test:web:performance` (2/2, 300 s por navegador); relatório `docs/reports/2026-07-18-godot-web-parity.md`
 
 - [ ] **Executar corte aprovado para o cliente Godot** (test-type: integration)
   - blocked-by: validação de paridade e aprovação explícita do gate de corte
