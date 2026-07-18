@@ -161,9 +161,18 @@ class CharController {
     this.cur = this.actions.shoot;
   }
 
-  die() { if (!this.dead) { this.dead = true; this.shooting = false; this.cur = null; this._to('death', true); } }
+  die() { if (!this.dead) { this.dead = true; this.shooting = false; this._to('death', true); } }
 
-  revive() { this.dead = false; this.shooting = false; this.cur = null; this._to('idle'); }
+  // Stop ALL actions first — the death clip runs with clampWhenFinished, so it holds
+  // its last (fallen) frame at full weight forever. Without stopAllAction the revived
+  // character does everything on top of the fallen pose (the "walking while falling
+  // backward" bug). Then start idle clean.
+  revive() {
+    this.dead = false; this.shooting = false;
+    this.mixer.stopAllAction();
+    this.cur = null;
+    this._to('idle');
+  }
 
   // moving: 0..1, hasTarget: bool. Advances mixer and picks locomotion state.
   update(dt, moving, hasTarget) {
