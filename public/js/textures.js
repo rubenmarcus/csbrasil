@@ -1,12 +1,15 @@
 // Procedural canvas textures — zero external assets.
 import * as THREE from 'three';
 
+let ANISO = 1; // setado por initTextures(renderer.capabilities.getMaxAnisotropy())
+
 function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 function tex(c, repeat = 1, ry = null) {
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   t.magFilter = THREE.NearestFilter;           // retro CS 1.6 pixel look
   t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.anisotropy = ANISO;                         // chão nítido em ângulo raso
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(repeat, ry === null ? repeat : ry);
   return t;
@@ -50,7 +53,8 @@ function concreteBase(w = 256, h = 256, base = '#9a938a', dark = '#7d766d') {
   return c;
 }
 
-export function initTextures() {
+export function initTextures(maxAniso = 1) {
+  ANISO = maxAniso;
   const T = {};
 
   // --- ground / structure ---
