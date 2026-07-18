@@ -152,7 +152,33 @@ export class Game {
   _buildViewModels() {
     const root = new THREE.Group();
     const dark = c => new THREE.MeshLambertMaterial({ color: c });
-    const skin = dark(0xd9a066);
+    // First-person arms inherit the selected character's skin + sleeve colors.
+    const pdef = byId(this.playerCharId);
+    const pal = (pdef && pdef.pal) || { skin: 0xd9a066, shirt: 0x3a4a5a };
+    const skinMat = dark(pal.skin);
+    const sleeveMat = dark(pal.shirt);
+    const skin = skinMat; // legacy alias
+    // A low-poly forearm+hand that recedes down toward the camera (screen bottom).
+    // wristZ ~ where the hand grips; the sleeve extends back (+Z) and tilts down.
+    // The viewmodel leaves almost no screen room below the gun, so a full forearm
+    // falls off-frame. What reads is the gripping hand (skin) plus a short sleeve
+    // cuff behind it — enough to carry the character's skin + sleeve colors.
+    const fpArm = (w = 0.08, h = 0.09, d = 0.12) => {
+      const g = new THREE.Group();
+      const hand = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), skinMat);
+      hand.castShadow = false; g.add(hand);
+      // Forearm angled toward the screen's bottom-right corner (the only room the
+      // viewmodel leaves), carrying the sleeve colour; a skin cuff at the wrist.
+      const fore = new THREE.Group();
+      fore.rotation.set(0.78, 0.62, 0);
+      const L = 0.42;
+      const sleeve = new THREE.Mesh(new THREE.BoxGeometry(w * 1.2, h * 1.25, L), sleeveMat);
+      sleeve.position.set(0, 0, L * 0.5 + 0.04); sleeve.castShadow = false; fore.add(sleeve);
+      const cuff = new THREE.Mesh(new THREE.BoxGeometry(w * 1.32, h * 1.36, 0.045), skinMat);
+      cuff.position.set(0, 0, 0.05); cuff.castShadow = false; fore.add(cuff);
+      g.add(fore);
+      return g;
+    };
     // AWP (right-handed)
     const awp = new THREE.Group();
     awp.add(new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.09, 0.5), dark(0x2e4a2e)));
@@ -162,7 +188,7 @@ export class Game {
     scope.rotation.x = Math.PI / 2; scope.position.set(0, 0.085, -0.05); awp.add(scope);
     const stock = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.2), dark(0x3a2a1e)); stock.position.set(0, -0.05, 0.28); awp.add(stock);
     const bolt = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.03), dark(0x888888)); bolt.position.set(0.05, 0.03, 0.05); awp.add(bolt);
-    const handR = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.09, 0.11), skin); handR.position.set(0, -0.085, 0.02); awp.add(handR);
+    const handR = fpArm(); handR.position.set(0, -0.085, 0.02); awp.add(handR);
     const handL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); handL.position.set(0.005, -0.04, -0.3); awp.add(handL);
     awp.position.set(0.26, -0.23, -0.5); awp.rotation.y = 0.03;
     // rifles genéricos (ak / m4 / mp5 / shotgun / deagle)
@@ -174,7 +200,7 @@ export class Game {
       const stock = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.18), woodC); stock.position.set(0, -0.04, len / 2 - 0.05); g.add(stock);
       const mag = new THREE.Mesh(new THREE.BoxGeometry(0.045, magH, 0.07), dark(0x2a2a2a));
       mag.position.set(0, -0.06 - magH / 2, -0.05); g.add(mag);
-      const hR = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.09, 0.11), skin); hR.position.set(0, -0.085, 0.1); g.add(hR);
+      const hR = fpArm(); hR.position.set(0, -0.085, 0.1); g.add(hR);
       const hL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); hL.position.set(0.005, -0.04, -len / 3); g.add(hL);
       g.position.set(0.26, -0.23, -0.5); g.rotation.y = 0.03;
       return g;
@@ -187,20 +213,20 @@ export class Game {
     deagle.add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.11, 0.26), dark(0x8a8a8a)));
     const dgrip = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.12, 0.07), dark(0xc9a227));
     dgrip.position.set(0, -0.1, 0.09); dgrip.rotation.x = 0.25; deagle.add(dgrip);
-    const handD = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.1, 0.08), skin); handD.position.set(0, -0.1, 0.09); deagle.add(handD);
+    const handD = fpArm(0.075, 0.1, 0.08); handD.position.set(0, -0.1, 0.09); deagle.add(handD);
     deagle.position.set(0.24, -0.2, -0.42);
     // pistol
     const pistol = new THREE.Group();
     pistol.add(new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.09, 0.22), dark(0x333333)));
     const pgrip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.06), dark(0x3a2a1e));
     pgrip.position.set(0, -0.09, 0.08); pgrip.rotation.x = 0.25; pistol.add(pgrip);
-    const handP = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.1, 0.08), skin); handP.position.set(0, -0.1, 0.08); pistol.add(handP);
+    const handP = fpArm(0.075, 0.1, 0.08); handP.position.set(0, -0.1, 0.08); pistol.add(handP);
     pistol.position.set(0.24, -0.2, -0.42);
     // knife
     const knife = new THREE.Group();
     const blade = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.05, 0.3), dark(0xb8c0c8)); blade.position.z = -0.2; knife.add(blade);
     knife.add(new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.12), dark(0x2a1e14)));
-    const handK = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.08, 0.08), skin); handK.position.set(0, -0.02, 0.03); knife.add(handK);
+    const handK = fpArm(0.07, 0.08, 0.08); handK.position.set(0, -0.02, 0.03); knife.add(handK);
     knife.position.set(0.28, -0.22, -0.4); knife.rotation.set(-0.2, 0.25, -0.15);
     root.add(awp, ak, m4, mp5, shotgun, deagle, pistol, knife);
     const models = { awp, ak, m4, mp5, shotgun, deagle, pistol, knife };
