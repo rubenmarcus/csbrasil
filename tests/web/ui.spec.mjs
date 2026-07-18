@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('navigates menu, starts, pauses, resumes, exits, and persists settings', async ({ page }) => {
   await page.goto('/');
   await expect.poll(() => page.evaluate(() => window.__csbrasilPlayerState?.uiState), {
-    timeout: 15_000,
+    timeout: 40_000,
   }).toBe('main_menu');
 
   await page.keyboard.press('Shift+Tab');

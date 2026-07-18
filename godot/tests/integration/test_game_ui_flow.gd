@@ -89,3 +89,19 @@ func test_radio_menu_logs_selection_and_routes_team_voice() -> void:
 	assert_true(main.radio_log.visible)
 	assert_string_contains(main.radio_log.text, "(RÁDIO): Bora, bora, bora!")
 	assert_eq(main.audio.latest_event().event, &"radio")
+
+
+func test_match_lifecycle_records_analytics_domain_events() -> void:
+	var main := MAIN_SCENE.instantiate()
+	add_child_autofree(main)
+	await wait_process_frames(2)
+	main.ui.choose_team(&"B")
+	main.ui.select_character_by_id(&"senhora")
+	main.ui.confirm_selection()
+	await wait_process_frames(2)
+	assert_eq(main.analytics_history[0].name, &"game_start")
+	assert_eq(main.analytics_history[0].data.team, "B")
+
+	main.match_controller.rounds.match_ended.emit(&"B")
+	assert_eq(main.analytics_history[1].name, &"match_end")
+	assert_eq(main.analytics_history[1].data.winner, "B")

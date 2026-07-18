@@ -18,5 +18,6 @@ audio/*
 !audio/manifest.example.json
 godot/.godot/
 build/
+.godot-ci/
 test-results/
 playwright-report/

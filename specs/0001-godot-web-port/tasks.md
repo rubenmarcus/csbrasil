@@ -98,7 +98,7 @@
   - tests: unitários para seleção/throttle; integração Web com e sem pacote.
   - verification: `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors`; `scripts/export-godot-web.sh`; `npm run test:web:audio`; `npm run test:web`
 
-- [~] **Integrar shell Vercel, SEO/AEO e analytics** (test-type: integration)
+- [x] **Integrar shell Vercel, SEO/AEO e analytics** (test-type: integration)
   - blocked-by: áudio, rádio e fallbacks Web
   - summary: produzir shell customizado, preservar metadados e ligar eventos
     `game_start`/`match_end` via integração Web.
@@ -107,9 +107,9 @@
   - acceptance criteria: HTML contém metadados antes de executar WASM, assets
     têm headers corretos e eventos são observáveis no stub de analytics.
   - tests: validação HTML/headers e smoke test Web com analytics interceptado.
-  - verification: `npm run test:web:shell && npm run test:web:analytics`
+  - verification: `sh -n scripts/build-vercel.sh scripts/install-godot-ci.sh scripts/export-godot-web.sh`; `scripts/build-vercel.sh`; `scripts/godot.sh --headless --path godot -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit -gdisable_colors` (72/72); `npm run test:web:shell`; `npm run test:web:analytics`; `npm run test:web` (28/28)
 
-- [ ] **Validar paridade, performance e preparar gate de corte** (test-type: both)
+- [~] **Validar paridade, performance e preparar gate de corte** (test-type: both)
   - blocked-by: shell Vercel, SEO/AEO e analytics
   - summary: executar toda a matriz, comparar com legado, medir cinco minutos
     de partida e documentar resultados sem alterar ainda o deploy principal.

@@ -31,10 +31,11 @@ O editor Godot precisa permanecer aberto para completion e debugging no VS
 Code. O LSP usa a porta padrão 6005 e o DAP usa 6006; a configuração de debug
 do VS Code conecta ao DAP pelo arquivo `.vscode/launch.json`.
 
-## Slice jogável atual
+## Cliente jogável atual
 
-O cliente Godot inicia em uma arena procedural mínima. Clique na área do jogo
-para iniciar a sessão de input e use:
+O cliente Godot oferece o fluxo completo de menu, seleção 4×4, partida até três
+rounds, HUD/radar, pause e fim de partida numa arena procedural completa. Clique
+na área do jogo para iniciar a sessão de input e use:
 
 - `W`, `A`, `S`, `D`: caminhar e strafe;
 - `Shift`: correr;
@@ -45,6 +46,8 @@ para iniciar a sessão de input e use:
 - clique direito: ativar/desativar a mira telescópica;
 - `R`: recarregar;
 - `1`, `2`, `3`: alternar entre AWP, pistola e faca;
+- `Z`, `X`, `C`: abrir as categorias do rádio e `1`–`3` para responder;
+- `Tab`: exibir o placar;
 - `Esc`: liberar o mouse com segurança.
 
 O movimento é dividido entre `MovementConfig` (contratos numéricos),
@@ -59,7 +62,28 @@ hitscan com oclusão e hitbox de cabeça. Jogador e bot morrem e reaparecem apó
 
 O inventário mantém instâncias e munição independentes para AWP e pistola,
 aplica 0,35 s de draw delay e usa uma scene dedicada de ataque corpo a corpo
-para a faca. Armas sem suporte a scope rejeitam essa ação.
+para a faca. Armas sem suporte a scope rejeitam essa ação. O áudio usa samples
+externos ao PCK e fallback sintetizado no navegador; nick, sensibilidade,
+volume e qualidade são persistidos no armazenamento local.
+
+## Shell e preview Vercel
+
+`godot/web/shell.html` é o shell customizado da exportação. Ele contém conteúdo
+HTML legível antes do WASM, canonical, Open Graph, Twitter Card, JSON-LD e o
+stub que encaminha `game_start` e `match_end` ao Vercel Analytics. A exportação
+também copia `robots.txt`, `sitemap.xml`, `llms.txt` e `og-image.png`.
+
+`vercel.json` permanece intocado para preservar o deploy Three.js. A configuração
+paralela `vercel.godot-preview.json` aponta para `build/web` e pode ser usada
+somente em preview, após autenticação explícita:
+
+```bash
+scripts/build-vercel.sh
+vercel deploy --local-config vercel.godot-preview.json
+```
+
+O segundo comando cria estado externo e não faz parte da automação local. O
+corte do domínio principal continua bloqueado até aprovação específica.
 
 ## Linha de comando
 
@@ -70,6 +94,10 @@ scripts/export-godot-web.sh
 npm run test:web:smoke
 npm run test:web:movement
 npm run test:web:combat
+npm run test:web:audio
+npm run test:web:shell
+npm run test:web:analytics
+npm run test:web
 ```
 
 Os smoke tests sobem o cliente Godot em `8177` e o cliente legado em `8176`,

@@ -29,6 +29,7 @@ const BASE_MOUSE_SENSITIVITY := 0.002
 
 var player: PlayerController
 var match_controller: CombatMatch
+var analytics_history: Array[Dictionary] = []
 var _web_state_elapsed: float = 0.0
 var _radar_elapsed: float = 0.0
 var _hitmarker_remaining: float = 0.0
@@ -187,6 +188,9 @@ func _start_game(team: StringName, character_id: StringName, nickname: String) -
 	hud.visible = true
 	crosshair.visible = true
 	audio.play_event(&"roundstart")
+	_track_analytics(&"game_start", {
+		"team": String(team), "character": String(character_id), "nickname_set": not nickname.is_empty()
+	})
 
 
 func _bind_match(controller: CombatMatch) -> void:
@@ -260,6 +264,11 @@ func _rematch() -> void:
 
 func _on_match_ended(winner: StringName) -> void:
 	audio.play_event(&"matchwin")
+	_track_analytics(&"match_end", {
+		"winner": String(winner),
+		"rounds_p": int(match_controller.rounds.round_wins[&"P"]),
+		"rounds_b": int(match_controller.rounds.round_wins[&"B"]),
+	})
 	player.release_pointer()
 	hud.visible = false
 	crosshair.visible = false
@@ -436,6 +445,18 @@ func _on_reload_started(_weapon_id: StringName) -> void:
 func _on_weapon_audio_changed(weapon_id: StringName, _name: String, _ammo: int, _reserve: int) -> void:
 	if weapon_id == &"knife":
 		audio.play_event(&"knifedeploy")
+
+
+func _track_analytics(event_name: StringName, data: Dictionary) -> void:
+	analytics_history.append({"name": event_name, "data": data.duplicate(true)})
+	if analytics_history.size() > 16:
+		analytics_history.pop_front()
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval(
+			"window.csbrasilTrack && window.csbrasilTrack(%s,%s);" % [
+				JSON.stringify(String(event_name)), JSON.stringify(data)
+			]
+		)
 
 
 func _refresh_scoreboard() -> void:

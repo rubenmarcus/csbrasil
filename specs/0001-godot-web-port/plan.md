@@ -72,8 +72,9 @@ por teclado e a persistência foram verificadas em Chromium e Firefox.
 
 ### 6. Áudio, persistência e integração Web
 
-Status: áudio, rádio e fallbacks concluídos e verificados em 2026-07-18;
-integração do shell Web em andamento.
+Status: áudio, rádio, fallbacks, shell Web, SEO/AEO e analytics concluídos e
+verificados em 2026-07-18. O build Godot usa uma configuração Vercel exclusiva
+de preview; a configuração de produção continua servindo o cliente legado.
 
 Portar pacotes de áudio e fallbacks, rádio, anúncios, settings e nick. Integrar
 o shell HTML, SEO/AEO, analytics e eventos Web. Escolher fallback de áudio que
@@ -86,6 +87,9 @@ Rádio Z/X/C, eventos de arma, dano, respawn, multikill e rounds foram ligados
 aos sinais do domínio e verificados em Chromium e Firefox.
 
 ### 7. Paridade, desempenho e corte
+
+Status: validação de paridade e desempenho em andamento; corte de produção
+aguarda aprovação explícita.
 
 Executar matriz completa de testes nos dois engines e navegadores suportados,
 corrigir divergências, medir uma partida roteirizada de cinco minutos e produzir
