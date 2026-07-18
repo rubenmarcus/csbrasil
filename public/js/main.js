@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { initTextures } from './textures.js';
 import { CHARACTERS, buildCharacter } from './characters.js';
-import { preloadCharacterAssets, GLB_CHARS } from './glbchars.js';
+import { preloadCharacterAssets, buildCharacterModel, hasModel, GLB_CHARS } from './glbchars.js';
 import { MAPS, MAP_IDS, DEFAULT_MAP, resolveMapId } from './maps.js';
 import { Sfx } from './audio.js';
 import { Game } from './game.js';
@@ -74,20 +74,40 @@ function ensurePreview() {
   pv = { r, scene, cam, model: null };
   return pv;
 }
+let pvToken = 0;
 function pvSetChar(def) {
   const p = ensurePreview();
   if (p.model) p.scene.remove(p.model);
+  p.mixer = null;
+  // Instant procedural fallback while the real model streams in.
   p.model = buildCharacter(def).group;
   p.model.rotation.y = 0.4;
   p.scene.add(p.model);
+  // Swap to the real rigged GLB (idle) once loaded, if this is still the selection.
+  const my = ++pvToken;
+  if (GLB_CHARS.has(def.id)) {
+    preloadCharacterAssets([def.id]).then(() => {
+      if (my !== pvToken || !hasModel(def.id)) return;
+      const m = buildCharacterModel(def);
+      if (!m) return;
+      if (p.model) p.scene.remove(p.model);
+      m.group.rotation.y = 0.4;
+      p.model = m.group; p.mixer = m.mixer;
+      p.scene.add(m.group);
+    }).catch(() => {});
+  }
 }
 function pvThumb(def) {
-  pvSetChar(def);
+  // Box-only thumbnail (tiny icon) — never triggers a GLB load.
   const p = ensurePreview();
-  p.model.rotation.y = 0.55;
+  if (p.model) { p.scene.remove(p.model); p.model = null; }
+  p.mixer = null;
+  const box = buildCharacter(def).group; box.rotation.y = 0.55;
+  p.scene.add(box);
   p.r.render(p.scene, p.cam);
   const c = document.createElement('canvas'); c.width = c.height = 96;
   c.getContext('2d').drawImage(p.r.domElement, 0, 0, 96, 96);
+  p.scene.remove(box);
   return c.toDataURL();
 }
 
@@ -597,6 +617,7 @@ function loop() {
     renderer.render(menuScene, menuCam);
     if (pv && pv.model && !$('char-select').classList.contains('hidden')) {
       pv.model.rotation.y += dt * 0.9;
+      if (pv.mixer) pv.mixer.update(dt);
       pv.r.render(pv.scene, pv.cam);
     }
   }
