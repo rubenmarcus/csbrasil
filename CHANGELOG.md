@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0] — 2026-07-18
+### Adicionado
+- **Seletor de rede social** no menu (X, GitHub, Instagram, LinkedIn, TikTok,
+  YouTube, site próprio) + handle — sem precisar de login; campo de usuário
+  fica desabilitado até escolher a rede
+- **Avatar do GitHub automático** (oficial, `github.com/handle.png`) além do X
+- **Upload de foto sem login** (`POST /api/avatar`, validado por nick+token,
+  resize 128×128 no servidor) — cobre Instagram/LinkedIn/TikTok, que não têm
+  fetch público de avatar
+
+### Mudado
+- OAuth social passa a ser opcional/dormant (volta na era multiplayer)
+
 ## [1.7.6] — 2026-07-18
 ### Adicionado
 - Mapa: nome da cidade sempre visível (tooltip amarelo permanente) e popup com

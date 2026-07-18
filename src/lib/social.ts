@@ -14,8 +14,12 @@ export function twitterHandle(s?: string | null): string | null {
   return m ? m[1] : null;
 }
 
-// avatar via unavatar.io (serviço comunitário; se falhar, cai no fallback de inicial)
+// avatar por rede social — X via unavatar.io, GitHub direto (oficial).
+// Instagram/LinkedIn/TikTok não têm fetch público: aí o usuário faz upload.
 export function socialAvatar(s?: string | null): string | null {
+  if (!s) return null;
+  const gh = s.match(/github\.com\/@?([A-Za-z0-9-]{1,39})/);
+  if (gh) return `https://github.com/${gh[1]}.png?size=128`;
   const h = twitterHandle(s);
   return h ? `https://unavatar.io/twitter/${h}` : null;
 }

@@ -95,7 +95,17 @@
   <canvas id="logo-canvas" width="900" height="360"></canvas>
   <div class="menu-buttons">
     <input id="nick-input" maxlength="14" placeholder="SEU NICK (ex: Zé do AWP)" autocomplete="off">
-    <input id="social-input" maxlength="60" placeholder="LINK SOCIAL (opcional, ex: x.com/ze)" autocomplete="off">
+    <select id="social-net" title="Rede social">
+      <option value="">rede…</option>
+      <option value="x">X / Twitter</option>
+      <option value="github">GitHub</option>
+      <option value="instagram">Instagram</option>
+      <option value="linkedin">LinkedIn</option>
+      <option value="tiktok">TikTok</option>
+      <option value="youtube">YouTube</option>
+      <option value="site">Site próprio</option>
+    </select>
+    <input id="social-input" maxlength="60" placeholder="@usuario (opcional)" autocomplete="off">
     <button id="btn-jogar" class="btn btn-big">JOGAR</button>
     <button id="btn-ranking" class="btn">RANKING</button>
     <button id="btn-howto" class="btn">COMO JOGAR</button>

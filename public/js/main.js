@@ -111,7 +111,7 @@ async function startGame(team, charId) {
   if (nick && !testMode) {
     await authReady;
     api('/api/register', {
-      nick, token: getToken(), social: $('social-input').value.trim(),
+      nick, token: getToken(), social: socialUrl(),
       accessToken: auth.accessToken,
     });
   }
@@ -148,7 +148,7 @@ function renderAuthRow() {
         `<button class="auth-btn" data-p="${id}" title="Entrar com ${name}">${label}</button>`).join('');
     row.querySelectorAll('.auth-btn').forEach(b => b.onclick = () => auth.login(b.dataset.p));
   }
-  $('avatar-row').classList.toggle('hidden', !auth.user);
+  $('avatar-row').classList.toggle('hidden', !(auth.user || (nickEl.value || '').trim()));
 }
 
 /* ---------------- heartbeat (presença/mapa) ---------------- */
@@ -158,18 +158,23 @@ setInterval(async () => {
   if (res && res.error) heartbeatOff = true;   // token inválido etc. — para de martelar
 }, 30_000);
 
-/* ---------------- avatar upload ---------------- */
+/* ---------------- avatar upload (sem login — validado por nick+token) ---------------- */
 $('avatar-btn').onclick = () => $('avatar-file').click();
 $('avatar-file').onchange = async e => {
   const f = e.target.files[0];
-  if (!f) return;
+  const nick = registeredNick || (nickEl.value || '').trim();
+  if (!f || !nick) return;
   $('avatar-note').textContent = 'enviando…';
-  const url = await auth.uploadAvatar(f);
-  if (url) {
-    const nick = (nickEl.value || '').trim();
-    await api('/api/register', { nick, token: getToken(), social: socialEl.value.trim(), accessToken: auth.accessToken, avatarUrl: url });
-    $('avatar-note').textContent = 'foto atualizada! ✓';
-  } else $('avatar-note').textContent = 'falhou — tente outra imagem';
+  try {
+    const bmp = await createImageBitmap(f);
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d');
+    const s = Math.min(bmp.width, bmp.height);
+    x.drawImage(bmp, (bmp.width - s) / 2, (bmp.height - s) / 2, s, s, 0, 0, 128, 128);
+    const dataUrl = c.toDataURL('image/png');
+    const res = await api('/api/avatar', { nick, token: getToken(), image: dataUrl });
+    $('avatar-note').textContent = res && res.ok ? 'foto atualizada! ✓' : 'falhou: ' + (res?.error || 'sem conexão');
+  } catch { $('avatar-note').textContent = 'falhou — tente outra imagem'; }
   e.target.value = '';
 };
 
@@ -205,9 +210,26 @@ $('char-confirm').onclick = () => { sfx.uiClick(); if (selChar) startGame(curren
 const nickEl = $('nick-input');
 nickEl.value = localStorage.getItem(NICK_KEY) || '';
 nickEl.oninput = () => localStorage.setItem(NICK_KEY, nickEl.value);
-const socialEl = $('social-input');
+const socialEl = $('social-input'), socialNetEl = $('social-net');
+const SOCIAL_NET_KEY = 'awpbr_social_net';
 socialEl.value = localStorage.getItem(SOCIAL_KEY) || '';
 socialEl.oninput = () => localStorage.setItem(SOCIAL_KEY, socialEl.value);
+socialNetEl.value = localStorage.getItem(SOCIAL_NET_KEY) || '';
+function syncSocialState() { socialEl.disabled = !socialNetEl.value; }
+socialNetEl.onchange = () => { localStorage.setItem(SOCIAL_NET_KEY, socialNetEl.value); syncSocialState(); };
+syncSocialState();
+
+// monta a URL social a partir da rede escolhida + handle (sem login)
+const NET_PREFIX = {
+  x: 'https://x.com/', github: 'https://github.com/', instagram: 'https://instagram.com/',
+  linkedin: 'https://linkedin.com/in/', tiktok: 'https://tiktok.com/@', youtube: 'https://youtube.com/@',
+};
+function socialUrl() {
+  const net = socialNetEl.value, h = socialEl.value.trim().replace(/^@/, '');
+  if (!net || !h) return '';
+  if (net === 'site') return /^https?:\/\//i.test(h) ? h : 'https://' + h;
+  return (NET_PREFIX[net] || '') + h;
+}
 
 /* ---------------- global ranking API (via /api/* do site) ---------------- */
 const TOKEN_KEY = 'awpbr_token';
@@ -311,7 +333,7 @@ function showRanking() {
     : (st.rounds || 0) > 0 ? `~${fmt(st.rounds * 99)}`
     : st.matches > 0 ? `~${fmt(st.matches * 297)}` : '0min';
   const nick = (nickEl.value || 'VOCÊ').trim();
-  const social = socialEl.value.trim();
+  const social = socialUrl();
   $('rank-local').innerHTML =
     `<div style="grid-column:1/-1;text-align:center;color:var(--cs);font-size:18px">${nick}` +
     (social ? ` · <span style="color:#8a8064;font-size:12px">${social.replace(/</g, '&lt;')}</span>` : '') + `</div>` +

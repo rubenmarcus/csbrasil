@@ -40,13 +40,17 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 .btn-back{position:absolute;top:26px;left:26px;font-size:13px;padding:9px 20px}
 .menu-buttons{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;z-index:1;width:min(520px,92vw)}
 .menu-buttons .btn{padding:10px 8px;font-size:13px;letter-spacing:1.5px}
-.menu-buttons #nick-input,.menu-buttons #social-input{grid-column:span 3;width:100%}
+.menu-buttons #nick-input{grid-column:span 3;width:100%}
+.menu-buttons #social-net{grid-column:span 2;width:100%}
+.menu-buttons #social-input{grid-column:span 4;width:100%}
 .menu-buttons #btn-jogar{grid-column:1/-1;font-size:18px;padding:13px}
 .menu-buttons #btn-ranking,.menu-buttons #btn-howto,.menu-buttons #btn-settings{grid-column:span 2}
-#nick-input,#social-input{font-family:Consolas,monospace;font-size:15px;letter-spacing:1px;text-align:center;
+#nick-input,#social-input,#social-net{font-family:Consolas,monospace;font-size:15px;letter-spacing:1px;text-align:center;
   background:#10130c;border:2px solid #4a5a2a;border-radius:4px;color:var(--cs);
   padding:9px 12px;outline:none}
+#social-net{font-size:13px;cursor:pointer}
 #social-input{font-size:12px;padding:8px 12px}
+#social-input:disabled{opacity:.35;cursor:not-allowed}
 #nick-input:focus,#social-input:focus{border-color:var(--cs);box-shadow:0 0 14px rgba(184,217,74,.3)}
 #nick-input::placeholder,#social-input::placeholder{color:#5a6b3a}
 .rank-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 26px;font-family:Consolas,monospace;font-size:14px;color:#c9bfa4}
