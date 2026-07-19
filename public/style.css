@@ -246,3 +246,99 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 #match-title{font-size:38px;letter-spacing:4px;text-shadow:0 4px 0 #000}
 #match-stats{display:flex;gap:26px;font-family:Consolas,monospace;font-size:15px;color:#c9bfa4}
 #match-stats b{color:var(--yellow);font-size:24px;display:block;text-align:center}
+
+/* ==================================================================== */
+/* ===============  FRUTIGER AERO / Y2K SKIN (menus)  ================== */
+/* Glossy translucent glass, sky+aqua gradients, bubbly buttons.        */
+/* Overrides the terminal theme for the menu screens only.              */
+/* ==================================================================== */
+.screen{
+  background:
+    radial-gradient(120vw 80vh at 50% -10%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+    radial-gradient(60vw 40vh at 12% 8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%),
+    radial-gradient(50vw 40vh at 88% 82%, rgba(190,255,225,.45), rgba(190,255,225,0) 60%),
+    linear-gradient(180deg, #63b8e8 0%, #7fcfe8 26%, #a7e6cf 66%, #c9f0d6 100%) !important;
+}
+.screen::after{ /* soft cloud/bokeh haze */
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(30vw 16vh at 22% 20%, rgba(255,255,255,.55), transparent 70%),
+    radial-gradient(26vw 14vh at 74% 30%, rgba(255,255,255,.45), transparent 70%),
+    radial-gradient(34vw 18vh at 60% 84%, rgba(255,255,255,.4), transparent 70%);
+  filter:blur(6px);opacity:.8;
+}
+.screen > *{position:relative;z-index:1}
+.scanlines{display:none!important}   /* no CRT scanlines in Frutiger Aero */
+
+body{font-family:"Segoe UI","Helvetica Neue",Frutiger,"Myriad Pro",Arial,sans-serif;color:#0f2f45}
+
+/* ---- glassy panels / cards ---- */
+.panel,.profile-card,.char-preview-box,#scoreboard,#radio-menu{
+  background:linear-gradient(180deg, rgba(255,255,255,.62), rgba(226,244,255,.34)) !important;
+  border:1px solid rgba(255,255,255,.75) !important;
+  border-radius:22px !important;
+  box-shadow:0 10px 44px rgba(10,70,120,.30), inset 0 1px 0 rgba(255,255,255,.95), inset 0 -18px 40px rgba(120,190,230,.18) !important;
+  backdrop-filter:blur(16px) saturate(1.5); -webkit-backdrop-filter:blur(16px) saturate(1.5);
+  color:#123;
+}
+.pc-title,.map-label,.pc-row,.set-row{color:#0d4a63 !important}
+.pc-title{border-bottom:1px solid rgba(10,90,130,.2) !important;font-weight:700;text-shadow:0 1px 0 rgba(255,255,255,.7)}
+
+/* ---- glossy aqua-green buttons ---- */
+.btn{
+  color:#063; text-transform:uppercase; letter-spacing:2px; transform:none;
+  background:linear-gradient(180deg, #eafffb 0%, #9fe9c9 46%, #58cf9e 52%, #34b98a 100%) !important;
+  border:1px solid rgba(255,255,255,.85) !important; border-radius:999px !important;
+  box-shadow:0 6px 16px rgba(20,140,110,.35), inset 0 1px 0 rgba(255,255,255,.95), inset 0 -8px 14px rgba(20,120,90,.25) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.6);
+}
+.btn:hover{transform:translateY(-2px) !important;filter:brightness(1.06);
+  box-shadow:0 10px 22px rgba(20,140,110,.45), inset 0 1px 0 rgba(255,255,255,.95) !important;color:#043}
+.btn-big{color:#053;
+  background:linear-gradient(180deg,#fffef0 0%,#ffe98f 45%,#ffd23f 52%,#f0b400 100%) !important;
+  box-shadow:0 8px 20px rgba(200,150,0,.4), inset 0 1px 0 rgba(255,255,255,.95), inset 0 -8px 14px rgba(180,130,0,.28) !important}
+.btn-big:hover{background:linear-gradient(180deg,#fffff5,#ffe27a,#ffcf2a) !important;color:#4a3500}
+.corner-btn,.btn-side{
+  font-family:"Segoe UI",Arial,sans-serif !important;color:#0d4a63 !important;text-decoration:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.7), rgba(210,238,252,.4)) !important;
+  border:1px solid rgba(255,255,255,.8) !important;border-radius:999px !important;
+  box-shadow:0 3px 10px rgba(20,90,140,.22), inset 0 1px 0 rgba(255,255,255,.9) !important}
+.corner-btn:hover,.btn-side:hover{color:#053 !important;filter:brightness(1.05)}
+.btn-ghost{border:1px dashed rgba(20,110,150,.5) !important;color:#0d4a63 !important;border-radius:14px !important;
+  background:rgba(255,255,255,.28) !important}
+.btn-ghost:hover{border-color:#1fae8a !important;color:#053 !important;background:rgba(255,255,255,.45) !important}
+
+/* ---- glassy rounded inputs / selects / dropdown ---- */
+#nick-input,#social-input,#social-net,#map-select,#bots-select,#diff-select,.dd-btn,
+.social-item select,.social-item input,.set-row select{
+  font-family:"Segoe UI",Arial,sans-serif !important;letter-spacing:.5px !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(232,246,255,.75)) !important;
+  border:1px solid rgba(120,190,230,.7) !important;border-radius:14px !important;color:#0d3a52 !important;
+  box-shadow:inset 0 2px 5px rgba(30,90,130,.14), inset 0 1px 0 rgba(255,255,255,.9) !important}
+#nick-input::placeholder{color:#5b93b0}
+#nick-input:focus,#social-input:focus,.dd-btn.open,.dd-btn:hover,#map-select:focus{
+  border-color:#2fbfa0 !important;box-shadow:0 0 0 3px rgba(47,191,160,.28), inset 0 1px 0 rgba(255,255,255,.9) !important;outline:none}
+.dd-list{background:rgba(245,252,255,.96) !important;border:1px solid rgba(120,190,230,.7) !important;border-radius:14px !important;
+  box-shadow:0 12px 30px rgba(10,70,120,.3) !important;backdrop-filter:blur(10px)}
+.dd-item{color:#0d3a52 !important}
+.dd-item:hover{background:rgba(47,191,160,.18) !important}
+
+/* ---- char select list ---- */
+.char-row{background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(225,244,255,.32)) !important;
+  border:1px solid rgba(255,255,255,.7) !important;border-radius:14px !important;color:#123 !important;
+  font-family:"Segoe UI",Arial,sans-serif !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+.char-row:hover{background:rgba(255,255,255,.7) !important;border-color:#2fbfa0 !important}
+.char-row.sel{background:linear-gradient(180deg,#eafffb,#bff0dd) !important;border-color:#2fbfa0 !important;
+  box-shadow:0 0 16px rgba(47,191,160,.4) !important}
+.char-row img{border-radius:8px;border:1px solid rgba(255,255,255,.8);background:rgba(210,238,252,.5)}
+#char-info-name{color:#0a7a58 !important;text-shadow:0 1px 0 rgba(255,255,255,.7)}
+#char-info-blurb{color:#134 !important}
+
+/* ---- layout fix: menu scrolls, JOGAR always reachable ---- */
+#main-menu{justify-content:flex-start;padding:4vh 0 3vh;gap:14px;overflow-y:auto;overflow-x:hidden}
+.menu-buttons{gap:12px}
+.profile-card{gap:10px;padding:16px 18px}
+#btn-jogar{position:sticky;bottom:6px;margin-top:4px;z-index:5}
+
+/* logo readability on the bright sky */
+#logo-canvas{filter:drop-shadow(0 8px 22px rgba(10,60,110,.45))}
