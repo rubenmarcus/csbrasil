@@ -47,20 +47,38 @@ export function buildBrasilia(scene, T) {
   }
 
   /* ---------------- ground + esplanade ---------------- */
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 320), lam({ map: T.grass }));
+  // Tile the textures (clone + RepeatWrapping) so big surfaces show real detail
+  // instead of one blurry stretched image.
+  const tiled = (tex, rx, ry) => {
+    const t = tex.clone(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.needsUpdate = true; return t;
+  };
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 360), lam({ map: tiled(T.grass, 46, 55) }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; root.add(ground);
-  addPlane(30, 110, lam({ map: T.concrete }), 0, 0.03, 0, 0, -Math.PI / 2);       // Esplanada (sightline)
-  for (const sx of [-1, 1]) addPlane(7, 110, lam({ map: T.concreteDark }), sx * 20, 0.02, 0, 0, -Math.PI / 2);
+  // Esplanada dos Ministérios — pale stone paving (tiled so the slab grid reads)
+  addPlane(30, 116, lam({ map: tiled(T.concrete, 10, 40) }), 0, 0.03, 0, 0, -Math.PI / 2);
+  for (const sx of [-1, 1]) addPlane(7, 116, lam({ map: tiled(T.concreteDark, 3, 40) }), sx * 20, 0.02, 0, 0, -Math.PI / 2);
 
   /* ---------------- LANDMARKS (Mint building models) ---------------- */
   // Congresso Nacional at the NORTH end (towers + Senate dome + Chamber bowl).
   // ry chosen so the dome/bowl/pilotis facade faces the esplanade (-Z); tuned on screen.
   putBuilding('congresso', { x: 0, z: 62, targetH: 22, ry: 0 });
-  // Catedral (crown) at the SOUTH end.
+  // Catedral (crown) at the SOUTH end + a translucent glass nave inside the crown
+  // (the Mint model has no glass, so we add the stained-glass drum ourselves).
   putBuilding('catedral', { x: 0, z: -60, targetH: 13, ry: 0 });
-  // Palácio do Planalto (east) + STF (west) framing the Praça, facing inward.
-  putBuilding('palacio', { x: 22, z: 30, targetH: 6, ry: -Math.PI / 2 });
-  putBuilding('palacio', { x: -22, z: 30, targetH: 6, ry: Math.PI / 2 });
+  {
+    const glass = new THREE.Mesh(new THREE.CylinderGeometry(5, 6.2, 9.5, 24, 1, true),
+      lam({ color: 0x8fbfe6, transparent: true, opacity: 0.42, side: THREE.DoubleSide }));
+    glass.position.set(0, 4.8, -60); root.add(glass);
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(5.2, 4, 24, 1, true),
+      lam({ color: 0xa9d2f0, transparent: true, opacity: 0.5, side: THREE.DoubleSide }));
+    cap.position.set(0, 10.5, -60); root.add(cap);
+  }
+  // Palácio do Planalto (east) + STF (west) framing the Praça, facing inward. A thin
+  // stone plinth under each grounds the pilotis so they don't read as "floating".
+  for (const px of [22, -22]) {
+    putBuilding('palacio', { x: px, z: 30, targetH: 6, ry: px > 0 ? -Math.PI / 2 : Math.PI / 2 });
+    addBox(16, 0.5, 15, lam({ color: 0xcfd2cb }), px, 0, 30, { collide: false });
+  }
   // Ministérios lining the esplanade (reuse the one slab, long axis along Z = lane walls).
   for (const sx of [-1, 1]) for (const mz of [-26, 0, 26])
     putBuilding('ministerio', { x: sx * 23, z: mz, targetH: 7, ry: Math.PI / 2 });
@@ -99,8 +117,25 @@ export function buildBrasilia(scene, T) {
     // real Brazil flag texture (mastro da Praça dos Três Poderes proportions ~3:2)
     addPlane(6, 4, lam({ map: T.flagBR, side: THREE.DoubleSide }), -8, 29, 44);
   }
-  // reflecting pool between the praça and Congresso
-  addPlane(30, 8, lam({ color: 0x2f6ea0, transparent: true, opacity: 0.9 }), 0, 0.06, 50, 0, -Math.PI / 2);
+  // Jardim com espelho d'água em frente ao Congresso (garden + reflecting pool)
+  {
+    addPlane(30, 9, lam({ color: 0x2f6ea0, transparent: true, opacity: 0.9 }), 0, 0.06, 50, 0, -Math.PI / 2);
+    for (const rz of [45.2, 54.8]) addBox(31, 0.35, 0.7, lam({ color: 0xcfd2cb }), 0, 0, rz, { collide: false });
+    for (const rx of [-15.2, 15.2]) addBox(0.7, 0.35, 10, lam({ color: 0xcfd2cb }), rx, 0, 50, { collide: false });
+    for (const gx of [-22, 22]) addPlane(10, 12, lam({ map: tiled(T.grass, 3, 4) }), gx, 0.04, 50, 0, -Math.PI / 2);
+  }
+
+  /* ---------------- protest posters / banners on the ministry facades ---------------- */
+  {
+    const mats = [T.posters && T.posters[0], T.posters && T.posters[1], T.posters && T.posters[2],
+      T.graffiti && T.graffiti[0], T.graffiti && T.graffiti[1]].filter(Boolean)
+      .map((m) => lam({ map: m, side: THREE.DoubleSide }));
+    if (mats.length) {
+      let i = 0;
+      for (const sx of [-1, 1]) for (const pz of [-24, 2, 28])
+        addPlane(4.6, 3, mats[i++ % mats.length], sx * 17.3, 3.4, pz, sx > 0 ? -Math.PI / 2 : Math.PI / 2);
+    }
+  }
 
   /* ---------------- gameplay cover ---------------- */
   const crateMat = lam({ map: T.crate });
