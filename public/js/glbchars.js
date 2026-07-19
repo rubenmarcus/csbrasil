@@ -18,7 +18,7 @@ export const GLB_CHARS = new Set([
   'caminhoneiro', 'influencer', 'sertanejo', 'senhora', 'coach',
 ]);
 
-const STATES = ['idle', 'walk', 'run', 'shoot', 'death', 'crouch', 'crouchwalk'];
+const STATES = ['idle', 'walk', 'run', 'shoot', 'death', 'crouch', 'crouchwalk', 'jump'];
 const qp = new URLSearchParams(location.search);
 const TARGET_HEIGHT = parseFloat(qp.get('charh')) || 1.72;      // meters (match box silhouette)
 const FACING_OFFSET = (parseFloat(qp.get('charface')) || 0) * Math.PI / 180; // yaw fix if model faces -Z
@@ -131,9 +131,10 @@ class CharController {
   constructor(mixer, actions, group, headBone, head) {
     this.mixer = mixer; this.actions = actions;
     this.group = group; this.headBone = headBone; this.head = head;
-    this.cur = null; this.dead = false; this.shooting = false; this.crouch = false;
+    this.cur = null; this.dead = false; this.shooting = false; this.crouch = false; this.jumping = false;
     mixer.addEventListener('finished', (e) => {
       if (e.action === actions.shoot) this.shooting = false;
+      if (e.action === actions.jump) this.jumping = false;
     });
     this._to('idle');
   }
@@ -150,6 +151,16 @@ class CharController {
   }
 
   setCrouch(v) { this.crouch = !!v; }
+
+  jump() {
+    if (this.dead || this.crouch || this.jumping || !this.actions.jump) return;
+    this.jumping = true;
+    const a = this.actions.jump;
+    a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = false;
+    a.enabled = true; a.fadeIn(0.08).play();
+    if (this.cur && this.cur !== a) this.cur.fadeOut(0.08);
+    this.cur = a;
+  }
 
   shoot() {
     if (this.dead || this.crouch || !this.actions.shoot) return; // crouch pose already aims
@@ -185,7 +196,7 @@ class CharController {
     if (!this.dead) {
       if (this.crouch) {
         this._to(moving > 0.05 ? 'crouchwalk' : 'crouch');
-      } else if (!this.shooting) {
+      } else if (!this.shooting && !this.jumping) {
         this._to(moving > 0.05 ? (hasTarget ? 'walk' : 'run') : 'idle');
       }
     }

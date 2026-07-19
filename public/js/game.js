@@ -1121,6 +1121,11 @@ export class Game {
     g.rotation.set(0, b.yaw, 0);
     if (b.mesh.isGLB) {
       b.mesh.ctrl.setCrouch(!!b.target && b.crouchBias);
+      // occasional hop while roaming (bots can jump)
+      if (!b.target && moving > 0.5 && this.time > (b._nextJump || 0)) {
+        if (Math.random() < 0.2) b.mesh.ctrl.jump();
+        b._nextJump = this.time + 5 + Math.random() * 8;
+      }
       b.mesh.ctrl.update(dt, moving, !!b.target);
     } else {
       b.phase += dt * (moving ? 9 : 0);
