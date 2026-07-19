@@ -1137,10 +1137,21 @@ export class Game {
           while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
           b.yaw += dy * Math.min(1, dt * 8);
           const bSlow = this.world.slowAt && this.world.slowAt(b.pos.x, b.pos.z) ? 0.5 : 1;  // bots também vadear
+          const px = b.pos.x, pz = b.pos.z;
           b.pos.x += Math.sin(b.yaw) * BOT_SPEED * bSlow * dt;
           b.pos.z += Math.cos(b.yaw) * BOT_SPEED * bSlow * dt;
           this._collide(b.pos, 0.38);
           moving = 1;
+          // stuck detection: barely moved (blocked by geometry) -> sidestep + pick a new
+          // target so bots don't grind against a box or all funnel to the same spot.
+          const moved = Math.hypot(b.pos.x - px, b.pos.z - pz);
+          if (moved < BOT_SPEED * bSlow * dt * 0.35) {
+            b._stuckT = (b._stuckT || 0) + dt;
+            if (b._stuckT > 0.5) {
+              b.yaw += (Math.random() < 0.5 ? 1 : -1) * (0.8 + Math.random());
+              b.roamUntil = 0; b.repathAt = 0; b.path = null; b._stuckT = 0;
+            }
+          } else b._stuckT = 0;
         }
       }
     }
