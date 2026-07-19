@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { initTextures } from './textures.js';
 import { CHARACTERS, buildCharacter } from './characters.js';
 import { preloadCharacterAssets, buildCharacterModel, hasModel, GLB_CHARS } from './glbchars.js';
+import { preloadMapProps } from './mapprops.js';
 import { MAPS, MAP_IDS, DEFAULT_MAP, resolveMapId } from './maps.js';
 import { Sfx } from './audio.js';
 import { Game } from './game.js';
@@ -126,8 +127,12 @@ async function startGame(team, charId) {
   show(null);
   await sfxReady;   // make sure voice/CS samples are registered before round 1 sounds
   // Preload real GLB character models + shared animation clips (bots). Falls back to
-  // procedural box meshes for any archetype that isn't modeled yet.
-  await preloadCharacterAssets([...GLB_CHARS]);
+  // procedural box meshes for any archetype that isn't modeled yet. Map props (statues)
+  // load in parallel and are optional — the map renders fine if they're missing.
+  await Promise.all([
+    preloadCharacterAssets([...GLB_CHARS]),
+    preloadMapProps(['guerreiros', 'justica']),
+  ]);
   game = new Game({
     renderer, textures, sfx, settings,
     playerCharId: charId, playerTeam: team, mapId: currentMap,
