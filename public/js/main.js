@@ -38,6 +38,8 @@ let currentMap = resolveMapId(urlMap || settings.map);
 settings.map = currentMap;
 
 /* ---------------- menu backdrop (orbiting map) ---------------- */
+// Mint building/statue GLBs used by the Brasília map (loaded once, cloned per placement).
+const MAP_PROPS = ['congresso', 'catedral', 'ministerio', 'palacio', 'justica'];
 let menuScene = new THREE.Scene();
 MAPS[currentMap].build(menuScene, textures);
 const menuCam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 400);
@@ -45,6 +47,9 @@ function rebuildMenuBackdrop() {
   menuScene = new THREE.Scene();
   MAPS[currentMap].build(menuScene, textures);
 }
+// The first backdrop is built before props load; rebuild once they're ready so the
+// menu shows the real Brasília landmarks too.
+preloadMapProps(MAP_PROPS).then(rebuildMenuBackdrop).catch(() => {});
 
 /* ---------------- screens ---------------- */
 const screens = ['mobile-warning', 'main-menu', 'team-select', 'char-select', 'settings-panel', 'howto-panel', 'ranking-panel', 'pause-menu', 'match-end'];
@@ -131,7 +136,7 @@ async function startGame(team, charId) {
   // load in parallel and are optional — the map renders fine if they're missing.
   await Promise.all([
     preloadCharacterAssets([...GLB_CHARS]),
-    preloadMapProps(['justica']),
+    preloadMapProps(MAP_PROPS),
   ]);
   game = new Game({
     renderer, textures, sfx, settings,
