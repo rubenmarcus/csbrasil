@@ -371,9 +371,13 @@ export class Game {
     this._md = e => {
       if (this.radioOpen) { this.radioOpen = null; this._radioUi(); }
       if (!this._acceptInput()) {
-        // pointer lock não engatou (ou caiu)? qualquer clique tenta de novo
-        if (!this.testMode && !this.paused && (this.state === 'live' || this.state === 'countdown') && !document.pointerLockElement)
+        // pointer lock não engatou (ou caiu)? qualquer clique retoma e tenta de novo.
+        // Inclui o caso pausado-por-perda-de-lock (ex.: depois do M): antes, clicar
+        // com o jogo pausado não fazia nada e travava até dar refresh.
+        if (!this.testMode && (this.state === 'live' || this.state === 'countdown') && !document.pointerLockElement) {
+          if (this.paused) this.setPaused(false);
           this._requestLock();
+        }
         return;
       }
       if (e.button === 0) { this.mouseDown0 = true; this._tryShoot(); }
@@ -1075,8 +1079,10 @@ export class Game {
   // CS: morto larga a arma no chão
   _dropWeapon(x, z, weapon) {
     const mesh = weaponModel(weapon) || buildRifle();  // real GLB on the ground
-    mesh.position.set(x, 0.16, z);
-    mesh.rotation.set(0, Math.random() * Math.PI * 2, 0.12);  // lie ~flat with a random yaw
+    // lay it FLAT on its side (roll 90° about the barrel) so it rests on the ground
+    // instead of standing on its belly, with a random yaw. Low y so it sits on the floor.
+    mesh.position.set(x, 0.09, z);
+    mesh.rotation.set(0, Math.random() * Math.PI * 2, Math.PI / 2);
     mesh.traverse(o => { if (o.isMesh) o.castShadow = true; });
     this.scene.add(mesh);
     this.drops.push({ x, z, weapon, readyAt: 0, mesh });
@@ -1156,11 +1162,20 @@ export class Game {
       while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
       b.yaw += dy * Math.min(1, dt * 7);
       b.strafeT += dt;
-      const strafe = Math.sin(b.strafeT * 1.3) * 0.6;
-      const sx = Math.cos(b.yaw) * strafe * dt, sz = -Math.sin(b.yaw) * strafe * dt;
-      b.pos.x += sx; b.pos.z += sz;
+      // Hold a comfortable range: advance if far, back off if close, plus a small
+      // lateral juke. Moving mostly ALONG the facing (forward/back) makes the forward
+      // walk clip read as walking, instead of the old pure sideways strafe that looked
+      // like the bot was sliding/moonwalking across the map.
+      const dist = Math.hypot(dx, dz);
+      const approach = dist > 18 ? 1 : dist < 9 ? -1 : 0;
+      const strafe = Math.sin(b.strafeT * 1.1) * 0.35;
+      const fdx = Math.sin(b.yaw), fdz = Math.cos(b.yaw);   // forward (mesh facing)
+      const rdx = Math.cos(b.yaw), rdz = -Math.sin(b.yaw);  // right
+      const spd = BOT_SPEED * 0.55;
+      b.pos.x += (fdx * approach + rdx * strafe) * spd * dt;
+      b.pos.z += (fdz * approach + rdz * strafe) * spd * dt;
       this._collide(b.pos, 0.38);
-      moving = Math.abs(strafe) * 0.5;
+      moving = Math.min(1, Math.abs(approach) + Math.abs(strafe));
       // fire
       if (this.time > b.reactAt && this.time > b.nextShotAt && Math.abs(dy) < 0.3) {
         b.nextShotAt = this.time + (2.1 + Math.random() * 1.4) / (b.skill * 1.5);

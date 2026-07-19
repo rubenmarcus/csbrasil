@@ -80,6 +80,14 @@ function ensurePreview() {
   pv = { r, scene, cam, model: null };
   return pv;
 }
+// Each character shows off a weapon that fits their vibe (not everyone with an AK).
+const CHAR_WEAPON = {
+  esquerdomacho: 'ak', sindicato: 'lmg', mst: 'shotgun', doutora: 'm4', mistico: 'mp5',
+  caminhoneiro: 'md97', influencer: 'deagle', sertanejo: 'revolver38', senhora: 'uzi',
+  coach: 'scar', gotinha: 'mp5', farialimer: 'm4', bombado: 'lmg', hipster: 'uzi',
+  dollynho: 'p90', et: 'awp', ancap: 'mosin',
+};
+const charWeapon = (id) => CHAR_WEAPON[id] || 'ak';
 let pvToken = 0;
 function pvSetChar(def) {
   const p = ensurePreview();
@@ -94,7 +102,7 @@ function pvSetChar(def) {
   if (GLB_CHARS.has(def.id)) {
     preloadCharacterAssets([def.id]).then(() => {
       if (my !== pvToken || !hasModel(def.id)) return;
-      const m = buildCharacterModel(def, { weaponId: 'ak' }); // showcase holding a weapon
+      const m = buildCharacterModel(def, { weaponId: charWeapon(def.id) }); // fitting weapon per character
       if (!m) return;
       if (p.model) p.scene.remove(p.model);
       m.group.rotation.y = 0.4;
@@ -170,6 +178,7 @@ async function startGame(team, charId) {
   if (!testMode) { try { renderer.domElement.requestPointerLock()?.catch?.(() => {}); } catch {} }
 }
 function quitToMenu() {
+  switchMode = false;   // never carry an in-match team-switch into the menu
   if (game) { game.dispose(); game = null; }
   if (document.pointerLockElement) document.exitPointerLock();
   show('main-menu');
@@ -311,13 +320,19 @@ function armSwitchHook() {
 $('char-confirm').onclick = () => {
   sfx.uiClick();
   if (!selChar) return;
-  if (switchMode) {
+  // Only take the in-match "switch team" path when there's a live game to switch;
+  // a stale switchMode flag (e.g. backed out of M) must NOT hit game._switchTeam on a
+  // disposed game — that used to throw and leave the next match unable to load.
+  if (switchMode && game) {
     switchMode = false;
     currentChar = selChar.id;
     show(null);
-    game._switchTeam(selChar.id);
-    if (!testMode) renderer.domElement.requestPointerLock();
-  } else startGame(currentTeam, selChar.id);
+    try { game._switchTeam(selChar.id); } catch (e) { console.error('switch team failed', e); }
+    game.resume();   // unpause + re-request pointer lock (fixes "M opens but game won't resume")
+  } else {
+    switchMode = false;
+    startGame(currentTeam, selChar.id);
+  }
 };
 
 const nickEl = $('nick-input');
