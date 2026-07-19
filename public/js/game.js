@@ -74,8 +74,13 @@ export class Game {
 
     // ---- bots ----
     this.bots = [];
-    const allyDefs = CHARACTERS.filter(c => c.team === playerTeam && c.id !== playerCharId).slice(0, 3);
-    const enemyDefs = CHARACTERS.filter(c => c.team === this.enemyTeam).slice(0, 4);
+    // Custom match: team size (total per side, player fills one ally slot) + difficulty.
+    const DIFF = { easy: 0.55, normal: 1, hard: 1.3, insane: 1.7 };
+    const diffMul = DIFF[this.settings.difficulty] || 1;
+    const teamSize = Math.max(1, Math.min(8, this.settings.bots || 4));
+    const cycle = (pool, n) => Array.from({ length: Math.max(0, n) }, (_, i) => pool[i % pool.length]).filter(Boolean);
+    const allyDefs = cycle(CHARACTERS.filter(c => c.team === playerTeam && c.id !== playerCharId), teamSize - 1);
+    const enemyDefs = cycle(CHARACTERS.filter(c => c.team === this.enemyTeam), teamSize);
     const mkBot = (def, team, i) => {
       const c = buildCharacterModel(def) || buildCharacter(def);
       c.group.traverse(o => { o.userData.botOwner = null; });
@@ -83,7 +88,7 @@ export class Game {
         isPlayer: false, name: def.name, def, team,
         mesh: c, pos: new THREE.Vector3(), yaw: 0, hp: 100, alive: true,
         respawnAt: 0, kills: 0, deaths: 0,
-        target: null, reactAt: 0, nextShotAt: 0, skill: 0.85 + Math.random() * 0.35, weapon: 'awp',
+        target: null, reactAt: 0, nextShotAt: 0, skill: (0.85 + Math.random() * 0.35) * diffMul, weapon: this._botWeapon(),
         path: null, pathIdx: 0, repathAt: 0, roamIdx: 0, phase: 0, think: Math.random() * 0.2,
         deadT: 0, strafeT: Math.random() * 10, revealedAt: -99,
         crouchBias: Math.random() < 0.45, // ~half the bots hold angles crouched (AWPer style)
@@ -663,7 +668,7 @@ export class Game {
     ent.alive = false; ent.hp = 0; ent.deaths++;
     ent.respawnAt = this.time + RESPAWN_DELAY;
     // CS: larga a arma no chão onde morreu
-    this._dropWeapon(ent.pos.x, ent.pos.z, ent.isPlayer ? (ent.weapon === 'knife' ? 'awp' : ent.weapon) : 'awp');
+    this._dropWeapon(ent.pos.x, ent.pos.z, ent.weapon === 'knife' ? 'awp' : ent.weapon);
     if (attacker) {
       attacker.kills++; this.roundKills[attacker.team]++;
       this.sfx.voice(attacker.team);   // killer's side celebrates (meme audio)
@@ -916,6 +921,15 @@ export class Game {
         if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, b, false); this.scene.remove(pk.mesh); this.drops.splice(i, 1); break; }
       }
     }
+  }
+  _botWeapon() {
+    // Give bots varied weapons that match the weapon mode, so ground drops aren't all AWP.
+    const mode = this.settings.wpnMode || 'all';
+    if (mode === 'awp') return 'awp';
+    if (mode === 'knife') return 'knife';
+    if (mode === 'pistols') return Math.random() < 0.5 ? 'pistol' : 'deagle';
+    const pool = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle'];
+    return pool[(Math.random() * pool.length) | 0];
   }
   _pickupAllowed(w) {
     const mode = this.settings.wpnMode || 'all';

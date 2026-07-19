@@ -10,7 +10,7 @@ import { VERSION } from './version.js';
 
 /* ---------------- settings & nickname ---------------- */
 const SETTINGS_KEY = 'awpbr_settings';
-const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP, wpnMode: 'all' },
+const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP, wpnMode: 'all', bots: 4, difficulty: 'normal' },
   JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 const saveSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 const NICK_KEY = 'awpbr_nick';
@@ -253,6 +253,19 @@ wpnDdList.querySelectorAll('.dd-item').forEach(b => b.onclick = () => {
   settings.wpnMode = b.dataset.id; saveSettings();
   wpnLabel(settings.wpnMode); sfx.uiClick();
 });
+// bots-per-side + difficulty selectors (custom match)
+const botsSel = $('bots-select');
+if (botsSel) {
+  [2, 3, 4, 5, 6, 7, 8].forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = `${n} vs ${n}`; botsSel.appendChild(o); });
+  botsSel.value = settings.bots || 4;
+  botsSel.onchange = () => { settings.bots = +botsSel.value; saveSettings(); sfx.uiClick(); };
+}
+const diffSel = $('diff-select');
+if (diffSel) {
+  [['easy', 'FÁCIL'], ['normal', 'NORMAL'], ['hard', 'DIFÍCIL'], ['insane', 'INSANO']].forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = l; diffSel.appendChild(o); });
+  diffSel.value = settings.difficulty || 'normal';
+  diffSel.onchange = () => { settings.difficulty = diffSel.value; saveSettings(); sfx.uiClick(); };
+}
 $('btn-howto').onclick = () => { sfx.uiClick(); show('howto-panel'); };
 $('howto-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
 $('btn-settings').onclick = () => { sfx.uiClick(); settingsReturn = 'main-menu'; show('settings-panel'); };
