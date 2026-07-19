@@ -89,7 +89,7 @@ function pvSetChar(def) {
   if (GLB_CHARS.has(def.id)) {
     preloadCharacterAssets([def.id]).then(() => {
       if (my !== pvToken || !hasModel(def.id)) return;
-      const m = buildCharacterModel(def, { weapon: false }); // clean showcase, no slung rifle
+      const m = buildCharacterModel(def, { weaponId: 'ak' }); // showcase holding a weapon
       if (!m) return;
       if (p.model) p.scene.remove(p.model);
       m.group.rotation.y = 0.4;
@@ -652,18 +652,23 @@ let menuAngle = 0;
 function loop() {
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, clock.getDelta());
-  if (game) {
+  const csOpen = !$('char-select').classList.contains('hidden');
+  // While the char-select is open mid-match (pressing M to switch teams), the game
+  // auto-pauses — so we must NOT keep rendering it here, and we MUST still spin the
+  // preview. Rendering the preview only lived in the menu branch before, which is
+  // why M froze the selector.
+  if (game && !csOpen) {
     game.update(dt);
-  } else {
+  } else if (!game) {
     menuAngle += dt * 0.07;
     menuCam.position.set(Math.sin(menuAngle) * 34, 17 + Math.sin(menuAngle * 0.6) * 4, Math.cos(menuAngle) * 34);
     menuCam.lookAt(0, 1, 0);
     renderer.render(menuScene, menuCam);
-    if (pv && pv.model && !$('char-select').classList.contains('hidden')) {
-      pv.model.rotation.y += dt * 0.9;
-      if (pv.mixer) pv.mixer.update(dt);
-      pv.r.render(pv.scene, pv.cam);
-    }
+  }
+  if (csOpen && pv && pv.model) {
+    pv.model.rotation.y += dt * 0.9;
+    if (pv.mixer) pv.mixer.update(dt);
+    pv.r.render(pv.scene, pv.cam);
   }
 }
 loop();
