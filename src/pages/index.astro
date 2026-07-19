@@ -25,7 +25,7 @@
 <meta name="twitter:title" content="CS BRASIL: Treta Suprema — FPS grátis de navegador">
 <meta name="twitter:description" content="Arena de sniper estilo CS 1.6 numa Brasília fictícia. Petistas × Bolsonaristas. Jogue grátis no navegador.">
 <meta name="twitter:image" content="https://csbrasil.online/og-image.png">
-<script type="application/ld+json">
+<script type="application/ld+json" is:inline>
 {
   "@context": "https://schema.org",
   "@type": "VideoGame",
@@ -45,7 +45,7 @@
   "author": { "@type": "Organization", "name": "CS BRASIL contributors" }
 }
 </script>
-<script type="application/ld+json">
+<script type="application/ld+json" is:inline>
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -66,8 +66,8 @@
 }
 </script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='8' height='16' fill='%23e03232'/><rect x='8' width='8' height='16' fill='%231faa4d'/></svg>">
-<link rel="stylesheet" href="style.css">
-<script type="importmap">
+<link rel="stylesheet" href="/style.css">
+<script type="importmap" is:inline>
 { "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
 </script>
 </head>
@@ -317,7 +317,7 @@
 
 <!-- Vercel Web Analytics + Speed Insights (static HTML — sem pacote npm).
      Só carrega fora de localhost. Ative no dashboard: Analytics → Enable. -->
-<script>
+<script is:inline>
   if (!/^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname)) {
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     var _s1 = document.createElement('script'); _s1.defer = true;
@@ -327,6 +327,6 @@
   }
 </script>
 
-<script type="module" src="js/main.js"></script>
+<script type="module" src="/js/main.js" is:inline></script>
 </body>
 </html>
