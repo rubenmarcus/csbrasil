@@ -39,7 +39,7 @@ settings.map = currentMap;
 
 /* ---------------- menu backdrop (orbiting map) ---------------- */
 // Mint building/statue GLBs used by the Brasília map (loaded once, cloned per placement).
-const MAP_PROPS = ['congresso', 'catedral', 'ministerio', 'palacio', 'justica'];
+const MAP_PROPS = ['congresso', 'catedral', 'ministerio', 'palacio', 'justica', 'tires', 'stall', 'tent'];
 let menuScene = new THREE.Scene();
 MAPS[currentMap].build(menuScene, textures);
 const menuCam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 400);

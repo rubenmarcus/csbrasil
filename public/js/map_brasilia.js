@@ -84,17 +84,16 @@ export function buildBrasilia(scene, T) {
     putBuilding('ministerio', { x: sx * 23, z: mz, targetH: 7, ry: Math.PI / 2 });
 
   /* ---------------- statues ---------------- */
-  { // A Justiça — Mint GLB prop in front of the STF, draped with a Brazil flag and the
-    // "PERDEU, MANÉ" graffiti (8 de janeiro reference). Statue faces +X (toward the lane).
-    const sx = -11, sz = 22;   // clear of the STF plinth, out in the open facing the lane
+  { // A Justiça — Mint GLB v2 (blindfolded, sword across the lap, Brazil flag draped as a
+    // sash — matches the real reference). The flag is baked into the mesh now; we only add
+    // the small "PERDEU, MANÉ" graffiti on the chest (Mint can't render reliable text).
+    const sx = -11, sz = 22;   // out in the open facing the lane (+X)
     const o = placeProp('justica', { x: sx, z: sz, targetH: 3.6, ry: Math.PI / 2 });
     if (o) {
       root.add(o); occluders.push(o); col(sx - 1, sx + 1, 0, 3.6, sz - 1, sz + 1);
-      // Brazil flag draped over one shoulder
-      const flag = addPlane(1.8, 1.3, lam({ map: T.flagBR, side: THREE.DoubleSide }), sx + 0.7, 2.6, sz - 0.5, Math.PI / 2);
-      flag.rotation.x = 0.35;
-      // graffiti scrawled across the torso
-      addPlane(1.6, 1.0, lam({ map: T.perdeuMane, transparent: true, side: THREE.DoubleSide }), sx + 0.72, 1.9, sz + 0.35, Math.PI / 2);
+      // small "PERDEU MANÉ" graffiti decal on the chest (statue front faces +X), clear of the sash
+      addPlane(0.52, 0.34, lam({ map: T.perdeuMane, transparent: true, side: THREE.DoubleSide }),
+        sx + 0.58, 2.42, sz + 0.26, Math.PI / 2);
     }
   }
   { // Os Guerreiros — procedural bronze monument (Mint mesher failed on it twice)
@@ -146,12 +145,23 @@ export function buildBrasilia(scene, T) {
     }
   }
 
-  /* ---------------- gameplay cover ---------------- */
+  /* ---------------- gameplay cover: props do 8 de janeiro ---------------- */
+  // Tire-pile barricades (Mint) as the main lane cover — the protest look.
+  for (const [tx, tz, ry] of [[-6, -14, 0.3], [7, 12, -0.4], [-8, 26, 0.8], [9, -26, 0.2],
+    [10, 3, 0], [-10, -3, 1.1], [4, 34, 0.5], [-4, -34, -0.3]])
+    putBuilding('tires', { x: tx, z: tz, targetH: 1.6, ry });
+  // Barraquinhas de camelô (vendor stalls)
+  putBuilding('stall', { x: -13, z: -8, targetH: 2.7, ry: Math.PI / 2 });
+  putBuilding('stall', { x: 13, z: 8, targetH: 2.7, ry: -Math.PI / 2 });
+  // Mini-acampamento de barracas (protest camp) junto aos ministérios oeste
+  for (const [tx, tz, ry] of [[-15, -30, 0.2], [-17, -35, 1.1], [-13, -36, -0.5], [16, 33, 0.6]])
+    putBuilding('tent', { x: tx, z: tz, targetH: 1.7, ry });
+  // a few "FRÁGIL TRETA" crates still around for variety
   const crateMat = lam({ map: T.crate });
-  for (const [cx, cz, lv] of [[-6, -14, 0], [6, 14, 0], [-6, -12.4, 1], [7, -24, 0], [-7, 24, 0],
-    [11, 2, 0], [-11, -2, 0], [4, 34, 0], [-4, -34, 0], [11, 3.6, 1], [-11, -0.4, 1]])
+  for (const [cx, cz, lv] of [[11, 2, 0], [-11, 0, 0], [11, 3.6, 1], [-5, 18, 0]])
     addBox(1.6, 1.6, 1.6, crateMat, cx, lv * 1.6, cz, { ry: (cx * 7 % 10) / 22, pad: -0.05 });
-  for (const [px, pz] of [[-9, 8], [9, -8], [-9, -20], [9, 20], [0, -30], [0, 30]]) {
+  // concrete planters with greenery
+  for (const [px, pz] of [[-9, 8], [9, -8], [0, -20], [0, 16]]) {
     addBox(3.4, 0.9, 1.3, lam({ color: 0xd9dbd4 }), px, 0, pz);
     addBox(3, 0.5, 0.9, lam({ map: T.grass }), px, 0.9, pz, { collide: false });
   }
