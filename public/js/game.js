@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { MAPS, resolveMapId } from './maps.js';
 import { buildCharacter, poseCharacter, byId, CHARACTERS, buildRifle } from './characters.js';
 import { buildCharacterModel } from './glbchars.js';
+import { weaponModel } from './weapons.js';
 
 export const WEAPONS = {
   awp:    { name: 'AWP "DELIBERADOR"', short: 'AWP', dmg: 400, mag: 5, reserve: 25, rate: 1.7, reload: 3.1, spreadHip: 0.075, spreadScope: 0.0008, recoil: 0.055, scope: true },
@@ -236,6 +237,18 @@ export class Game {
     knife.position.set(0.28, -0.22, -0.4); knife.rotation.set(-0.2, 0.25, -0.15);
     root.add(awp, ak, m4, mp5, shotgun, deagle, pistol, knife);
     const models = { awp, ak, m4, mp5, shotgun, deagle, pistol, knife };
+    // Swap the procedural box guns for the real weapon GLBs where available: add the
+    // real model (barrel rotated to point into the screen) and hide the box meshes,
+    // keeping the first-person hand. Falls back to the box gun if a model is missing.
+    for (const id in models) {
+      const rw = weaponModel(id);
+      if (!rw) continue;
+      rw.rotation.y = Math.PI;             // weapon barrel +Z -> -Z (into the screen)
+      rw.scale.multiplyScalar(0.82);       // slightly tucked for first-person framing
+      rw.position.z += id === 'knife' ? 0.0 : 0.12; // pull the grip back toward the hand
+      models[id].children.forEach((ch) => { if (ch.isMesh) ch.visible = false; });
+      models[id].add(rw);
+    }
     for (const k in models) models[k].visible = k === 'awp';
     return { root, models, awp, pistol, knife, kick: 0, bobPhase: 0, reloadDip: 0 };
   }
