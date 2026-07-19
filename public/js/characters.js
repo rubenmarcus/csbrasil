@@ -47,6 +47,12 @@ export const CHARACTERS = [
   { id: 'guaranito', team: 'B', name: 'Guaranito',
     blurb: 'Mascote do guaraná da direita. Efervescente, polêmico e sempre gelado.',
     pal: { skin: 0x2f9e44, shirt: 0x2f9e44, pants: 0x1f7a34, hair: 0xffd23f, boots: 0xffd23f } },
+  { id: 'bombado', team: 'B', name: 'Bombado da Academia',
+    blurb: 'Peitoral gigante, perna de palito. Pulou o leg day pra treinar o gatilho.',
+    pal: { skin: 0x8d5a3b, shirt: 0xffd23f, pants: 0x2e3d55, hair: 0x2a2a2a, boots: 0xf0f0f0 } },
+  { id: 'hipster', team: 'P', name: 'Hipster Alternativo',
+    blurb: 'Moicano colorido e camiseta de banda que você não conhece. Já jogava isso antes de ser mainstream.',
+    pal: { skin: 0xe8b98a, shirt: 0x1a1a1a, pants: 0x3a4a5a, hair: 0x2fd3c0, boots: 0xf0f0f0 } },
 ];
 export const byId = id => CHARACTERS.find(c => c.id === id);
 

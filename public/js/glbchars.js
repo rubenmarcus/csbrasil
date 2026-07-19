@@ -18,6 +18,7 @@ export const GLB_CHARS = new Set([
   'esquerdomacho', 'sindicato', 'mst', 'doutora', 'mistico',
   'caminhoneiro', 'influencer', 'sertanejo', 'senhora', 'coach',
   'deputado', 'pintor', 'gotinha', 'farialimer', 'guaranito',
+  'bombado', 'hipster',
 ]);
 
 const STATES = ['idle', 'walk', 'run', 'shoot', 'death', 'crouch', 'crouchwalk', 'jump'];
