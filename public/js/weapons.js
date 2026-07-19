@@ -6,7 +6,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
 const _cache = new Map();
-export const WEAPON_IDS = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle', 'pistol', 'knife'];
+export const WEAPON_IDS = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle', 'pistol', 'knife',
+  't56', 'akm', 'revolver38', 'md97', 'carbine', 'm400', 'mosin', 'rem700'];
 
 // len = real length along the barrel (m); rot = degrees to point the barrel +Z;
 // gripZ = fraction of length from the muzzle where the hand grips (0=muzzle,1=stock).
@@ -19,6 +20,15 @@ const CFG = {
   deagle:  { len: 0.30, rot: [0, 90, 0], gripZ: 0.7 },
   pistol:  { len: 0.26, rot: [0, 90, 0], gripZ: 0.7 },
   knife:   { len: 0.30, rot: [0, 90, 0], gripZ: 0.6 },
+  // arsenal-2 (Brazilian-flavored)
+  t56:       { len: 0.88, rot: [0, 90, 0], gripZ: 0.62 },
+  akm:       { len: 0.88, rot: [0, 90, 0], gripZ: 0.62 },
+  revolver38:{ len: 0.24, rot: [0, 90, 0], gripZ: 0.68 },
+  md97:      { len: 1.05, rot: [0, 90, 0], gripZ: 0.62 },
+  carbine:   { len: 0.98, rot: [0, 90, 0], gripZ: 0.6 },
+  m400:      { len: 0.92, rot: [0, 90, 0], gripZ: 0.62 },
+  mosin:     { len: 1.20, rot: [0, 90, 0], gripZ: 0.66 },
+  rem700:    { len: 1.15, rot: [0, 90, 0], gripZ: 0.66 },
 };
 
 const loadGLB = (url) => new Promise((res, rej) => loader.load(url, res, undefined, rej));
