@@ -96,9 +96,8 @@ export function buildBrasilia(scene, T) {
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 32, 8), lam({ color: 0x9aa0a6 }));
     pole.position.set(-11, 16, 44); pole.castShadow = true; root.add(pole);
     col(-11.3, -10.7, 0, 32, 43.7, 44.3);
-    addPlane(5, 3.4, lam({ color: 0x1f9d55, side: THREE.DoubleSide }), -8.3, 29, 44);
-    const dia = addPlane(2.4, 2.4, lam({ color: 0xffd23f, side: THREE.DoubleSide }), -8.3, 29, 44.02); dia.rotation.z = Math.PI / 4;
-    addPlane(1.1, 1.1, lam({ color: 0x2b3f8f, side: THREE.DoubleSide }), -8.3, 29, 44.04);
+    // real Brazil flag texture (mastro da Praça dos Três Poderes proportions ~3:2)
+    addPlane(6, 4, lam({ map: T.flagBR, side: THREE.DoubleSide }), -8, 29, 44);
   }
   // reflecting pool between the praça and Congresso
   addPlane(30, 8, lam({ color: 0x2f6ea0, transparent: true, opacity: 0.9 }), 0, 0.06, 50, 0, -Math.PI / 2);

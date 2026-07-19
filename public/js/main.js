@@ -82,7 +82,7 @@ function ensurePreview() {
 }
 // Each character shows off a weapon that fits their vibe (not everyone with an AK).
 const CHAR_WEAPON = {
-  esquerdomacho: 'ak', sindicato: 'lmg', mst: 'shotgun', doutora: 'm4', mistico: 'mp5',
+  esquerdomacho: 'pistol', sindicato: 'shotgun', mst: 'ak', doutora: 'm4', mistico: 'mp5',
   caminhoneiro: 'md97', influencer: 'deagle', sertanejo: 'revolver38', senhora: 'uzi',
   coach: 'scar', gotinha: 'mp5', farialimer: 'm4', bombado: 'lmg', hipster: 'uzi',
   dollynho: 'p90', et: 'awp', ancap: 'mosin',
