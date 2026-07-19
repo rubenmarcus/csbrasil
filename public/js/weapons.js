@@ -7,7 +7,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const loader = new GLTFLoader();
 const _cache = new Map();
 export const WEAPON_IDS = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle', 'pistol', 'knife',
-  't56', 'akm', 'revolver38', 'md97', 'carbine', 'm400', 'mosin', 'rem700'];
+  't56', 'akm', 'revolver38', 'md97', 'carbine', 'm400', 'mosin', 'rem700',
+  'lmg', 'scar', 'tavor', 'famas', 'uzi', 'p90'];
 
 // len = real length along the barrel (m); rot = degrees to point the barrel +Z;
 // gripZ = fraction of length from the muzzle where the hand grips (0=muzzle,1=stock).
@@ -29,6 +30,13 @@ const CFG = {
   m400:      { len: 0.92, rot: [0, 90, 0], gripZ: 0.62 },
   mosin:     { len: 1.20, rot: [0, 90, 0], gripZ: 0.66 },
   rem700:    { len: 1.15, rot: [0, 90, 0], gripZ: 0.66 },
+  // arsenal-3 (military)
+  lmg:       { len: 1.10, rot: [0, 90, 0], gripZ: 0.58 },
+  scar:      { len: 0.90, rot: [0, 90, 0], gripZ: 0.62 },
+  tavor:     { len: 0.72, rot: [0, 90, 0], gripZ: 0.5 },
+  famas:     { len: 0.76, rot: [0, 90, 0], gripZ: 0.5 },
+  uzi:       { len: 0.60, rot: [0, 90, 0], gripZ: 0.58 },
+  p90:       { len: 0.52, rot: [0, 90, 0], gripZ: 0.55 },
 };
 
 const loadGLB = (url) => new Promise((res, rej) => loader.load(url, res, undefined, rej));
