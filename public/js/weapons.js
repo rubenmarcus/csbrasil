@@ -65,7 +65,7 @@ export function weaponModel(id) {
   wrap.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(wrap);
   const zlen = (box.max.z - box.min.z) || 1;
-  const s = cfg.len / zlen;
+  const s = Math.min(8, Math.max(0.05, cfg.len / zlen)); // guard against a bad bbox → giant gun
   wrap.scale.setScalar(s);
   // shift so the grip point (gripZ along the barrel) sits at the origin
   wrap.updateMatrixWorld(true);

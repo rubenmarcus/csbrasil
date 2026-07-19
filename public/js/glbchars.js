@@ -17,7 +17,7 @@ import { weaponModel, preloadWeapons } from './weapons.js';
 export const GLB_CHARS = new Set([
   'esquerdomacho', 'sindicato', 'mst', 'doutora', 'mistico',
   'caminhoneiro', 'influencer', 'sertanejo', 'senhora', 'coach',
-  'deputado', 'pintor', 'gotinha', 'farialimer', 'guaranito',
+  'deputado', 'pintor', 'gotinha', 'farialimer',
   'bombado', 'hipster', 'dollynho', 'et', 'ancap',
 ]);
 
@@ -113,7 +113,9 @@ export function buildCharacterModel(def, opts = {}) {
     const bs = new THREE.Vector3();
     handBone.matrixWorld.decompose(new THREE.Vector3(), new THREE.Quaternion(), bs);
     const mount = new THREE.Group();
-    mount.scale.setScalar(1 / (bs.x || 1));       // 1 mount unit == 1 world meter
+    // 1 mount unit == 1 world meter, but clamp against rigs with extreme bone scales
+    // (an uncompensated tiny bone scale would blow the weapon up to giant size).
+    mount.scale.setScalar(Math.min(2.5, Math.max(0.35, 1 / (bs.x || 1))));
     const gun = weaponModel(opts.weaponId || 'awp') || buildRifle();
     gun.scale.multiplyScalar(GUN_SCALE);
     gun.position.set(GUN_POS[0], GUN_POS[1], GUN_POS[2]);
@@ -142,6 +144,10 @@ class CharController {
       if (e.action === actions.shoot) this.shooting = false;
       if (e.action === actions.jump) this.jumping = false;
     });
+    // Speed up the leg cycle so the feet roughly keep up with BOT_SPEED (less "ice-skating").
+    if (actions.run) actions.run.timeScale = 1.8;
+    if (actions.walk) actions.walk.timeScale = 1.45;
+    if (actions.crouchwalk) actions.crouchwalk.timeScale = 1.4;
     this._to('idle');
   }
 
