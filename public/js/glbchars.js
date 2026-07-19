@@ -17,7 +17,7 @@ import { weaponModel, preloadWeapons } from './weapons.js';
 export const GLB_CHARS = new Set([
   'esquerdomacho', 'sindicato', 'mst', 'doutora', 'mistico',
   'caminhoneiro', 'influencer', 'sertanejo', 'senhora', 'coach',
-  'deputado', 'pintor', 'gotinha', 'farialimer',
+  'gotinha', 'farialimer',
   'bombado', 'hipster', 'dollynho', 'et', 'ancap',
 ]);
 
