@@ -32,6 +32,21 @@ export const CHARACTERS = [
   { id: 'coach', team: 'B', name: 'Coach Quântico',
     blurb: 'Blazer, headset e 47 técnicas de manifestação. Já venceu antes de começar — no quântico.',
     pal: { skin: 0xf2c9a4, shirt: 0xf0f0f0, pants: 0x2a2a2a, hair: 0x2a2a2a, boots: 0x1a1a1a } },
+  { id: 'deputado', team: 'P', name: 'Deputado Raiz',
+    blurb: 'Terno amassado, gravata vermelha e 9 mandatos. Emenda parlamentar direto no gatilho.',
+    pal: { skin: 0xc98d5e, shirt: 0x2a2f3a, pants: 0x22262e, hair: 0xb8b8b8, boots: 0x1a1a1a } },
+  { id: 'pintor', team: 'P', name: 'Artista Engajado',
+    blurb: 'Boina, avental manchado e um manifesto por round. Pinta a revolução e foge do aluguel.',
+    pal: { skin: 0xd9a580, shirt: 0xe8dcc0, pants: 0x3a4a5a, hair: 0x2a1e14, boots: 0xdedede } },
+  { id: 'gotinha', team: 'P', name: 'Zé da Gotinha',
+    blurb: 'Mascote da saúde. Imuniza a treta com dose de reforço — e ainda pega o SUS de graça.',
+    pal: { skin: 0xf4f4f4, shirt: 0xf4f4f4, pants: 0xf4f4f4, hair: 0x2fae5a, boots: 0xe03232 } },
+  { id: 'farialimer', team: 'B', name: 'Faria Limer',
+    blurb: 'Colete, sapatênis e planilha de day trade. Compra na baixa, atira na alta.',
+    pal: { skin: 0xf2c9a4, shirt: 0x8fb8e0, pants: 0xcdbb98, hair: 0x2a2018, boots: 0xf0f0f0 } },
+  { id: 'guaranito', team: 'B', name: 'Guaranito',
+    blurb: 'Mascote do guaraná da direita. Efervescente, polêmico e sempre gelado.',
+    pal: { skin: 0x2f9e44, shirt: 0x2f9e44, pants: 0x1f7a34, hair: 0xffd23f, boots: 0xffd23f } },
 ];
 export const byId = id => CHARACTERS.find(c => c.id === id);
 
