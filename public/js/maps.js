@@ -1,10 +1,12 @@
 // Map registry — single source of truth for selectable arenas.
 import { buildWorld } from './map.js';
 import { buildPoolDay } from './map_pool_day.js';
+import { buildSitio } from './map_sitio.js';
 
 export const MAPS = {
   awp_map:     { name: 'AWP Treta (Praça)',   build: buildWorld },
   fy_pool_day: { name: 'Piscinão da Treta',   build: buildPoolDay },
+  fy_sitio:    { name: 'Sítio da Treta (Atibaia)', build: buildSitio },
 };
 export const MAP_IDS = Object.keys(MAPS);
 export const DEFAULT_MAP = 'awp_map';
