@@ -211,20 +211,20 @@ $('btn-jogar').onclick = () => {
 };
 $('btn-ranking').onclick = () => { sfx.uiClick(); showRanking(); };
 $('ranking-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
-// dropdown de mapas (depois dos campos do usuário, antes do JOGAR)
-const mapSel = $('map-select');
-for (const id of MAP_IDS) {
-  const o = document.createElement('option');
-  o.value = id; o.textContent = MAPS[id].name;
-  mapSel.appendChild(o);
-}
-mapSel.value = currentMap;
-mapSel.onchange = () => {
+// carrossel de mapas: setas ‹ › trocam o mapa E o fundo 3D do menu
+const mapNameEl = $('map-name');
+let mapIdx = Math.max(0, MAP_IDS.indexOf(currentMap));
+function stepMap(dir) {
   sfx.uiClick();
-  currentMap = resolveMapId(mapSel.value);
+  mapIdx = (mapIdx + dir + MAP_IDS.length) % MAP_IDS.length;
+  currentMap = resolveMapId(MAP_IDS[mapIdx]);
   settings.map = currentMap; saveSettings();
+  mapNameEl.textContent = MAPS[currentMap].name;
   rebuildMenuBackdrop();
-};
+}
+mapNameEl.textContent = MAPS[currentMap].name;
+$('map-prev').onclick = () => stepMap(-1);
+$('map-next').onclick = () => stepMap(1);
 const wpnSel = { value: settings.wpnMode || 'all' };
 // dropdown custom de modo de armas (com ícones SVG originais)
 const WPN_ICONS = {

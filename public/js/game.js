@@ -194,20 +194,56 @@ export class Game {
     // The viewmodel leaves almost no screen room below the gun, so a full forearm
     // falls off-frame. What reads is the gripping hand (skin) plus a short sleeve
     // cuff behind it — enough to carry the character's skin + sleeve colors.
-    const fpArm = (w = 0.08, h = 0.09, d = 0.12) => {
+    // A curled gripping hand built from capsules (rounded) instead of a single box,
+    // so the first-person hand reads as fingers wrapping the grip rather than a brick.
+    // Trigger hand: palm + 4 curled fingers + thumb + a receding sleeve/cuff.
+    const fpArm = (w = 0.08) => {
       const g = new THREE.Group();
-      const hand = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), skinMat);
-      hand.castShadow = false; g.add(hand);
-      // Forearm angled toward the screen's bottom-right corner (the only room the
-      // viewmodel leaves), carrying the sleeve colour; a skin cuff at the wrist.
+      const sc = w / 0.08; // callers pass a smaller w for pistols/knife → scale the whole hand
+      const knuckle = new THREE.Group(); g.add(knuckle);
+      // palm — a flattened capsule laid across the grip (X axis)
+      const palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.042, 0.05, 4, 8), skinMat);
+      palm.rotation.z = Math.PI / 2; palm.scale.set(1, 1, 0.7);
+      palm.castShadow = false; knuckle.add(palm);
+      // four fingers curling over the top of the grip, spaced along Z
+      const fingerGeo = new THREE.CapsuleGeometry(0.0115, 0.05, 3, 6);
+      for (let i = 0; i < 4; i++) {
+        const f = new THREE.Mesh(fingerGeo, skinMat);
+        f.rotation.set(0.55, 0, Math.PI / 2);
+        f.position.set(0.006, 0.03, -0.03 + i * 0.026);
+        f.castShadow = false; knuckle.add(f);
+      }
+      // thumb on the near side, angled up along the grip
+      const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.013, 0.038, 3, 6), skinMat);
+      thumb.rotation.set(0.35, 0, 0.55); thumb.position.set(-0.032, 0.006, 0.028);
+      thumb.castShadow = false; knuckle.add(thumb);
+      knuckle.scale.setScalar(sc);
+      // Forearm angled toward the screen's bottom corner, carrying the sleeve colour;
+      // a rounded cuff at the wrist. Capsule/cylinder → no hard box edges.
       const fore = new THREE.Group();
       fore.rotation.set(0.78, 0.62, 0);
-      const L = 0.42;
-      const sleeve = new THREE.Mesh(new THREE.BoxGeometry(w * 1.2, h * 1.25, L), sleeveMat);
-      sleeve.position.set(0, 0, L * 0.5 + 0.04); sleeve.castShadow = false; fore.add(sleeve);
-      const cuff = new THREE.Mesh(new THREE.BoxGeometry(w * 1.32, h * 1.36, 0.045), skinMat);
-      cuff.position.set(0, 0, 0.05); cuff.castShadow = false; fore.add(cuff);
+      const L = 0.42 * sc;
+      const sleeve = new THREE.Mesh(new THREE.CapsuleGeometry(w * 0.62, L, 4, 10), sleeveMat);
+      sleeve.rotation.x = Math.PI / 2; sleeve.position.set(0, 0, L * 0.5 + 0.04);
+      sleeve.castShadow = false; fore.add(sleeve);
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.72, w * 0.66, 0.05, 12), skinMat);
+      cuff.rotation.x = Math.PI / 2; cuff.position.set(0, 0, 0.05);
+      cuff.castShadow = false; fore.add(cuff);
       g.add(fore);
+      return g;
+    };
+    // Support (front) hand: palm + curled fingers only, no receding sleeve.
+    const frontHand = (sc = 1) => {
+      const g = new THREE.Group();
+      const palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.045, 4, 8), skinMat);
+      palm.rotation.z = Math.PI / 2; palm.scale.set(1, 1, 0.7); palm.castShadow = false; g.add(palm);
+      const fingerGeo = new THREE.CapsuleGeometry(0.011, 0.046, 3, 6);
+      for (let i = 0; i < 4; i++) {
+        const f = new THREE.Mesh(fingerGeo, skinMat);
+        f.rotation.set(0.6, 0, Math.PI / 2);
+        f.position.set(0.006, 0.028, -0.028 + i * 0.024); f.castShadow = false; g.add(f);
+      }
+      g.scale.setScalar(sc);
       return g;
     };
     // AWP (right-handed)
@@ -220,7 +256,7 @@ export class Game {
     const stock = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.2), dark(0x3a2a1e)); stock.position.set(0, -0.05, 0.28); awp.add(stock);
     const bolt = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.03), dark(0x888888)); bolt.position.set(0.05, 0.03, 0.05); awp.add(bolt);
     const handR = fpArm(); handR.position.set(0, -0.085, 0.02); awp.add(handR);
-    const handL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); handL.position.set(0.005, -0.04, -0.3); awp.add(handL);
+    const handL = frontHand(0.95); handL.position.set(0.005, -0.04, -0.3); awp.add(handL);
     awp.position.set(0.26, -0.23, -0.5); awp.rotation.y = 0.03;
     // rifles genéricos (ak / m4 / mp5 / shotgun / deagle)
     const mkRifle = (bodyC, woodC, len, magH) => {
@@ -232,7 +268,7 @@ export class Game {
       const mag = new THREE.Mesh(new THREE.BoxGeometry(0.045, magH, 0.07), dark(0x2a2a2a));
       mag.position.set(0, -0.06 - magH / 2, -0.05); g.add(mag);
       const hR = fpArm(); hR.position.set(0, -0.085, 0.1); g.add(hR);
-      const hL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); hL.position.set(0.005, -0.04, -len / 3); g.add(hL);
+      const hL = frontHand(0.95); hL.position.set(0.005, -0.04, -len / 3); g.add(hL);
       g.position.set(0.26, -0.23, -0.5); g.rotation.y = 0.03;
       return g;
     };
