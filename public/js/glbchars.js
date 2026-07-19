@@ -162,7 +162,12 @@ class CharController {
     this.cur = this.actions.shoot;
   }
 
-  die() { if (!this.dead) { this.dead = true; this.shooting = false; this._to('death', true); } }
+  die() {
+    if (this.dead) return;
+    this.dead = true; this.shooting = false;
+    this._to('death', true);
+    if (this.actions.death) this.actions.death.timeScale = 1.8; // snappy fall, not slow-mo
+  }
 
   // Stop ALL actions first — the death clip runs with clampWhenFinished, so it holds
   // its last (fallen) frame at full weight forever. Without stopAllAction the revived

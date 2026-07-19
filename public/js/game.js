@@ -985,6 +985,7 @@ export class Game {
       if (b.mesh.isGLB) {
         b.mesh.ctrl.die();
         b.mesh.ctrl.update(dt, 0, false);
+        if (b.deadT > 1.0) g.visible = false; // fall fast, then vanish (no lingering ragdoll)
       } else {
         g.rotation.x = Math.max(-Math.PI / 2, g.rotation.x - dt * 5);
         g.position.y = b.pos.y + Math.max(-0.6, 0 - b.deadT * 0.3);
