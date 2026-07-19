@@ -59,6 +59,9 @@ export const CHARACTERS = [
   { id: 'et', team: 'P', name: 'ET de Varginha',
     blurb: 'Veio de longe pra treta. Abduz a direita e some no mato de Minas.',
     pal: { skin: 0x8a9a7a, shirt: 0x8a9a7a, pants: 0x6a7a5a, hair: 0x8a9a7a, boots: 0x5a6a4a } },
+  { id: 'ancap', team: 'B', name: 'Ancap Medieval',
+    blurb: 'Cota de malha, cruz templária e capa verde-amarela. Privatiza a treta e xinga o Banco Central.',
+    pal: { skin: 0xe8b98a, shirt: 0xf0f0f0, pants: 0x3a3a30, hair: 0x8a8a8a, boots: 0x9a9a8a } },
 ];
 export const byId = id => CHARACTERS.find(c => c.id === id);
 
