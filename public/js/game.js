@@ -496,10 +496,14 @@ export class Game {
       const scatterPool = ['ak', 'm4', 'mp5', 'shotgun', 'deagle', 't56', 'akm', 'md97', 'scar',
         'tavor', 'famas', 'uzi', 'p90', 'mosin', 'rem700', 'm400', 'carbine', 'revolver38']
         .filter(w => this._pickupAllowed(w));
-      for (let i = 0; i < 8 && scatterPool.length; i++) {
-        const n = wp[(Math.random() * wp.length) | 0];
-        const w = scatterPool[(Math.random() * scatterPool.length) | 0];
-        if (n) this._dropWeapon(n.x + (Math.random() - 0.5) * 2.5, n.z + (Math.random() - 0.5) * 2.5, w);
+      // Lots of weapons of every type on the ground, clustered near waypoints (not flung
+      // far). Guarantee one of each allowed type first, then top up to a healthy count.
+      if (scatterPool.length) {
+        const near = () => wp[(Math.random() * wp.length) | 0];
+        const put = (w) => { const n = near(); if (n) this._dropWeapon(n.x + (Math.random() - 0.5) * 1.4, n.z + (Math.random() - 0.5) * 1.4, w); };
+        for (const w of scatterPool) put(w);                       // at least one of each type
+        const extra = Math.max(0, 30 - scatterPool.length);        // ~30 guns on the map total
+        for (let i = 0; i < extra; i++) put(scatterPool[(Math.random() * scatterPool.length) | 0]);
       }
     }
     for (const k in this.vm.models) this.vm.models[k].visible = k === this.player.weapon;
@@ -945,12 +949,6 @@ export class Game {
     const eye = 1.62 - 0.52 * p.crouchF;
     this.camera.position.set(p.pos.x, p.pos.y + eye, p.pos.z);
     this.camera.rotation.set(p.pitch, p.yaw, 0);
-    // smooth aim zoom (magnify through the scope / iron sights)
-    const tFov = p.scoped ? this._zoomFov(p.weapon) : 70;
-    if (Math.abs(this.camera.fov - tFov) > 0.05) {
-      this.camera.fov += (tFov - this.camera.fov) * Math.min(1, dt * 16);
-      this.camera.updateProjectionMatrix();
-    }
     // footsteps + view bob
     const moving = sp > 0.6 && p.grounded;
     if (moving) {
@@ -958,17 +956,20 @@ export class Game {
       const prev = Math.sin(p.stepPhase - dt * sp * 1.6), now = Math.sin(p.stepPhase);
       if (prev >= 0 && now < 0) this.sfx.step();
     }
-    // FOV: scope / sprint
-    const targetFov = p.scoped ? 24 : sprint && moving ? 76 : 70;
-    if (Math.abs(this.camera.fov - targetFov) > 0.2) {
-      this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, dt * 16);
+    // Aim: real scopes (AWP / Mosin / Rem700) hide the gun and show the scope overlay.
+    // Every other weapon does light iron-sight ADS — the gun stays on screen and the
+    // crosshair stays visible so you can see exactly where you're aiming.
+    const realScope = p.scoped && !!WEAPONS[p.weapon].scope;
+    const tFov = p.scoped ? this._zoomFov(p.weapon) : (sprint && moving ? 76 : 70);
+    if (Math.abs(this.camera.fov - tFov) > 0.05) {
+      this.camera.fov += (tFov - this.camera.fov) * Math.min(1, dt * 16);
       this.camera.updateProjectionMatrix();
     }
-    this.el.crosshair.style.display = p.scoped ? 'none' : 'block';
-    // dynamic crosshair gap (movement/spray opens it, crouch closes)
-    const gap = Math.max(4, Math.min(26, 5 + sp * 1.15 + this.vm.kick * 20 - p.crouchF * 2.5));
+    this.el.crosshair.style.display = realScope ? 'none' : 'block';
+    // dynamic crosshair gap (movement/spray opens it, crouch + ADS tighten it)
+    const gap = Math.max(3, Math.min(26, 5 + sp * 1.15 + this.vm.kick * 20 - p.crouchF * 2.5 - (p.scoped ? 4 : 0)));
     this.el.crosshair.style.setProperty('--ch', gap.toFixed(1) + 'px');
-    this.vm.root.visible = !p.scoped;
+    this.vm.root.visible = !realScope;
     // reload completion
     if (this._reloading()) {
       this.vm.reloadDip = Math.min(1, this.vm.reloadDip + dt * 4);
@@ -988,7 +989,11 @@ export class Game {
     // view model animation
     this.vm.kick = Math.max(0, this.vm.kick - dt * 6);
     const bobY = moving ? Math.sin(p.stepPhase * 2) * 0.012 : 0;
-    this.vm.root.position.set(0, bobY - this.vm.reloadDip * 0.18 - p.crouchF * 0.02, this.vm.kick * 0.09);
+    // iron-sight ADS: ease the gun toward screen center so you sight down it
+    const adsWant = p.scoped && !realScope ? 1 : 0;
+    this.vm.adsF = (this.vm.adsF || 0) + (adsWant - (this.vm.adsF || 0)) * Math.min(1, dt * 12);
+    const a = this.vm.adsF;
+    this.vm.root.position.set(-0.17 * a, bobY - this.vm.reloadDip * 0.18 - p.crouchF * 0.02 + 0.05 * a, this.vm.kick * 0.09 - 0.1 * a);
     this.vm.root.rotation.x = this.vm.kick * 0.12 + this.vm.reloadDip * 0.9;
   }
   // fy_pool_day ground weapons: anyone who runs over one grabs it (CS-1.6 style).
@@ -1242,7 +1247,11 @@ export class Game {
         if (Math.random() < 0.2) b.mesh.ctrl.jump();
         b._nextJump = this.time + 5 + Math.random() * 8;
       }
-      b.mesh.ctrl.update(dt, moving, !!b.target);
+      // true ground speed (accounts for collisions / wading / being stuck) drives the
+      // leg-cycle rate so the feet plant instead of sliding.
+      const spd = b._lp ? Math.hypot(b.pos.x - b._lp.x, b.pos.z - b._lp.z) / Math.max(dt, 1e-3) : 0;
+      b._lp = { x: b.pos.x, z: b.pos.z };
+      b.mesh.ctrl.update(dt, moving, !!b.target, spd);
     } else {
       b.phase += dt * (moving ? 9 : 0);
       poseCharacter(b.mesh.parts, b.phase, moving, this.time);

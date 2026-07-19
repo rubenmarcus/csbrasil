@@ -17,7 +17,7 @@ const CFG = {
   ak:      { len: 0.88, rot: [0, 90, 0], gripZ: 0.62 },
   m4:      { len: 0.84, rot: [0, 90, 0], gripZ: 0.62 },
   mp5:     { len: 0.66, rot: [0, 90, 0], gripZ: 0.58 },
-  shotgun: { len: 1.00, rot: [0, 180, 0], gripZ: 0.6 },
+  shotgun: { len: 1.00, rot: [0, 0, 0], gripZ: 0.6 },   // model is natively +Z (barrel forward)
   deagle:  { len: 0.30, rot: [0, 90, 0], gripZ: 0.7 },
   pistol:  { len: 0.26, rot: [0, 90, 0], gripZ: 0.7 },
   knife:   { len: 0.30, rot: [0, 90, 0], gripZ: 0.6 },
@@ -26,7 +26,7 @@ const CFG = {
   akm:       { len: 0.88, rot: [0, 90, 0], gripZ: 0.62 },
   revolver38:{ len: 0.24, rot: [0, 90, 0], gripZ: 0.68 },
   md97:      { len: 1.05, rot: [0, 90, 0], gripZ: 0.62 },
-  carbine:   { len: 0.98, rot: [0, 90, 0], gripZ: 0.6 },
+  carbine:   { len: 0.98, rot: [0, 0, 0], gripZ: 0.6 },   // natively +Z; [0,90,0] threw the barrel onto X (giant)
   m400:      { len: 0.92, rot: [0, 90, 0], gripZ: 0.62 },
   mosin:     { len: 1.20, rot: [0, 90, 0], gripZ: 0.66 },
   rem700:    { len: 1.15, rot: [0, 90, 0], gripZ: 0.66 },

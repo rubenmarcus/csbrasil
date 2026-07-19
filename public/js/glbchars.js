@@ -24,6 +24,7 @@ export const GLB_CHARS = new Set([
 const STATES = ['idle', 'walk', 'run', 'shoot', 'death', 'crouch', 'crouchwalk', 'jump'];
 const qp = new URLSearchParams(location.search);
 const TARGET_HEIGHT = parseFloat(qp.get('charh')) || 1.72;      // meters (match box silhouette)
+const LOCO_REF = parseFloat(qp.get('loco')) || 1.45;            // m/s where leg cycle looks planted @ timeScale 1
 const FACING_OFFSET = (parseFloat(qp.get('charface')) || 0) * Math.PI / 180; // yaw fix if model faces -Z
 
 // Rifle mounted in the right hand (bone-local meters via a scale-compensated mount).
@@ -109,20 +110,24 @@ export function buildCharacterModel(def, opts = {}) {
   model.traverse((o) => { if (o.isBone && !handBone && /right.?hand|hand.?r\b|rhand|r_hand/i.test(o.name)) handBone = o; });
   if (!handBone) model.traverse((o) => { if (o.isBone && !handBone && /hand/i.test(o.name)) handBone = o; });
   if (handBone && withWeapon) {
-    handBone.updateWorldMatrix(true, false);
-    const bs = new THREE.Vector3();
-    handBone.matrixWorld.decompose(new THREE.Vector3(), new THREE.Quaternion(), bs);
-    const mount = new THREE.Group();
-    // 1 mount unit == 1 world meter, but clamp against rigs with extreme bone scales
-    // (an uncompensated tiny bone scale would blow the weapon up to giant size).
-    mount.scale.setScalar(Math.min(2.5, Math.max(0.35, 1 / (bs.x || 1))));
     const gun = weaponModel(opts.weaponId || 'awp') || buildRifle();
-    gun.scale.multiplyScalar(GUN_SCALE);
-    gun.position.set(GUN_POS[0], GUN_POS[1], GUN_POS[2]);
     gun.rotation.set(GUN_ROT[0], GUN_ROT[1], GUN_ROT[2]);
+    // Measure the weapon's authored (real-world) size in its own space, before parenting.
+    gun.updateMatrixWorld(true);
+    const asz = new THREE.Vector3(); new THREE.Box3().setFromObject(gun).getSize(asz);
+    const authored = Math.max(asz.x, asz.y, asz.z) || 1;
+    const mount = new THREE.Group();
+    handBone.add(mount); mount.add(gun);
+    // Meshy rigs have wildly different hand-bone world scales (~70x apart), so a fixed
+    // or clamped compensation makes weapons either microscopic or giant. Instead, measure
+    // the mounted world size and rescale so the weapon always renders at its real length.
+    // This is self-correcting: it can never balloon or shrink to a speck.
+    group.updateMatrixWorld(true);
+    const wsz = new THREE.Vector3(); new THREE.Box3().setFromObject(gun).getSize(wsz);
+    const worldLen = Math.max(wsz.x, wsz.y, wsz.z) || authored;
+    mount.scale.setScalar(GUN_SCALE * authored / worldLen); // -> mount space ~= world meters
+    gun.position.set(GUN_POS[0], GUN_POS[1], GUN_POS[2]);
     gun.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; o.userData.noHit = true; } });
-    mount.add(gun);
-    handBone.add(mount);
   }
 
   const mixer = new THREE.AnimationMixer(model);
@@ -144,10 +149,6 @@ class CharController {
       if (e.action === actions.shoot) this.shooting = false;
       if (e.action === actions.jump) this.jumping = false;
     });
-    // Speed up the leg cycle so the feet roughly keep up with BOT_SPEED (less "ice-skating").
-    if (actions.run) actions.run.timeScale = 1.8;
-    if (actions.walk) actions.walk.timeScale = 1.45;
-    if (actions.crouchwalk) actions.crouchwalk.timeScale = 1.4;
     this._to('idle');
   }
 
@@ -203,14 +204,22 @@ class CharController {
     this._to('idle');
   }
 
-  // moving: 0..1, hasTarget: bool. Advances mixer and picks locomotion state.
-  update(dt, moving, hasTarget) {
+  // moving: 0..1, hasTarget: bool, speed: real ground speed (m/s). Advances the mixer,
+  // picks the locomotion state, and scales the leg-cycle rate to the actual ground speed
+  // so the feet plant instead of ice-skating (root-motion-free clips have no built-in
+  // stride, so we drive the cycle rate from how fast the body is really moving).
+  update(dt, moving, hasTarget, speed = 0) {
     if (!this.dead) {
       if (this.crouch) {
         this._to(moving > 0.05 ? 'crouchwalk' : 'crouch');
       } else if (!this.shooting && !this.jumping) {
         this._to(moving > 0.05 ? (hasTarget ? 'walk' : 'run') : 'idle');
       }
+      // LOCO_REF ~= the speed (m/s) at which the clip looks planted at timeScale 1.
+      const f = Math.max(0.35, Math.min(2.6, speed / LOCO_REF));
+      if (this.actions.run) this.actions.run.timeScale = f;
+      if (this.actions.walk) this.actions.walk.timeScale = f;
+      if (this.actions.crouchwalk) this.actions.crouchwalk.timeScale = f * 0.9;
     }
     this.mixer.update(dt);
     if (this.headBone) {
