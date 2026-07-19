@@ -131,7 +131,7 @@ async function startGame(team, charId) {
   // load in parallel and are optional — the map renders fine if they're missing.
   await Promise.all([
     preloadCharacterAssets([...GLB_CHARS]),
-    preloadMapProps(['guerreiros', 'justica']),
+    preloadMapProps(['justica']),
   ]);
   game = new Game({
     renderer, textures, sfx, settings,

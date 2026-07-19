@@ -112,15 +112,33 @@ export function buildBrasilia(scene, T) {
     addPlane(1.1, 1.1, lam({ color: 0x2b3f8f, side: THREE.DoubleSide }), -9.3, 31, 40.04);   // blue globe
   }
 
-  /* ---------------- statues (Mint props, optional) ---------------- */
-  const putStatue = (id, x, z, targetH, ry) => {
-    const o = placeProp(id, { x, z, targetH, ry });
-    if (!o) return;
-    root.add(o); occluders.push(o);
-    col(x - 1, x + 1, 0, targetH, z - 1, z + 1);
-  };
-  putStatue('guerreiros', 6, 36, 4.6, Math.PI);   // Os Guerreiros, praça centre-east
-  putStatue('justica', -13, 24, 3.4, 0);          // A Justiça, in front of STF
+  /* ---------------- statues ---------------- */
+  // A Justiça: Mint-generated GLB prop (optional — null if not loaded yet).
+  {
+    const o = placeProp('justica', { x: -13, z: 24, targetH: 3.4, ry: 0 });
+    if (o) { root.add(o); occluders.push(o); col(-14, -12, 0, 3.4, 23, 25); }
+  }
+  // Os Guerreiros (Dois Candangos): procedural bronze monument — the two fused
+  // elongated figures repeatedly broke the Meshy mesher, so we model it in code.
+  {
+    const bx = 6, bz = 36;
+    const bronze = lam({ color: 0x6f5f42 });
+    const g = new THREE.Group(); g.position.set(bx, 0, bz); root.add(g); occluders.push(g);
+    const ped = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.5, 1.7), lam({ color: 0x8f9391 }));
+    ped.position.y = 0.25; ped.receiveShadow = true; g.add(ped);
+    for (const dx of [-0.55, 0.55]) {
+      const sgn = dx > 0 ? 1 : -1;
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.5, 4.7, 6), bronze);
+      body.position.set(dx, 2.85, 0); body.castShadow = true; g.add(body);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6), bronze);
+      head.position.set(dx, 5.25, 0); head.castShadow = true; g.add(head);
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 2.2, 5), bronze);
+      arm.position.set(dx + sgn * 0.5, 4.7, 0); arm.rotation.z = -sgn * 0.9; g.add(arm);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 3.6, 4), bronze);
+      pole.position.set(dx + sgn * 1.05, 5.6, 0); pole.rotation.z = -sgn * 0.18; pole.castShadow = true; g.add(pole);
+    }
+    col(bx - 1.5, bx + 1.5, 0, 5.6, bz - 1, bz + 1);
+  }
 
   /* ================= CATEDRAL (south end, z≈-54) ================= */
   {
