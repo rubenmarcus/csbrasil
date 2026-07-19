@@ -23,6 +23,8 @@ func _ready() -> void:
 		_weapons[weapon_id] = child
 		if child.has_signal("ammo_changed"):
 			child.ammo_changed.connect(_on_child_ammo_changed.bind(child))
+		if child.has_signal("reload_started"):
+			child.reload_started.connect(_on_child_reload_started.bind(child))
 	active_weapon = _weapons.get(initial_weapon)
 	assert(active_weapon != null, "Initial weapon must exist in inventory")
 	_update_visibility()
@@ -47,6 +49,8 @@ func switch_to(weapon_id: StringName) -> bool:
 	draw_remaining = float(active_weapon.definition.draw_delay)
 	_update_visibility()
 	_publish_weapon()
+	if active_weapon is HitscanWeapon and active_weapon.state.ammo <= 0:
+		active_weapon.reload()
 	return true
 
 
@@ -65,10 +69,7 @@ func attack(origin: Vector3, direction: Vector3, source: Node = null) -> Diction
 func reload() -> bool:
 	if active_weapon == null or active_weapon.definition.melee:
 		return false
-	var started: bool = active_weapon.reload()
-	if started:
-		reload_started.emit(active_weapon.definition.weapon_id)
-	return started
+	return active_weapon.reload()
 
 
 func set_scoped(active: bool) -> bool:
@@ -106,3 +107,8 @@ func _publish_weapon() -> void:
 func _on_child_ammo_changed(ammo: int, reserve: int, weapon: Node3D) -> void:
 	if weapon == active_weapon:
 		ammo_changed.emit(ammo, reserve)
+
+
+func _on_child_reload_started(weapon: Node3D) -> void:
+	if weapon == active_weapon:
+		reload_started.emit(weapon.definition.weapon_id)

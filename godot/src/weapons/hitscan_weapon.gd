@@ -3,6 +3,7 @@ extends Node3D
 
 signal fired(result: Dictionary)
 signal ammo_changed(ammo: int, reserve: int)
+signal reload_started
 
 const WeaponStateScript := preload("res://src/weapons/weapon_state.gd")
 
@@ -41,6 +42,8 @@ func fire(origin: Vector3, direction: Vector3, source: Node = null) -> Dictionar
 		return result
 	result.fired = true
 	ammo_changed.emit(state.ammo, state.reserve)
+	if state.ammo <= 0:
+		reload()
 
 	var shot_direction := _spread_direction(direction.normalized())
 	var query := PhysicsRayQueryParameters3D.create(
@@ -71,7 +74,10 @@ func fire(origin: Vector3, direction: Vector3, source: Node = null) -> Dictionar
 
 
 func reload() -> bool:
-	return state.start_reload()
+	var started: bool = state.start_reload()
+	if started:
+		reload_started.emit()
+	return started
 
 
 func _spread_direction(direction: Vector3) -> Vector3:

@@ -29,6 +29,20 @@ func test_inventory_switches_three_independent_weapon_scenes() -> void:
 	assert_eq(inventory.active_weapon.state.ammo, 4)
 
 
+func test_drawing_weapon_with_empty_magazine_starts_reload() -> void:
+	var player := (load(PLAYER_SCENE_PATH) as PackedScene).instantiate()
+	add_child_autofree(player)
+	var inventory := player.get_node("CameraPivot/Camera3D/Inventory")
+	var awp: Node3D = inventory.get_node("AWP")
+	awp.state.ammo = 0
+	awp.state.cancel_reload()
+	assert_true(inventory.switch_to(&"pistol"))
+	watch_signals(inventory)
+	assert_true(inventory.switch_to(&"awp"))
+	assert_true(awp.state.reloading, "Empty weapon must start reloading when drawn")
+	assert_signal_emitted_with_parameters(inventory, "reload_started", [&"awp"])
+
+
 func test_knife_disables_scope_and_has_no_ammo_state() -> void:
 	var player := (load(PLAYER_SCENE_PATH) as PackedScene).instantiate()
 	add_child_autofree(player)
