@@ -2,6 +2,8 @@
 import * as THREE from 'three';
 import { MAPS, resolveMapId } from './maps.js';
 import { buildCharacter, poseCharacter, byId, CHARACTERS, buildRifle } from './characters.js';
+import { buildCharacterModel } from './glbchars.js';
+import { weaponModel, WEAPON_IDS } from './weapons.js';
 
 export const WEAPONS = {
   awp:    { name: 'AWP "DELIBERADOR"', short: 'AWP', dmg: 400, mag: 5, reserve: 25, rate: 1.7, reload: 3.1, spreadHip: 0.075, spreadScope: 0.0008, recoil: 0.055, scope: true },
@@ -12,6 +14,22 @@ export const WEAPONS = {
   deagle: { name: 'DEAGLE "MARTELO"', short: 'DE', dmg: 53, mag: 7, reserve: 35, rate: 0.28, reload: 2.0, spreadHip: 0.012, recoil: 0.03 },
   pistol: { name: 'PT-38 "APITO"', short: 'PT-38', dmg: 34, mag: 12, reserve: 48, rate: 0.24, reload: 1.6, spreadHip: 0.02, recoil: 0.014, scope: false },
   knife:  { name: 'FACA "CONVERSA FIADA"', short: 'FACA', dmg: 55, rate: 0.55, range: 2.4, reload: 0, recoil: 0.02, scope: false },
+  // arsenal 2 (BR)
+  t56:       { name: 'T-56 "XING-LING"', short: 'T-56', dmg: 32, mag: 30, reserve: 90, rate: 0.1, reload: 2.5, spreadHip: 0.026, recoil: 0.009, auto: true },
+  akm:       { name: 'AKM "KALASH DA VÉIA"', short: 'AKM', dmg: 35, mag: 30, reserve: 90, rate: 0.105, reload: 2.5, spreadHip: 0.025, recoil: 0.009, auto: true },
+  revolver38:{ name: 'REVÓLVER .38 "TROVÃO"', short: '.38', dmg: 46, mag: 6, reserve: 24, rate: 0.36, reload: 2.4, spreadHip: 0.016, recoil: 0.03 },
+  md97:      { name: 'MD97 "FUZIL DA PÁTRIA"', short: 'MD97', dmg: 38, mag: 20, reserve: 80, rate: 0.12, reload: 2.6, spreadHip: 0.022, recoil: 0.012, auto: true },
+  carbine:   { name: 'CARABINA "PAPO DE PEÃO"', short: 'CARB', dmg: 42, mag: 10, reserve: 40, rate: 0.5, reload: 2.8, spreadHip: 0.02, recoil: 0.02 },
+  m400:      { name: 'M400 "MIRA FINA"', short: 'M400', dmg: 40, mag: 20, reserve: 80, rate: 0.11, reload: 2.4, spreadHip: 0.018, spreadScope: 0.004, recoil: 0.011, auto: true, scope: true },
+  mosin:     { name: 'MOSIN "VOVÓ RUSSA"', short: 'MOSIN', dmg: 120, mag: 5, reserve: 25, rate: 1.5, reload: 3.4, spreadHip: 0.08, spreadScope: 0.001, recoil: 0.05, scope: true },
+  rem700:    { name: 'REM 700 "CAÇADOR"', short: 'REM', dmg: 130, mag: 5, reserve: 25, rate: 1.5, reload: 3.2, spreadHip: 0.08, spreadScope: 0.0009, recoil: 0.05, scope: true },
+  // arsenal 3 (militar)
+  lmg:       { name: 'METRALHA "TRETA PESADA"', short: 'LMG', dmg: 31, mag: 100, reserve: 200, rate: 0.085, reload: 5.0, spreadHip: 0.04, recoil: 0.011, auto: true },
+  scar:      { name: 'SCAR "PAGA-PAU"', short: 'SCAR', dmg: 37, mag: 20, reserve: 80, rate: 0.11, reload: 2.5, spreadHip: 0.02, recoil: 0.01, auto: true },
+  tavor:     { name: 'TAVOR "CURTINHO"', short: 'TAVOR', dmg: 32, mag: 30, reserve: 90, rate: 0.09, reload: 2.3, spreadHip: 0.024, recoil: 0.008, auto: true },
+  famas:     { name: 'FAMAS "BAGUETE"', short: 'FAMAS', dmg: 29, mag: 25, reserve: 90, rate: 0.06, reload: 2.4, spreadHip: 0.028, recoil: 0.006, auto: true },
+  uzi:       { name: 'UZI "RÁ-TÁ-TÁ"', short: 'UZI', dmg: 25, mag: 25, reserve: 100, rate: 0.07, reload: 2.1, spreadHip: 0.032, recoil: 0.006, auto: true },
+  p90:       { name: 'P90 "CHINELÃO"', short: 'P90', dmg: 23, mag: 50, reserve: 100, rate: 0.065, reload: 2.3, spreadHip: 0.03, recoil: 0.005, auto: true },
 };
 const ROUND_TIME = 99, ROUNDS_TO_WIN = 3, RESPAWN_DELAY = 2.5, PICKUP_RESPAWN = 8;
 const BOT_SPEED = 3.3, BOT_EYE = 1.5;
@@ -48,8 +66,16 @@ export class Game {
     if (this.world.pickups) {
       const keep = [];
       for (const pk of this.world.pickups) {
-        if (this._pickupAllowed(pk.weapon)) keep.push(pk);
-        else if (pk.mesh) this.scene.remove(pk.mesh);
+        if (this._pickupAllowed(pk.weapon)) {
+          const rw = weaponModel(pk.weapon);            // swap the map's box gun for the real GLB
+          if (rw && pk.mesh) {
+            rw.position.copy(pk.mesh.position); rw.position.y = Math.max(0.16, rw.position.y);
+            rw.rotation.set(0, pk.mesh.rotation.y || Math.random() * 6.28, 0.12);
+            rw.traverse(o => { if (o.isMesh) o.castShadow = true; });
+            this.scene.remove(pk.mesh); this.scene.add(rw); pk.mesh = rw;
+          }
+          keep.push(pk);
+        } else if (pk.mesh) this.scene.remove(pk.mesh);
       }
       this.world.pickups = keep;
     }
@@ -66,25 +92,32 @@ export class Game {
       pos: new THREE.Vector3(), vel: new THREE.Vector3(),
       yaw: 0, pitch: 0, hp: 100, alive: true, respawnAt: 0, crouchF: 0,
       weapon: 'awp', scoped: false, reloadUntil: 0, nextShotAt: 0, drawUntil: 0,
-      ammo: { awp: { mag: WEAPONS.awp.mag, res: WEAPONS.awp.reserve }, pistol: { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve } },
+      ammo: Object.fromEntries(Object.keys(WEAPONS).filter(w => w !== 'knife').map(w => [w, { mag: WEAPONS[w].mag, res: WEAPONS[w].reserve }])),
       kills: 0, deaths: 0, headshots: 0, grounded: true, stepPhase: 0, revealedAt: -99,
     };
     this.combatants.push(this.player);
 
     // ---- bots ----
     this.bots = [];
-    const allyDefs = CHARACTERS.filter(c => c.team === playerTeam && c.id !== playerCharId).slice(0, 3);
-    const enemyDefs = CHARACTERS.filter(c => c.team === this.enemyTeam).slice(0, 4);
+    // Custom match: team size (total per side, player fills one ally slot) + difficulty.
+    const DIFF = { easy: 0.55, normal: 1, hard: 1.3, insane: 1.7 };
+    const diffMul = DIFF[this.settings.difficulty] || 1;
+    const teamSize = Math.max(1, Math.min(8, this.settings.bots || 4));
+    const cycle = (pool, n) => Array.from({ length: Math.max(0, n) }, (_, i) => pool[i % pool.length]).filter(Boolean);
+    const allyDefs = cycle(CHARACTERS.filter(c => c.team === playerTeam && c.id !== playerCharId), teamSize - 1);
+    const enemyDefs = cycle(CHARACTERS.filter(c => c.team === this.enemyTeam), teamSize);
     const mkBot = (def, team, i) => {
-      const c = buildCharacter(def);
+      const wpn = this._botWeapon();
+      const c = buildCharacterModel(def, { weaponId: wpn }) || buildCharacter(def);
       c.group.traverse(o => { o.userData.botOwner = null; });
       const bot = {
         isPlayer: false, name: def.name, def, team,
         mesh: c, pos: new THREE.Vector3(), yaw: 0, hp: 100, alive: true,
         respawnAt: 0, kills: 0, deaths: 0,
-        target: null, reactAt: 0, nextShotAt: 0, skill: 0.85 + Math.random() * 0.35, weapon: 'awp',
+        target: null, reactAt: 0, nextShotAt: 0, skill: (0.85 + Math.random() * 0.35) * diffMul, weapon: wpn,
         path: null, pathIdx: 0, repathAt: 0, roamIdx: 0, phase: 0, think: Math.random() * 0.2,
         deadT: 0, strafeT: Math.random() * 10, revealedAt: -99,
+        crouchBias: Math.random() < 0.45, // ~half the bots hold angles crouched (AWPer style)
       };
       c.group.traverse(o => { o.userData.botOwner = bot; });
       this.scene.add(c.group);
@@ -150,7 +183,69 @@ export class Game {
   _buildViewModels() {
     const root = new THREE.Group();
     const dark = c => new THREE.MeshLambertMaterial({ color: c });
-    const skin = dark(0xd9a066);
+    // First-person arms inherit the selected character's skin + sleeve colors.
+    const pdef = byId(this.playerCharId);
+    const pal = (pdef && pdef.pal) || { skin: 0xd9a066, shirt: 0x3a4a5a };
+    const skinMat = dark(pal.skin);
+    const sleeveMat = dark(pal.shirt);
+    const skin = skinMat; // legacy alias
+    // A low-poly forearm+hand that recedes down toward the camera (screen bottom).
+    // wristZ ~ where the hand grips; the sleeve extends back (+Z) and tilts down.
+    // The viewmodel leaves almost no screen room below the gun, so a full forearm
+    // falls off-frame. What reads is the gripping hand (skin) plus a short sleeve
+    // cuff behind it — enough to carry the character's skin + sleeve colors.
+    // A curled gripping hand built from capsules (rounded) instead of a single box,
+    // so the first-person hand reads as fingers wrapping the grip rather than a brick.
+    // Trigger hand: palm + 4 curled fingers + thumb + a receding sleeve/cuff.
+    const fpArm = (w = 0.08) => {
+      const g = new THREE.Group();
+      const sc = w / 0.08; // callers pass a smaller w for pistols/knife → scale the whole hand
+      const knuckle = new THREE.Group(); g.add(knuckle);
+      // palm — a flattened capsule laid across the grip (X axis)
+      const palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.042, 0.05, 4, 8), skinMat);
+      palm.rotation.z = Math.PI / 2; palm.scale.set(1, 1, 0.7);
+      palm.castShadow = false; knuckle.add(palm);
+      // four fingers curling over the top of the grip, spaced along Z
+      const fingerGeo = new THREE.CapsuleGeometry(0.0115, 0.05, 3, 6);
+      for (let i = 0; i < 4; i++) {
+        const f = new THREE.Mesh(fingerGeo, skinMat);
+        f.rotation.set(0.55, 0, Math.PI / 2);
+        f.position.set(0.006, 0.03, -0.03 + i * 0.026);
+        f.castShadow = false; knuckle.add(f);
+      }
+      // thumb on the near side, angled up along the grip
+      const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.013, 0.038, 3, 6), skinMat);
+      thumb.rotation.set(0.35, 0, 0.55); thumb.position.set(-0.032, 0.006, 0.028);
+      thumb.castShadow = false; knuckle.add(thumb);
+      knuckle.scale.setScalar(sc);
+      // Forearm angled toward the screen's bottom corner, carrying the sleeve colour;
+      // a rounded cuff at the wrist. Capsule/cylinder → no hard box edges.
+      const fore = new THREE.Group();
+      fore.rotation.set(0.78, 0.62, 0);
+      const L = 0.42 * sc;
+      const sleeve = new THREE.Mesh(new THREE.CapsuleGeometry(w * 0.62, L, 4, 10), sleeveMat);
+      sleeve.rotation.x = Math.PI / 2; sleeve.position.set(0, 0, L * 0.5 + 0.04);
+      sleeve.castShadow = false; fore.add(sleeve);
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.72, w * 0.66, 0.05, 12), skinMat);
+      cuff.rotation.x = Math.PI / 2; cuff.position.set(0, 0, 0.05);
+      cuff.castShadow = false; fore.add(cuff);
+      g.add(fore);
+      return g;
+    };
+    // Support (front) hand: palm + curled fingers only, no receding sleeve.
+    const frontHand = (sc = 1) => {
+      const g = new THREE.Group();
+      const palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.045, 4, 8), skinMat);
+      palm.rotation.z = Math.PI / 2; palm.scale.set(1, 1, 0.7); palm.castShadow = false; g.add(palm);
+      const fingerGeo = new THREE.CapsuleGeometry(0.011, 0.046, 3, 6);
+      for (let i = 0; i < 4; i++) {
+        const f = new THREE.Mesh(fingerGeo, skinMat);
+        f.rotation.set(0.6, 0, Math.PI / 2);
+        f.position.set(0.006, 0.028, -0.028 + i * 0.024); f.castShadow = false; g.add(f);
+      }
+      g.scale.setScalar(sc);
+      return g;
+    };
     // AWP (right-handed)
     const awp = new THREE.Group();
     awp.add(new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.09, 0.5), dark(0x2e4a2e)));
@@ -160,8 +255,8 @@ export class Game {
     scope.rotation.x = Math.PI / 2; scope.position.set(0, 0.085, -0.05); awp.add(scope);
     const stock = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.2), dark(0x3a2a1e)); stock.position.set(0, -0.05, 0.28); awp.add(stock);
     const bolt = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.03), dark(0x888888)); bolt.position.set(0.05, 0.03, 0.05); awp.add(bolt);
-    const handR = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.09, 0.11), skin); handR.position.set(0, -0.085, 0.02); awp.add(handR);
-    const handL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); handL.position.set(0.005, -0.04, -0.3); awp.add(handL);
+    const handR = fpArm(); handR.position.set(0, -0.085, 0.02); awp.add(handR);
+    const handL = frontHand(0.95); handL.position.set(0.005, -0.04, -0.3); awp.add(handL);
     awp.position.set(0.26, -0.23, -0.5); awp.rotation.y = 0.03;
     // rifles genéricos (ak / m4 / mp5 / shotgun / deagle)
     const mkRifle = (bodyC, woodC, len, magH) => {
@@ -172,8 +267,8 @@ export class Game {
       const stock = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.18), woodC); stock.position.set(0, -0.04, len / 2 - 0.05); g.add(stock);
       const mag = new THREE.Mesh(new THREE.BoxGeometry(0.045, magH, 0.07), dark(0x2a2a2a));
       mag.position.set(0, -0.06 - magH / 2, -0.05); g.add(mag);
-      const hR = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.09, 0.11), skin); hR.position.set(0, -0.085, 0.1); g.add(hR);
-      const hL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.09), skin); hL.position.set(0.005, -0.04, -len / 3); g.add(hL);
+      const hR = fpArm(); hR.position.set(0, -0.085, 0.1); g.add(hR);
+      const hL = frontHand(0.95); hL.position.set(0.005, -0.04, -len / 3); g.add(hL);
       g.position.set(0.26, -0.23, -0.5); g.rotation.y = 0.03;
       return g;
     };
@@ -185,23 +280,46 @@ export class Game {
     deagle.add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.11, 0.26), dark(0x8a8a8a)));
     const dgrip = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.12, 0.07), dark(0xc9a227));
     dgrip.position.set(0, -0.1, 0.09); dgrip.rotation.x = 0.25; deagle.add(dgrip);
-    const handD = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.1, 0.08), skin); handD.position.set(0, -0.1, 0.09); deagle.add(handD);
+    const handD = fpArm(0.075, 0.1, 0.08); handD.position.set(0, -0.1, 0.09); deagle.add(handD);
     deagle.position.set(0.24, -0.2, -0.42);
     // pistol
     const pistol = new THREE.Group();
     pistol.add(new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.09, 0.22), dark(0x333333)));
     const pgrip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.06), dark(0x3a2a1e));
     pgrip.position.set(0, -0.09, 0.08); pgrip.rotation.x = 0.25; pistol.add(pgrip);
-    const handP = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.1, 0.08), skin); handP.position.set(0, -0.1, 0.08); pistol.add(handP);
+    const handP = fpArm(0.075, 0.1, 0.08); handP.position.set(0, -0.1, 0.08); pistol.add(handP);
     pistol.position.set(0.24, -0.2, -0.42);
     // knife
     const knife = new THREE.Group();
     const blade = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.05, 0.3), dark(0xb8c0c8)); blade.position.z = -0.2; knife.add(blade);
     knife.add(new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.12), dark(0x2a1e14)));
-    const handK = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.08, 0.08), skin); handK.position.set(0, -0.02, 0.03); knife.add(handK);
+    const handK = fpArm(0.07, 0.08, 0.08); handK.position.set(0, -0.02, 0.03); knife.add(handK);
     knife.position.set(0.28, -0.22, -0.4); knife.rotation.set(-0.2, 0.25, -0.15);
     root.add(awp, ak, m4, mp5, shotgun, deagle, pistol, knife);
     const models = { awp, ak, m4, mp5, shotgun, deagle, pistol, knife };
+    // Swap the procedural box guns for the real weapon GLBs where available: add the
+    // real model (barrel rotated to point into the screen) and hide the box meshes,
+    // keeping the first-person hand. Falls back to the box gun if a model is missing.
+    for (const id in models) {
+      const rw = weaponModel(id);
+      if (!rw) continue;
+      rw.rotation.y = Math.PI;             // weapon barrel +Z -> -Z (into the screen)
+      rw.scale.multiplyScalar(0.82);       // slightly tucked for first-person framing
+      rw.position.z += id === 'knife' ? 0.0 : 0.12; // pull the grip back toward the hand
+      models[id].children.forEach((ch) => { if (ch.isMesh) ch.visible = false; });
+      models[id].add(rw);
+    }
+    // Build first-person viewmodels for the extended arsenal (weapons without a box
+    // group): real GLB + a hand, positioned like the AWP viewmodel.
+    for (const id of WEAPON_IDS) {
+      if (models[id]) continue;
+      const g = new THREE.Group();
+      const rw = weaponModel(id);
+      if (rw) { rw.rotation.y = Math.PI; rw.scale.multiplyScalar(0.82); rw.position.z += id === 'knife' ? 0 : 0.12; g.add(rw); }
+      const hR = fpArm(); hR.position.set(0, -0.085, 0.02); g.add(hR);
+      g.position.copy(awp.position); g.rotation.copy(awp.rotation);
+      root.add(g); models[id] = g;
+    }
     for (const k in models) models[k].visible = k === 'awp';
     return { root, models, awp, pistol, knife, kick: 0, bobPhase: 0, reloadDip: 0 };
   }
@@ -253,9 +371,13 @@ export class Game {
     this._md = e => {
       if (this.radioOpen) { this.radioOpen = null; this._radioUi(); }
       if (!this._acceptInput()) {
-        // pointer lock não engatou (ou caiu)? qualquer clique tenta de novo
-        if (!this.testMode && !this.paused && (this.state === 'live' || this.state === 'countdown') && !document.pointerLockElement)
+        // pointer lock não engatou (ou caiu)? qualquer clique retoma e tenta de novo.
+        // Inclui o caso pausado-por-perda-de-lock (ex.: depois do M): antes, clicar
+        // com o jogo pausado não fazia nada e travava até dar refresh.
+        if (!this.testMode && (this.state === 'live' || this.state === 'countdown') && !document.pointerLockElement) {
+          if (this.paused) this.setPaused(false);
           this._requestLock();
+        }
         return;
       }
       if (e.button === 0) { this.mouseDown0 = true; this._tryShoot(); }
@@ -371,6 +493,37 @@ export class Game {
     this.player.scoped = false; this.player.reloadUntil = 0;
     for (const d of this.drops) this.scene.remove(d.mesh);
     this.drops = [];
+    // scatter a few real weapons on the ground each round so the player finds variety
+    // (map pickups are often AWP-only; bot drops only appear after kills)
+    const wp = this.world.waypoints && this.world.waypoints.nodes;
+    if (wp && wp.length) {
+      const scatterPool = ['ak', 'm4', 'mp5', 'shotgun', 'deagle', 't56', 'akm', 'md97', 'scar',
+        'tavor', 'famas', 'uzi', 'p90', 'mosin', 'rem700', 'm400', 'carbine', 'revolver38']
+        .filter(w => this._pickupAllowed(w));
+      // Lots of weapons of every type on the ground, clustered near waypoints (not flung
+      // far). Guarantee one of each allowed type first, then top up to a healthy count.
+      if (scatterPool.length) {
+        const near = () => wp[(Math.random() * wp.length) | 0];
+        const put = (w) => { const n = near(); if (n) this._dropWeapon(n.x + (Math.random() - 0.5) * 1.4, n.z + (Math.random() - 0.5) * 1.4, w); };
+        for (const w of scatterPool) put(w);                       // at least one of each type
+        const extra = Math.max(0, 30 - scatterPool.length);        // ~30 guns on the map total
+        for (let i = 0; i < extra; i++) put(scatterPool[(Math.random() * scatterPool.length) | 0]);
+      }
+      // Weapons RIGHT AT each spawn so players arm up on respawn (not just scattered on
+      // the map). Snipers first (the user wants plenty, especially snipers).
+      const rack = ['awp', 'mosin', 'rem700', 'm400', 'ak', 'm4', 'scar', 'shotgun', 'mp5', 'deagle', 'lmg', 'famas']
+        .filter(w => this._pickupAllowed(w));
+      if (rack.length) {
+        for (const team of ['P', 'B']) {
+          const spawns = this.world.spawns[team] || [];
+          const sz = spawns.length ? spawns[0].z : 0;
+          const inward = sz > 0 ? -1 : 1;              // just in front of the spawn line
+          let i = 0;
+          for (const gx of [-12, -8, -4, 4, 8, 12])
+            this._dropWeapon(gx, sz + inward * (2.5 + (i % 2)), rack[i++ % rack.length]);
+        }
+      }
+    }
     for (const k in this.vm.models) this.vm.models[k].visible = k === this.player.weapon;
     this.el.weaponName.textContent = WEAPONS[this.player.weapon].name;
     const slots = { P: 1, B: 0 };
@@ -381,6 +534,7 @@ export class Game {
       b.mesh.group.rotation.set(0, b.yaw, 0);
       b.mesh.group.position.copy(b.pos);
       b.mesh.group.visible = true;
+      if (b.mesh.isGLB) b.mesh.ctrl.revive();
     }
   }
 
@@ -482,8 +636,9 @@ export class Game {
       const newDef = defs[(Math.random() * defs.length) | 0];
       swapBot.def = newDef; swapBot.name = newDef.name;
       this.scene.remove(swapBot.mesh.group);
-      swapBot.mesh.group.traverse(o => { if (o.geometry) o.geometry.dispose(); });
-      swapBot.mesh = buildCharacter(newDef);
+      // GLB clones share geometry with the cached template — never dispose it here.
+      if (!swapBot.mesh.isGLB) swapBot.mesh.group.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+      swapBot.mesh = buildCharacterModel(newDef) || buildCharacter(newDef);
       swapBot.mesh.group.traverse(o => { o.userData.botOwner = swapBot; });
       this.scene.add(swapBot.mesh.group);
       swapBot.target = null; swapBot.path = null; swapBot.hp = 100; swapBot.alive = true;
@@ -518,12 +673,19 @@ export class Game {
     if (w === 'knife') this.sfx.knifeDeploy(); else this.sfx.uiClick();
   }
   _scope(on, silent = false) {
-    const p = this.player;
-    if (on && (p.weapon !== 'awp' || !p.alive || this._reloading())) on = false;
+    const p = this.player, w = p.weapon;
+    // any weapon (except knife/shotgun) can aim-zoom; only real scopes show the circle
+    if (on && (w === 'knife' || w === 'shotgun' || !p.alive || this._reloading())) on = false;
     if (p.scoped === on) return;
     p.scoped = on;
-    this.el.scope.classList.toggle('on', on);
+    this.el.scope.classList.toggle('on', on && !!(WEAPONS[w] && WEAPONS[w].scope));
     if (!silent) on ? this.sfx.scopeIn() : this.sfx.scopeOut();
+  }
+  // Target FOV while aiming: strong for scoped snipers, light ADS for the rest.
+  _zoomFov(w) {
+    const Z = { awp: 22, mosin: 20, rem700: 22, m400: 38, m400scope: 38, md97: 44, carbine: 42,
+      ak: 52, t56: 52, akm: 52, m4: 52, mp5: 55, deagle: 50, pistol: 54, revolver38: 54 };
+    return Z[w] || 55;
   }
   _reloading() { return this.time < this.player.reloadUntil; }
   _startReload() {
@@ -569,7 +731,8 @@ export class Game {
     // recoil + muzzle flash
     p.pitch += w.recoil * (1 - 0.25 * p.crouchF); this.vm.kick = 1;
     this._flash(this.camera.localToWorld(new THREE.Vector3(0.26, -0.2, -1.1)));
-    if (p.weapon === 'awp') this._scope(false, true);
+    // bolt-action snipers drop the scope after each shot (CS-style); autos stay aimed
+    if (p.scoped && (p.weapon === 'awp' || p.weapon === 'mosin' || p.weapon === 'rem700')) this._scope(false, true);
   }
   _meleeHit() {
     const from = this.camera.getWorldPosition(new THREE.Vector3());
@@ -633,7 +796,7 @@ export class Game {
     ent.alive = false; ent.hp = 0; ent.deaths++;
     ent.respawnAt = this.time + RESPAWN_DELAY;
     // CS: larga a arma no chão onde morreu
-    this._dropWeapon(ent.pos.x, ent.pos.z, ent.isPlayer ? (ent.weapon === 'knife' ? 'awp' : ent.weapon) : 'awp');
+    this._dropWeapon(ent.pos.x, ent.pos.z, ent.weapon === 'knife' ? 'awp' : ent.weapon);
     if (attacker) {
       attacker.kills++; this.roundKills[attacker.team]++;
       this.sfx.voice(attacker.team);   // killer's side celebrates (meme audio)
@@ -811,17 +974,20 @@ export class Game {
       const prev = Math.sin(p.stepPhase - dt * sp * 1.6), now = Math.sin(p.stepPhase);
       if (prev >= 0 && now < 0) this.sfx.step();
     }
-    // FOV: scope / sprint
-    const targetFov = p.scoped ? 24 : sprint && moving ? 76 : 70;
-    if (Math.abs(this.camera.fov - targetFov) > 0.2) {
-      this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, dt * 16);
+    // Aim: real scopes (AWP / Mosin / Rem700) hide the gun and show the scope overlay.
+    // Every other weapon does light iron-sight ADS — the gun stays on screen and the
+    // crosshair stays visible so you can see exactly where you're aiming.
+    const realScope = p.scoped && !!WEAPONS[p.weapon].scope;
+    const tFov = p.scoped ? this._zoomFov(p.weapon) : (sprint && moving ? 76 : 70);
+    if (Math.abs(this.camera.fov - tFov) > 0.05) {
+      this.camera.fov += (tFov - this.camera.fov) * Math.min(1, dt * 16);
       this.camera.updateProjectionMatrix();
     }
-    this.el.crosshair.style.display = p.scoped ? 'none' : 'block';
-    // dynamic crosshair gap (movement/spray opens it, crouch closes)
-    const gap = Math.max(4, Math.min(26, 5 + sp * 1.15 + this.vm.kick * 20 - p.crouchF * 2.5));
+    this.el.crosshair.style.display = realScope ? 'none' : 'block';
+    // dynamic crosshair gap (movement/spray opens it, crouch + ADS tighten it)
+    const gap = Math.max(3, Math.min(26, 5 + sp * 1.15 + this.vm.kick * 20 - p.crouchF * 2.5 - (p.scoped ? 4 : 0)));
     this.el.crosshair.style.setProperty('--ch', gap.toFixed(1) + 'px');
-    this.vm.root.visible = !p.scoped;
+    this.vm.root.visible = !realScope;
     // reload completion
     if (this._reloading()) {
       this.vm.reloadDip = Math.min(1, this.vm.reloadDip + dt * 4);
@@ -841,7 +1007,11 @@ export class Game {
     // view model animation
     this.vm.kick = Math.max(0, this.vm.kick - dt * 6);
     const bobY = moving ? Math.sin(p.stepPhase * 2) * 0.012 : 0;
-    this.vm.root.position.set(0, bobY - this.vm.reloadDip * 0.18 - p.crouchF * 0.02, this.vm.kick * 0.09);
+    // iron-sight ADS: ease the gun toward screen center so you sight down it
+    const adsWant = p.scoped && !realScope ? 1 : 0;
+    this.vm.adsF = (this.vm.adsF || 0) + (adsWant - (this.vm.adsF || 0)) * Math.min(1, dt * 12);
+    const a = this.vm.adsF;
+    this.vm.root.position.set(-0.17 * a, bobY - this.vm.reloadDip * 0.18 - p.crouchF * 0.02 + 0.05 * a, this.vm.kick * 0.09 - 0.1 * a);
     this.vm.root.rotation.x = this.vm.kick * 0.12 + this.vm.reloadDip * 0.9;
   }
   // fy_pool_day ground weapons: anyone who runs over one grabs it (CS-1.6 style).
@@ -887,6 +1057,16 @@ export class Game {
       }
     }
   }
+  _botWeapon() {
+    // Give bots varied weapons that match the weapon mode, so ground drops aren't all AWP.
+    const mode = this.settings.wpnMode || 'all';
+    if (mode === 'awp') return 'awp';
+    if (mode === 'knife') return 'knife';
+    if (mode === 'pistols') return Math.random() < 0.5 ? 'pistol' : 'deagle';
+    const pool = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle', 't56', 'akm', 'md97',
+      'carbine', 'm400', 'mosin', 'rem700', 'lmg', 'scar', 'tavor', 'famas', 'uzi', 'p90', 'revolver38'];
+    return pool[(Math.random() * pool.length) | 0];
+  }
   _pickupAllowed(w) {
     const mode = this.settings.wpnMode || 'all';
     if (mode === 'pistols') return w === 'pistol' || w === 'deagle';
@@ -912,17 +1092,11 @@ export class Game {
   }
   // CS: morto larga a arma no chão
   _dropWeapon(x, z, weapon) {
-    let mesh;
-    if (weapon === 'awp') {
-      mesh = buildRifle();
-    } else {
-      mesh = new THREE.Group();
-      mesh.add(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.28), new THREE.MeshLambertMaterial({ color: 0x333333 })));
-      const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.08), new THREE.MeshLambertMaterial({ color: 0x3a2a1e }));
-      grip.position.set(0, -0.09, 0.09); grip.rotation.x = 0.25; mesh.add(grip);
-    }
-    mesh.position.set(x, 0.08, z);
-    mesh.rotation.set(0, Math.random() * Math.PI * 2, Math.PI / 2 * 0.12);
+    const mesh = weaponModel(weapon) || buildRifle();  // real GLB on the ground
+    // lay it FLAT on its side (roll 90° about the barrel) so it rests on the ground
+    // instead of standing on its belly, with a random yaw. Low y so it sits on the floor.
+    mesh.position.set(x, 0.09, z);
+    mesh.rotation.set(0, Math.random() * Math.PI * 2, Math.PI / 2);
     mesh.traverse(o => { if (o.isMesh) o.castShadow = true; });
     this.scene.add(mesh);
     this.drops.push({ x, z, weapon, readyAt: 0, mesh });
@@ -952,17 +1126,28 @@ export class Game {
     const g = b.mesh.group;
     if (!b.alive) {
       b.deadT += dt;
-      g.rotation.x = Math.max(-Math.PI / 2, g.rotation.x - dt * 5);
-      g.position.y = b.pos.y + Math.max(-0.6, 0 - b.deadT * 0.3);
+      if (b.mesh.isGLB) {
+        b.mesh.ctrl.die();
+        b.mesh.ctrl.update(dt, 0, false);
+        if (b.deadT > 1.0) g.visible = false; // fall fast, then vanish (no lingering ragdoll)
+      } else {
+        g.rotation.x = Math.max(-Math.PI / 2, g.rotation.x - dt * 5);
+        g.position.y = b.pos.y + Math.max(-0.6, 0 - b.deadT * 0.3);
+      }
       if (this.time >= b.respawnAt && (this.state === 'live')) {
         const s = this.world.spawns[b.team][(Math.random() * 4) | 0];
         b.pos.set(s.x, 0, s.z); b.hp = 100; b.alive = true;
         b.target = null; b.path = null; b.yaw = b.team === 'P' ? 0 : Math.PI;
         g.rotation.set(0, b.yaw, 0); g.position.copy(b.pos); g.visible = true;
+        if (b.mesh.isGLB) b.mesh.ctrl.revive();
       }
       return;
     }
-    if (this.state !== 'live') { poseCharacter(b.mesh.parts, 0, 0, this.time); return; }
+    if (this.state !== 'live') {
+      if (b.mesh.isGLB) b.mesh.ctrl.update(dt, 0, false);
+      else poseCharacter(b.mesh.parts, 0, 0, this.time);
+      return;
+    }
 
     // --- think: target acquisition
     b.think -= dt;
@@ -991,11 +1176,20 @@ export class Game {
       while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
       b.yaw += dy * Math.min(1, dt * 7);
       b.strafeT += dt;
-      const strafe = Math.sin(b.strafeT * 1.3) * 0.6;
-      const sx = Math.cos(b.yaw) * strafe * dt, sz = -Math.sin(b.yaw) * strafe * dt;
-      b.pos.x += sx; b.pos.z += sz;
+      // Hold a comfortable range: advance if far, back off if close, plus a small
+      // lateral juke. Moving mostly ALONG the facing (forward/back) makes the forward
+      // walk clip read as walking, instead of the old pure sideways strafe that looked
+      // like the bot was sliding/moonwalking across the map.
+      const dist = Math.hypot(dx, dz);
+      const approach = dist > 18 ? 1 : dist < 9 ? -1 : 0;
+      const strafe = Math.sin(b.strafeT * 1.1) * 0.35;
+      const fdx = Math.sin(b.yaw), fdz = Math.cos(b.yaw);   // forward (mesh facing)
+      const rdx = Math.cos(b.yaw), rdz = -Math.sin(b.yaw);  // right
+      const spd = BOT_SPEED * 0.55;
+      b.pos.x += (fdx * approach + rdx * strafe) * spd * dt;
+      b.pos.z += (fdz * approach + rdz * strafe) * spd * dt;
       this._collide(b.pos, 0.38);
-      moving = Math.abs(strafe) * 0.5;
+      moving = Math.min(1, Math.abs(approach) + Math.abs(strafe));
       // fire
       if (this.time > b.reactAt && this.time > b.nextShotAt && Math.abs(dy) < 0.3) {
         b.nextShotAt = this.time + (2.1 + Math.random() * 1.4) / (b.skill * 1.5);
@@ -1025,6 +1219,7 @@ export class Game {
         this._tracer(from.clone().add(dir.clone().multiplyScalar(0.7)), end);
         this._flash(from.clone().add(dir.clone().multiplyScalar(0.85)));
         this.sfx.shotAwp();
+        if (b.mesh.isGLB) b.mesh.ctrl.shoot();
       }
     } else {
       // --- roam toward enemy half
@@ -1053,18 +1248,43 @@ export class Game {
           while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
           b.yaw += dy * Math.min(1, dt * 8);
           const bSlow = this.world.slowAt && this.world.slowAt(b.pos.x, b.pos.z) ? 0.5 : 1;  // bots também vadear
+          const px = b.pos.x, pz = b.pos.z;
           b.pos.x += Math.sin(b.yaw) * BOT_SPEED * bSlow * dt;
           b.pos.z += Math.cos(b.yaw) * BOT_SPEED * bSlow * dt;
           this._collide(b.pos, 0.38);
           moving = 1;
+          // stuck detection: barely moved (blocked by geometry) -> sidestep + pick a new
+          // target so bots don't grind against a box or all funnel to the same spot.
+          const moved = Math.hypot(b.pos.x - px, b.pos.z - pz);
+          if (moved < BOT_SPEED * bSlow * dt * 0.35) {
+            b._stuckT = (b._stuckT || 0) + dt;
+            if (b._stuckT > 0.5) {
+              b.yaw += (Math.random() < 0.5 ? 1 : -1) * (0.8 + Math.random());
+              b.roamUntil = 0; b.repathAt = 0; b.path = null; b._stuckT = 0;
+            }
+          } else b._stuckT = 0;
         }
       }
     }
     b.pos.y = this.world.groundHeightAt(b.pos.x, b.pos.z);
-    b.phase += dt * (moving ? 9 : 0);
     g.position.copy(b.pos);
     g.rotation.set(0, b.yaw, 0);
-    poseCharacter(b.mesh.parts, b.phase, moving, this.time);
+    if (b.mesh.isGLB) {
+      b.mesh.ctrl.setCrouch(!!b.target && b.crouchBias);
+      // occasional hop while roaming (bots can jump)
+      if (!b.target && moving > 0.5 && this.time > (b._nextJump || 0)) {
+        if (Math.random() < 0.2) b.mesh.ctrl.jump();
+        b._nextJump = this.time + 5 + Math.random() * 8;
+      }
+      // true ground speed (accounts for collisions / wading / being stuck) drives the
+      // leg-cycle rate so the feet plant instead of sliding.
+      const spd = b._lp ? Math.hypot(b.pos.x - b._lp.x, b.pos.z - b._lp.z) / Math.max(dt, 1e-3) : 0;
+      b._lp = { x: b.pos.x, z: b.pos.z };
+      b.mesh.ctrl.update(dt, moving, !!b.target, spd);
+    } else {
+      b.phase += dt * (moving ? 9 : 0);
+      poseCharacter(b.mesh.parts, b.phase, moving, this.time);
+    }
   }
 
   /* ================= radar (CS-style) ================= */

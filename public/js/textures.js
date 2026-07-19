@@ -173,6 +173,17 @@ export function initTextures() {
     T.billboard = tex(c);
   }
 
+  // --- graffiti "PERDEU, MANÉ" (referência 8 de janeiro) — fundo transparente ---
+  {
+    const c = canvas(512, 256), x = c.getContext('2d');
+    x.translate(256, 128); x.rotate(-0.07);
+    x.textAlign = 'center'; x.fillStyle = '#4a1010';
+    x.font = '900 96px Arial Black, sans-serif';
+    x.fillText('PERDEU,', 0, -8);
+    x.fillText('MANÉ', 0, 92);
+    T.perdeuMane = tex(c);
+  }
+
   // --- urna eletrônica front (fictional, generic) ---
   {
     const c = canvas(256, 256), x = c.getContext('2d');

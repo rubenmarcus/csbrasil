@@ -246,3 +246,56 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 #match-title{font-size:38px;letter-spacing:4px;text-shadow:0 4px 0 #000}
 #match-stats{display:flex;gap:26px;font-family:Consolas,monospace;font-size:15px;color:#c9bfa4}
 #match-stats b{color:var(--yellow);font-size:24px;display:block;text-align:center}
+
+
+/* ---- layout fix: menu rola e o JOGAR fica sempre visível ---- */
+#main-menu{padding-top:5vh;gap:14px;overflow-y:auto;overflow-x:hidden}
+#btn-jogar{position:sticky;bottom:6px;z-index:5}
+
+/* ============================================================
+   TERMINAL / HALF-LIFE 1 / FORSAKEN — menu inicial em 2 colunas
+   ============================================================ */
+.menu-buttons{width:min(760px,95vw)}
+.profile-card{
+  gap:14px;padding:20px 22px;background:linear-gradient(160deg,rgba(9,12,7,.94),rgba(6,8,5,.96));
+  border:1px solid #55622f;border-radius:4px;position:relative;backdrop-filter:blur(2px);
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 0 60px rgba(0,0,0,.55),0 10px 40px rgba(0,0,0,.7),
+             0 0 22px rgba(184,217,74,.06)}
+/* cantos em colchete estilo terminal/HUD */
+.profile-card::before,.profile-card::after{content:"";position:absolute;width:16px;height:16px;pointer-events:none}
+.profile-card::before{top:5px;left:5px;border-top:2px solid var(--cs);border-left:2px solid var(--cs)}
+.profile-card::after{bottom:5px;right:5px;border-bottom:2px solid var(--cs);border-right:2px solid var(--cs)}
+
+.pc-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.pc-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.pc-col+.pc-col{border-left:1px solid #2b331b;padding-left:22px}
+.pc-title{font-family:Consolas,monospace;font-size:11px;letter-spacing:3px;color:var(--cs);
+  border-bottom:1px solid #2b331b;padding-bottom:8px;text-shadow:0 0 8px rgba(184,217,74,.35)}
+.pc-title::after{content:"_";animation:blink 1s steps(2) infinite;color:var(--cs)}
+
+/* carrossel de mapa: ‹  NOME  › */
+.map-carousel{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:8px}
+.map-arrow{font-family:Consolas,monospace;font-size:22px;line-height:1;cursor:pointer;
+  background:#10130c;border:2px solid #4a5a2a;border-radius:4px;color:var(--cs);
+  height:40px;display:flex;align-items:center;justify-content:center;transition:all .12s;padding:0}
+.map-arrow:hover{border-color:var(--cs);color:#fff;background:#1c2411;box-shadow:0 0 14px rgba(184,217,74,.3)}
+.map-arrow:active{transform:translateY(1px)}
+#map-name{font-family:Consolas,monospace;font-size:14px;letter-spacing:1px;text-align:center;
+  color:var(--cs);background:#10130c;border:2px solid #4a5a2a;border-radius:4px;padding:10px 6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 8px rgba(184,217,74,.25)}
+
+#bots-select,#diff-select{font-family:Consolas,monospace;font-size:14px;letter-spacing:1px;text-align:center;
+  background:#10130c;border:2px solid #4a5a2a;border-radius:4px;color:var(--cs);padding:10px 12px;
+  outline:none;cursor:pointer;width:100%}
+#bots-select:hover,#diff-select:hover{border-color:var(--cs)}
+
+#btn-jogar{font-size:22px;padding:15px;letter-spacing:5px;width:100%;transform:none;
+  border-color:var(--yellow);color:var(--yellow);background:linear-gradient(180deg,#20240f,#0e1006)}
+#btn-jogar:hover{transform:translateY(-2px);background:var(--yellow);color:#12140a;
+  box-shadow:0 0 26px rgba(255,210,63,.4)}
+
+/* empilha em telas estreitas */
+@media(max-width:640px){
+  .pc-cols{grid-template-columns:1fr;gap:14px}
+  .pc-col+.pc-col{border-left:0;padding-left:0;border-top:1px solid #2b331b;padding-top:14px}
+}

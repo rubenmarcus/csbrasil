@@ -68,7 +68,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='8' height='16' fill='%23e03232'/><rect x='8' width='8' height='16' fill='%231faa4d'/></svg>">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">
-{ "imports": { "three": "./vendor/three.module.js" } }
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
 </script>
 </head>
 <body>
@@ -95,26 +95,43 @@
   <canvas id="logo-canvas" width="900" height="360"></canvas>
   <div class="menu-buttons">
     <div class="profile-card">
-      <div class="pc-title">SEU PERFIL</div>
-      <input id="nick-input" maxlength="14" placeholder="SEU NICK (ex: Zé do AWP)" autocomplete="off">
-      <div id="social-list"></div>
-      <button id="social-add" class="btn-ghost" type="button">+ REDE SOCIAL</button>
-      <div id="avatar-row" class="hidden">
-        <button id="avatar-btn" class="btn-ghost">📷 ADICIONAR FOTO DE PERFIL</button>
-        <input id="avatar-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
-        <span id="avatar-note"></span>
-      </div>
-      <label class="map-label">ARMAS
-        <div class="dd" id="wpn-dd">
-          <button class="dd-btn" id="wpn-dd-btn" type="button"><span id="wpn-dd-label"></span><span class="dd-arrow">▾</span></button>
-          <div class="dd-list hidden" id="wpn-dd-list"></div>
+      <div class="pc-cols">
+        <div class="pc-col">
+          <div class="pc-title">▚ SEU PERFIL</div>
+          <input id="nick-input" maxlength="14" placeholder="SEU NICK (ex: Zé do AWP)" autocomplete="off">
+          <div id="social-list"></div>
+          <button id="social-add" class="btn-ghost" type="button">+ REDE SOCIAL</button>
+          <div id="avatar-row" class="hidden">
+            <button id="avatar-btn" class="btn-ghost">📷 ADICIONAR FOTO DE PERFIL</button>
+            <input id="avatar-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
+            <span id="avatar-note"></span>
+          </div>
         </div>
-      </label>
-      <label class="map-label">MAPA
-        <select id="map-select"></select>
-      </label>
+        <div class="pc-col">
+          <div class="pc-title">▚ PARTIDA</div>
+          <label class="map-label">ARMAS
+            <div class="dd" id="wpn-dd">
+              <button class="dd-btn" id="wpn-dd-btn" type="button"><span id="wpn-dd-label"></span><span class="dd-arrow">▾</span></button>
+              <div class="dd-list hidden" id="wpn-dd-list"></div>
+            </div>
+          </label>
+          <label class="map-label">MAPA
+            <div class="map-carousel">
+              <button id="map-prev" class="map-arrow" type="button" aria-label="mapa anterior">‹</button>
+              <span id="map-name">—</span>
+              <button id="map-next" class="map-arrow" type="button" aria-label="próximo mapa">›</button>
+            </div>
+          </label>
+          <label class="map-label">BOTS / LADO
+            <select id="bots-select"></select>
+          </label>
+          <label class="map-label">DIFICULDADE
+            <select id="diff-select"></select>
+          </label>
+        </div>
+      </div>
+      <button id="btn-jogar" class="btn btn-big">▶ JOGAR</button>
     </div>
-    <button id="btn-jogar" class="btn btn-big">JOGAR</button>
   </div>
   <div class="side-actions">
     <button id="btn-ranking" class="btn btn-side">RANKING</button>

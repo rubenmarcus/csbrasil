@@ -2,6 +2,8 @@
 import * as THREE from 'three';
 import { initTextures } from './textures.js';
 import { CHARACTERS, buildCharacter } from './characters.js';
+import { preloadCharacterAssets, buildCharacterModel, hasModel, GLB_CHARS } from './glbchars.js';
+import { preloadMapProps } from './mapprops.js';
 import { MAPS, MAP_IDS, DEFAULT_MAP, resolveMapId } from './maps.js';
 import { Sfx } from './audio.js';
 import { Game } from './game.js';
@@ -9,7 +11,7 @@ import { VERSION } from './version.js';
 
 /* ---------------- settings & nickname ---------------- */
 const SETTINGS_KEY = 'awpbr_settings';
-const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP, wpnMode: 'all' },
+const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP, wpnMode: 'all', bots: 4, difficulty: 'normal' },
   JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 const saveSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 const NICK_KEY = 'awpbr_nick';
@@ -36,6 +38,8 @@ let currentMap = resolveMapId(urlMap || settings.map);
 settings.map = currentMap;
 
 /* ---------------- menu backdrop (orbiting map) ---------------- */
+// Mint building/statue GLBs used by the Brasília map (loaded once, cloned per placement).
+const MAP_PROPS = ['congresso', 'catedral', 'ministerio', 'palacio', 'justica'];
 let menuScene = new THREE.Scene();
 MAPS[currentMap].build(menuScene, textures);
 const menuCam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 400);
@@ -43,6 +47,9 @@ function rebuildMenuBackdrop() {
   menuScene = new THREE.Scene();
   MAPS[currentMap].build(menuScene, textures);
 }
+// The first backdrop is built before props load; rebuild once they're ready so the
+// menu shows the real Brasília landmarks too.
+preloadMapProps(MAP_PROPS).then(rebuildMenuBackdrop).catch(() => {});
 
 /* ---------------- screens ---------------- */
 const screens = ['mobile-warning', 'main-menu', 'team-select', 'char-select', 'settings-panel', 'howto-panel', 'ranking-panel', 'pause-menu', 'match-end'];
@@ -73,20 +80,48 @@ function ensurePreview() {
   pv = { r, scene, cam, model: null };
   return pv;
 }
+// Each character shows off a weapon that fits their vibe (not everyone with an AK).
+const CHAR_WEAPON = {
+  esquerdomacho: 'pistol', sindicato: 'shotgun', mst: 'ak', doutora: 'm4', mistico: 'mp5',
+  caminhoneiro: 'md97', influencer: 'deagle', sertanejo: 'revolver38', senhora: 'uzi',
+  coach: 'scar', gotinha: 'mp5', farialimer: 'm4', bombado: 'lmg', hipster: 'uzi',
+  dollynho: 'p90', et: 'awp', ancap: 'mosin',
+};
+const charWeapon = (id) => CHAR_WEAPON[id] || 'ak';
+let pvToken = 0;
 function pvSetChar(def) {
   const p = ensurePreview();
   if (p.model) p.scene.remove(p.model);
+  p.mixer = null;
+  // Instant procedural fallback while the real model streams in.
   p.model = buildCharacter(def).group;
   p.model.rotation.y = 0.4;
   p.scene.add(p.model);
+  // Swap to the real rigged GLB (idle) once loaded, if this is still the selection.
+  const my = ++pvToken;
+  if (GLB_CHARS.has(def.id)) {
+    preloadCharacterAssets([def.id]).then(() => {
+      if (my !== pvToken || !hasModel(def.id)) return;
+      const m = buildCharacterModel(def, { weaponId: charWeapon(def.id) }); // fitting weapon per character
+      if (!m) return;
+      if (p.model) p.scene.remove(p.model);
+      m.group.rotation.y = 0.4;
+      p.model = m.group; p.mixer = m.mixer;
+      p.scene.add(m.group);
+    }).catch(() => {});
+  }
 }
 function pvThumb(def) {
-  pvSetChar(def);
+  // Box-only thumbnail (tiny icon) — never triggers a GLB load.
   const p = ensurePreview();
-  p.model.rotation.y = 0.55;
+  if (p.model) { p.scene.remove(p.model); p.model = null; }
+  p.mixer = null;
+  const box = buildCharacter(def).group; box.rotation.y = 0.55;
+  p.scene.add(box);
   p.r.render(p.scene, p.cam);
   const c = document.createElement('canvas'); c.width = c.height = 96;
   c.getContext('2d').drawImage(p.r.domElement, 0, 0, 96, 96);
+  p.scene.remove(box);
   return c.toDataURL();
 }
 
@@ -104,6 +139,13 @@ async function startGame(team, charId) {
   if (game) game.dispose();
   show(null);
   await sfxReady;   // make sure voice/CS samples are registered before round 1 sounds
+  // Preload real GLB character models + shared animation clips (bots). Falls back to
+  // procedural box meshes for any archetype that isn't modeled yet. Map props (statues)
+  // load in parallel and are optional — the map renders fine if they're missing.
+  await Promise.all([
+    preloadCharacterAssets([...GLB_CHARS]),
+    preloadMapProps(MAP_PROPS),
+  ]);
   game = new Game({
     renderer, textures, sfx, settings,
     playerCharId: charId, playerTeam: team, mapId: currentMap,
@@ -136,6 +178,7 @@ async function startGame(team, charId) {
   if (!testMode) { try { renderer.domElement.requestPointerLock()?.catch?.(() => {}); } catch {} }
 }
 function quitToMenu() {
+  switchMode = false;   // never carry an in-match team-switch into the menu
   if (game) { game.dispose(); game = null; }
   if (document.pointerLockElement) document.exitPointerLock();
   show('main-menu');
@@ -187,20 +230,20 @@ $('btn-jogar').onclick = () => {
 };
 $('btn-ranking').onclick = () => { sfx.uiClick(); showRanking(); };
 $('ranking-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
-// dropdown de mapas (depois dos campos do usuário, antes do JOGAR)
-const mapSel = $('map-select');
-for (const id of MAP_IDS) {
-  const o = document.createElement('option');
-  o.value = id; o.textContent = MAPS[id].name;
-  mapSel.appendChild(o);
-}
-mapSel.value = currentMap;
-mapSel.onchange = () => {
+// carrossel de mapas: setas ‹ › trocam o mapa E o fundo 3D do menu
+const mapNameEl = $('map-name');
+let mapIdx = Math.max(0, MAP_IDS.indexOf(currentMap));
+function stepMap(dir) {
   sfx.uiClick();
-  currentMap = resolveMapId(mapSel.value);
+  mapIdx = (mapIdx + dir + MAP_IDS.length) % MAP_IDS.length;
+  currentMap = resolveMapId(MAP_IDS[mapIdx]);
   settings.map = currentMap; saveSettings();
+  mapNameEl.textContent = MAPS[currentMap].name;
   rebuildMenuBackdrop();
-};
+}
+mapNameEl.textContent = MAPS[currentMap].name;
+$('map-prev').onclick = () => stepMap(-1);
+$('map-next').onclick = () => stepMap(1);
 const wpnSel = { value: settings.wpnMode || 'all' };
 // dropdown custom de modo de armas (com ícones SVG originais)
 const WPN_ICONS = {
@@ -229,6 +272,19 @@ wpnDdList.querySelectorAll('.dd-item').forEach(b => b.onclick = () => {
   settings.wpnMode = b.dataset.id; saveSettings();
   wpnLabel(settings.wpnMode); sfx.uiClick();
 });
+// bots-per-side + difficulty selectors (custom match)
+const botsSel = $('bots-select');
+if (botsSel) {
+  [2, 3, 4, 5, 6, 7, 8].forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = `${n} vs ${n}`; botsSel.appendChild(o); });
+  botsSel.value = settings.bots || 4;
+  botsSel.onchange = () => { settings.bots = +botsSel.value; saveSettings(); sfx.uiClick(); };
+}
+const diffSel = $('diff-select');
+if (diffSel) {
+  [['easy', 'FÁCIL'], ['normal', 'NORMAL'], ['hard', 'DIFÍCIL'], ['insane', 'INSANO']].forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = l; diffSel.appendChild(o); });
+  diffSel.value = settings.difficulty || 'normal';
+  diffSel.onchange = () => { settings.difficulty = diffSel.value; saveSettings(); sfx.uiClick(); };
+}
 $('btn-howto').onclick = () => { sfx.uiClick(); show('howto-panel'); };
 $('howto-back').onclick = () => { sfx.uiClick(); show('main-menu'); };
 $('btn-settings').onclick = () => { sfx.uiClick(); settingsReturn = 'main-menu'; show('settings-panel'); };
@@ -264,13 +320,19 @@ function armSwitchHook() {
 $('char-confirm').onclick = () => {
   sfx.uiClick();
   if (!selChar) return;
-  if (switchMode) {
+  // Only take the in-match "switch team" path when there's a live game to switch;
+  // a stale switchMode flag (e.g. backed out of M) must NOT hit game._switchTeam on a
+  // disposed game — that used to throw and leave the next match unable to load.
+  if (switchMode && game) {
     switchMode = false;
     currentChar = selChar.id;
     show(null);
-    game._switchTeam(selChar.id);
-    if (!testMode) renderer.domElement.requestPointerLock();
-  } else startGame(currentTeam, selChar.id);
+    try { game._switchTeam(selChar.id); } catch (e) { console.error('switch team failed', e); }
+    game.resume();   // unpause + re-request pointer lock (fixes "M opens but game won't resume")
+  } else {
+    switchMode = false;
+    startGame(currentTeam, selChar.id);
+  }
 };
 
 const nickEl = $('nick-input');
@@ -459,16 +521,36 @@ async function renderGlobal(nick) {
     `<a href="/mapa" target="_blank" style="color:var(--cs)">MAPA AO VIVO ↗</a></div>`;
 }
 
+// GLB idle thumbnail (no weapon), rendered off the shared preview renderer.
+function glbThumb(def) {
+  const p = ensurePreview();
+  if (!hasModel(def.id)) return null;
+  const m = buildCharacterModel(def, { weapon: false });
+  if (!m) return null;
+  m.group.rotation.y = 0.5;
+  for (let i = 0; i < 42; i++) m.mixer.update(1 / 60); // settle into the idle pose
+  const prevVis = p.model ? p.model.visible : false;
+  if (p.model) p.model.visible = false;
+  p.scene.add(m.group);
+  p.r.render(p.scene, p.cam);
+  const c = document.createElement('canvas'); c.width = c.height = 96;
+  c.getContext('2d').drawImage(p.r.domElement, 0, 0, 96, 96);
+  p.scene.remove(m.group);
+  if (p.model) p.model.visible = prevVis;
+  return c.toDataURL();
+}
 function pickTeam(team) {
   currentTeam = team;
   const list = $('char-list');
   list.innerHTML = '';
   const chars = CHARACTERS.filter(c => c.team === team);
   let firstRow = null;
+  const imgs = [];
   chars.forEach((c, i) => {
     const row = document.createElement('button');
     row.className = 'char-row';
     row.innerHTML = `<img src="${pvThumb(c)}" alt="${c.name}"><span>${c.name}</span>`;
+    imgs.push(row.querySelector('img'));
     row.onclick = () => { sfx.uiClick(); selectChar(c, row); };
     list.appendChild(row);
     if (i === 0) firstRow = row;
@@ -476,6 +558,12 @@ function pickTeam(team) {
   // seleciona DEPOIS de gerar todos os thumbs — senão o preview fica com o último
   if (firstRow) selectChar(chars[0], firstRow);
   show('char-select');
+  // Upgrade the box placeholders to real GLB: preload all team models once, then swap
+  // each thumbnail and refresh the main preview (so the first load isn't stuck on box).
+  preloadCharacterAssets(chars.map(c => c.id)).then(() => {
+    chars.forEach((c, i) => { const url = glbThumb(c); if (url && imgs[i]) imgs[i].src = url; });
+    if (selChar) pvSetChar(selChar);
+  }).catch(() => {});
 }
 function selectChar(c, row) {
   selChar = c;
@@ -584,17 +672,23 @@ let menuAngle = 0;
 function loop() {
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, clock.getDelta());
-  if (game) {
+  const csOpen = !$('char-select').classList.contains('hidden');
+  // While the char-select is open mid-match (pressing M to switch teams), the game
+  // auto-pauses — so we must NOT keep rendering it here, and we MUST still spin the
+  // preview. Rendering the preview only lived in the menu branch before, which is
+  // why M froze the selector.
+  if (game && !csOpen) {
     game.update(dt);
-  } else {
+  } else if (!game) {
     menuAngle += dt * 0.07;
     menuCam.position.set(Math.sin(menuAngle) * 34, 17 + Math.sin(menuAngle * 0.6) * 4, Math.cos(menuAngle) * 34);
     menuCam.lookAt(0, 1, 0);
     renderer.render(menuScene, menuCam);
-    if (pv && pv.model && !$('char-select').classList.contains('hidden')) {
-      pv.model.rotation.y += dt * 0.9;
-      pv.r.render(pv.scene, pv.cam);
-    }
+  }
+  if (csOpen && pv && pv.model) {
+    pv.model.rotation.y += dt * 0.9;
+    if (pv.mixer) pv.mixer.update(dt);
+    pv.r.render(pv.scene, pv.cam);
   }
 }
 loop();
