@@ -554,12 +554,19 @@ export class Game {
     if (w === 'knife') this.sfx.knifeDeploy(); else this.sfx.uiClick();
   }
   _scope(on, silent = false) {
-    const p = this.player;
-    if (on && (p.weapon !== 'awp' || !p.alive || this._reloading())) on = false;
+    const p = this.player, w = p.weapon;
+    // any weapon (except knife/shotgun) can aim-zoom; only real scopes show the circle
+    if (on && (w === 'knife' || w === 'shotgun' || !p.alive || this._reloading())) on = false;
     if (p.scoped === on) return;
     p.scoped = on;
-    this.el.scope.classList.toggle('on', on);
+    this.el.scope.classList.toggle('on', on && !!(WEAPONS[w] && WEAPONS[w].scope));
     if (!silent) on ? this.sfx.scopeIn() : this.sfx.scopeOut();
+  }
+  // Target FOV while aiming: strong for scoped snipers, light ADS for the rest.
+  _zoomFov(w) {
+    const Z = { awp: 22, mosin: 20, rem700: 22, m400: 38, m400scope: 38, md97: 44, carbine: 42,
+      ak: 52, t56: 52, akm: 52, m4: 52, mp5: 55, deagle: 50, pistol: 54, revolver38: 54 };
+    return Z[w] || 55;
   }
   _reloading() { return this.time < this.player.reloadUntil; }
   _startReload() {
@@ -605,7 +612,8 @@ export class Game {
     // recoil + muzzle flash
     p.pitch += w.recoil * (1 - 0.25 * p.crouchF); this.vm.kick = 1;
     this._flash(this.camera.localToWorld(new THREE.Vector3(0.26, -0.2, -1.1)));
-    if (p.weapon === 'awp') this._scope(false, true);
+    // bolt-action snipers drop the scope after each shot (CS-style); autos stay aimed
+    if (p.scoped && (p.weapon === 'awp' || p.weapon === 'mosin' || p.weapon === 'rem700')) this._scope(false, true);
   }
   _meleeHit() {
     const from = this.camera.getWorldPosition(new THREE.Vector3());
@@ -840,6 +848,12 @@ export class Game {
     const eye = 1.62 - 0.52 * p.crouchF;
     this.camera.position.set(p.pos.x, p.pos.y + eye, p.pos.z);
     this.camera.rotation.set(p.pitch, p.yaw, 0);
+    // smooth aim zoom (magnify through the scope / iron sights)
+    const tFov = p.scoped ? this._zoomFov(p.weapon) : 70;
+    if (Math.abs(this.camera.fov - tFov) > 0.05) {
+      this.camera.fov += (tFov - this.camera.fov) * Math.min(1, dt * 16);
+      this.camera.updateProjectionMatrix();
+    }
     // footsteps + view bob
     const moving = sp > 0.6 && p.grounded;
     if (moving) {
