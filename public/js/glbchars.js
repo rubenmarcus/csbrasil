@@ -24,7 +24,12 @@ export const GLB_CHARS = new Set([
 const STATES = ['idle', 'walk', 'run', 'shoot', 'death', 'crouch', 'crouchwalk', 'jump'];
 const qp = new URLSearchParams(location.search);
 const TARGET_HEIGHT = parseFloat(qp.get('charh')) || 1.72;      // meters (match box silhouette)
-const LOCO_REF = parseFloat(qp.get('loco')) || 1.45;            // m/s where leg cycle looks planted @ timeScale 1
+// Per-clip natural ground speed (m/s) that plants the feet at timeScale 1, MEASURED from
+// each clip's real foot stride (tools: iktest HARNESS.measureStride). walk and run have
+// different strides, so a single ref moon-walks one of them. Override via ?wref/?rref/?cref.
+const WALK_REF   = parseFloat(qp.get('wref')) || 0.79;
+const RUN_REF    = parseFloat(qp.get('rref')) || 1.92;
+const CROUCH_REF = parseFloat(qp.get('cref')) || 0.83;
 const FACING_OFFSET = (parseFloat(qp.get('charface')) || 0) * Math.PI / 180; // yaw fix if model faces -Z
 
 // Rifle mounted in the right hand (bone-local meters via a scale-compensated mount).
@@ -215,11 +220,12 @@ class CharController {
       } else if (!this.shooting && !this.jumping) {
         this._to(moving > 0.05 ? (hasTarget ? 'walk' : 'run') : 'idle');
       }
-      // LOCO_REF ~= the speed (m/s) at which the clip looks planted at timeScale 1.
-      const f = Math.max(0.35, Math.min(2.6, speed / LOCO_REF));
-      if (this.actions.run) this.actions.run.timeScale = f;
-      if (this.actions.walk) this.actions.walk.timeScale = f;
-      if (this.actions.crouchwalk) this.actions.crouchwalk.timeScale = f * 0.9;
+      // Per-clip cycle rate = ground speed / that clip's measured natural speed, so the
+      // feet plant instead of ice-skating. clamp keeps it from looking frantic/frozen.
+      const rate = (ref) => Math.max(0.45, Math.min(3.0, speed / ref));
+      if (this.actions.run) this.actions.run.timeScale = rate(RUN_REF);
+      if (this.actions.walk) this.actions.walk.timeScale = rate(WALK_REF);
+      if (this.actions.crouchwalk) this.actions.crouchwalk.timeScale = rate(CROUCH_REF);
     }
     this.mixer.update(dt);
     if (this.headBone) {
