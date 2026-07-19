@@ -509,6 +509,20 @@ export class Game {
         const extra = Math.max(0, 30 - scatterPool.length);        // ~30 guns on the map total
         for (let i = 0; i < extra; i++) put(scatterPool[(Math.random() * scatterPool.length) | 0]);
       }
+      // Weapons RIGHT AT each spawn so players arm up on respawn (not just scattered on
+      // the map). Snipers first (the user wants plenty, especially snipers).
+      const rack = ['awp', 'mosin', 'rem700', 'm400', 'ak', 'm4', 'scar', 'shotgun', 'mp5', 'deagle', 'lmg', 'famas']
+        .filter(w => this._pickupAllowed(w));
+      if (rack.length) {
+        for (const team of ['P', 'B']) {
+          const spawns = this.world.spawns[team] || [];
+          const sz = spawns.length ? spawns[0].z : 0;
+          const inward = sz > 0 ? -1 : 1;              // just in front of the spawn line
+          let i = 0;
+          for (const gx of [-12, -8, -4, 4, 8, 12])
+            this._dropWeapon(gx, sz + inward * (2.5 + (i % 2)), rack[i++ % rack.length]);
+        }
+      }
     }
     for (const k in this.vm.models) this.vm.models[k].visible = k === this.player.weapon;
     this.el.weaponName.textContent = WEAPONS[this.player.weapon].name;

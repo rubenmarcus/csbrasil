@@ -84,9 +84,18 @@ export function buildBrasilia(scene, T) {
     putBuilding('ministerio', { x: sx * 23, z: mz, targetH: 7, ry: Math.PI / 2 });
 
   /* ---------------- statues ---------------- */
-  { // A Justiça — Mint GLB prop, in front of the STF (west)
-    const o = placeProp('justica', { x: -16, z: 20, targetH: 3.4, ry: Math.PI / 2 });
-    if (o) { root.add(o); occluders.push(o); col(-17, -15, 0, 3.4, 19, 21); }
+  { // A Justiça — Mint GLB prop in front of the STF, draped with a Brazil flag and the
+    // "PERDEU, MANÉ" graffiti (8 de janeiro reference). Statue faces +X (toward the lane).
+    const sx = -11, sz = 22;   // clear of the STF plinth, out in the open facing the lane
+    const o = placeProp('justica', { x: sx, z: sz, targetH: 3.6, ry: Math.PI / 2 });
+    if (o) {
+      root.add(o); occluders.push(o); col(sx - 1, sx + 1, 0, 3.6, sz - 1, sz + 1);
+      // Brazil flag draped over one shoulder
+      const flag = addPlane(1.8, 1.3, lam({ map: T.flagBR, side: THREE.DoubleSide }), sx + 0.7, 2.6, sz - 0.5, Math.PI / 2);
+      flag.rotation.x = 0.35;
+      // graffiti scrawled across the torso
+      addPlane(1.6, 1.0, lam({ map: T.perdeuMane, transparent: true, side: THREE.DoubleSide }), sx + 0.72, 1.9, sz + 0.35, Math.PI / 2);
+    }
   }
   { // Os Guerreiros — procedural bronze monument (Mint mesher failed on it twice)
     const bx = 6, bz = 40;
@@ -229,7 +238,9 @@ export function buildBrasilia(scene, T) {
 
   /* ---------------- spawns ---------------- */
   const mk = s => [-9, -3, 3, 9].map(x => ({ x, z: 43 * s, yaw: s < 0 ? Math.PI : 0 }));
-  const spawns = { P: mk(-1), B: mk(1) };
+  // Bolsonaristas start at the Cathedral (south) end, Petistas at the Congresso (north)
+  // end — swapped per request.
+  const spawns = { B: mk(-1), P: mk(1) };
 
   return {
     root, colliders, occluders, groundHeightAt, spawns, sun, hemi,
