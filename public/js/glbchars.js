@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js';
 import { buildRifle } from './characters.js';
+import { weaponModel, preloadWeapons } from './weapons.js';
 
 // Character ids that have a real model under public/models/characters/<id>.glb.
 export const GLB_CHARS = new Set([
@@ -44,12 +45,15 @@ export function hasModel(id) { return _base.has(id); }
 export async function preloadCharacterAssets(ids) {
   if (!_clips) {
     _clips = {};
-    await Promise.all(STATES.map(async (s) => {
-      try {
-        const g = await loadGLB(`models/anims/${s}.glb`);
-        if (g.animations[0]) { g.animations[0].name = s; _clips[s] = g.animations[0]; }
-      } catch (e) { console.warn('anim load failed', s, e); }
-    }));
+    await Promise.all([
+      preloadWeapons(), // real weapon GLBs (mounts fall back to box if missing)
+      ...STATES.map(async (s) => {
+        try {
+          const g = await loadGLB(`models/anims/${s}.glb`);
+          if (g.animations[0]) { g.animations[0].name = s; _clips[s] = g.animations[0]; }
+        } catch (e) { console.warn('anim load failed', s, e); }
+      }),
+    ]);
   }
   const wanted = [...new Set(ids)].filter((id) => GLB_CHARS.has(id) && !_base.has(id));
   await Promise.all(wanted.map(async (id) => {
@@ -108,7 +112,7 @@ export function buildCharacterModel(def, opts = {}) {
     handBone.matrixWorld.decompose(new THREE.Vector3(), new THREE.Quaternion(), bs);
     const mount = new THREE.Group();
     mount.scale.setScalar(1 / (bs.x || 1));       // 1 mount unit == 1 world meter
-    const gun = buildRifle();
+    const gun = weaponModel(opts.weaponId || 'awp') || buildRifle();
     gun.scale.multiplyScalar(GUN_SCALE);
     gun.position.set(GUN_POS[0], GUN_POS[1], GUN_POS[2]);
     gun.rotation.set(GUN_ROT[0], GUN_ROT[1], GUN_ROT[2]);

@@ -82,13 +82,14 @@ export class Game {
     const allyDefs = cycle(CHARACTERS.filter(c => c.team === playerTeam && c.id !== playerCharId), teamSize - 1);
     const enemyDefs = cycle(CHARACTERS.filter(c => c.team === this.enemyTeam), teamSize);
     const mkBot = (def, team, i) => {
-      const c = buildCharacterModel(def) || buildCharacter(def);
+      const wpn = this._botWeapon();
+      const c = buildCharacterModel(def, { weaponId: wpn }) || buildCharacter(def);
       c.group.traverse(o => { o.userData.botOwner = null; });
       const bot = {
         isPlayer: false, name: def.name, def, team,
         mesh: c, pos: new THREE.Vector3(), yaw: 0, hp: 100, alive: true,
         respawnAt: 0, kills: 0, deaths: 0,
-        target: null, reactAt: 0, nextShotAt: 0, skill: (0.85 + Math.random() * 0.35) * diffMul, weapon: this._botWeapon(),
+        target: null, reactAt: 0, nextShotAt: 0, skill: (0.85 + Math.random() * 0.35) * diffMul, weapon: wpn,
         path: null, pathIdx: 0, repathAt: 0, roamIdx: 0, phase: 0, think: Math.random() * 0.2,
         deadT: 0, strafeT: Math.random() * 10, revealedAt: -99,
         crouchBias: Math.random() < 0.45, // ~half the bots hold angles crouched (AWPer style)
