@@ -53,6 +53,20 @@ func test_world_geometry_occludes_target() -> void:
 	assert_eq(bot.health.current_health, 100)
 
 
+func test_emptying_magazine_starts_reload_automatically() -> void:
+	var weapon: Node3D = (load(WEAPON_PATH) as GDScript).new()
+	weapon.definition = load(AWP_PATH)
+	add_child_autofree(weapon)
+	weapon.state.ammo = 1
+	watch_signals(weapon)
+
+	var result: Dictionary = weapon.fire(Vector3(0.0, 1.55, 0.0), Vector3.FORWARD)
+	assert_true(result.fired)
+	assert_eq(weapon.state.ammo, 0)
+	assert_true(weapon.state.reloading, "Reload must start as soon as the magazine empties")
+	assert_signal_emitted(weapon, "reload_started")
+
+
 func test_reload_completion_publishes_ammo_for_hud() -> void:
 	var weapon: Node3D = (load(WEAPON_PATH) as GDScript).new()
 	weapon.definition = load(AWP_PATH)

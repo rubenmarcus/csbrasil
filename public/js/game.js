@@ -516,6 +516,8 @@ export class Game {
     this.el.weaponName.textContent = WEAPONS[w].name;
     this.el.reloadNote.classList.add('hidden');
     if (w === 'knife') this.sfx.knifeDeploy(); else this.sfx.uiClick();
+    // sacar arma com pente vazio já inicia a recarga automaticamente
+    if (w !== 'knife' && p.ammo[w].mag <= 0 && p.ammo[w].res > 0) this._startReload();
   }
   _scope(on, silent = false) {
     const p = this.player;
@@ -570,6 +572,8 @@ export class Game {
     p.pitch += w.recoil * (1 - 0.25 * p.crouchF); this.vm.kick = 1;
     this._flash(this.camera.localToWorld(new THREE.Vector3(0.26, -0.2, -1.1)));
     if (p.weapon === 'awp') this._scope(false, true);
+    // recarga automática assim que o pente esvazia (sem exigir clique com 0 balas)
+    if (a.mag <= 0 && a.res > 0) this._startReload();
   }
   _meleeHit() {
     const from = this.camera.getWorldPosition(new THREE.Vector3());
