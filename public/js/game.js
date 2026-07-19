@@ -66,8 +66,16 @@ export class Game {
     if (this.world.pickups) {
       const keep = [];
       for (const pk of this.world.pickups) {
-        if (this._pickupAllowed(pk.weapon)) keep.push(pk);
-        else if (pk.mesh) this.scene.remove(pk.mesh);
+        if (this._pickupAllowed(pk.weapon)) {
+          const rw = weaponModel(pk.weapon);            // swap the map's box gun for the real GLB
+          if (rw && pk.mesh) {
+            rw.position.copy(pk.mesh.position); rw.position.y = Math.max(0.16, rw.position.y);
+            rw.rotation.set(0, pk.mesh.rotation.y || Math.random() * 6.28, 0.12);
+            rw.traverse(o => { if (o.isMesh) o.castShadow = true; });
+            this.scene.remove(pk.mesh); this.scene.add(rw); pk.mesh = rw;
+          }
+          keep.push(pk);
+        } else if (pk.mesh) this.scene.remove(pk.mesh);
       }
       this.world.pickups = keep;
     }
@@ -445,6 +453,19 @@ export class Game {
     this.player.scoped = false; this.player.reloadUntil = 0;
     for (const d of this.drops) this.scene.remove(d.mesh);
     this.drops = [];
+    // scatter a few real weapons on the ground each round so the player finds variety
+    // (map pickups are often AWP-only; bot drops only appear after kills)
+    const wp = this.world.waypoints && this.world.waypoints.nodes;
+    if (wp && wp.length) {
+      const scatterPool = ['ak', 'm4', 'mp5', 'shotgun', 'deagle', 't56', 'akm', 'md97', 'scar',
+        'tavor', 'famas', 'uzi', 'p90', 'mosin', 'rem700', 'm400', 'carbine', 'revolver38']
+        .filter(w => this._pickupAllowed(w));
+      for (let i = 0; i < 8 && scatterPool.length; i++) {
+        const n = wp[(Math.random() * wp.length) | 0];
+        const w = scatterPool[(Math.random() * scatterPool.length) | 0];
+        if (n) this._dropWeapon(n.x + (Math.random() - 0.5) * 2.5, n.z + (Math.random() - 0.5) * 2.5, w);
+      }
+    }
     for (const k in this.vm.models) this.vm.models[k].visible = k === this.player.weapon;
     this.el.weaponName.textContent = WEAPONS[this.player.weapon].name;
     const slots = { P: 1, B: 0 };
@@ -1012,17 +1033,9 @@ export class Game {
   }
   // CS: morto larga a arma no chão
   _dropWeapon(x, z, weapon) {
-    let mesh;
-    if (weapon === 'awp') {
-      mesh = buildRifle();
-    } else {
-      mesh = new THREE.Group();
-      mesh.add(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.28), new THREE.MeshLambertMaterial({ color: 0x333333 })));
-      const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.08), new THREE.MeshLambertMaterial({ color: 0x3a2a1e }));
-      grip.position.set(0, -0.09, 0.09); grip.rotation.x = 0.25; mesh.add(grip);
-    }
-    mesh.position.set(x, 0.08, z);
-    mesh.rotation.set(0, Math.random() * Math.PI * 2, Math.PI / 2 * 0.12);
+    const mesh = weaponModel(weapon) || buildRifle();  // real GLB on the ground
+    mesh.position.set(x, 0.16, z);
+    mesh.rotation.set(0, Math.random() * Math.PI * 2, 0.12);  // lie ~flat with a random yaw
     mesh.traverse(o => { if (o.isMesh) o.castShadow = true; });
     this.scene.add(mesh);
     this.drops.push({ x, z, weapon, readyAt: 0, mesh });
