@@ -88,7 +88,7 @@ function pvSetChar(def) {
   if (GLB_CHARS.has(def.id)) {
     preloadCharacterAssets([def.id]).then(() => {
       if (my !== pvToken || !hasModel(def.id)) return;
-      const m = buildCharacterModel(def);
+      const m = buildCharacterModel(def, { weapon: false }); // clean showcase, no slung rifle
       if (!m) return;
       if (p.model) p.scene.remove(p.model);
       m.group.rotation.y = 0.4;
@@ -483,16 +483,36 @@ async function renderGlobal(nick) {
     `<a href="/mapa" target="_blank" style="color:var(--cs)">MAPA AO VIVO ↗</a></div>`;
 }
 
+// GLB idle thumbnail (no weapon), rendered off the shared preview renderer.
+function glbThumb(def) {
+  const p = ensurePreview();
+  if (!hasModel(def.id)) return null;
+  const m = buildCharacterModel(def, { weapon: false });
+  if (!m) return null;
+  m.group.rotation.y = 0.5;
+  for (let i = 0; i < 42; i++) m.mixer.update(1 / 60); // settle into the idle pose
+  const prevVis = p.model ? p.model.visible : false;
+  if (p.model) p.model.visible = false;
+  p.scene.add(m.group);
+  p.r.render(p.scene, p.cam);
+  const c = document.createElement('canvas'); c.width = c.height = 96;
+  c.getContext('2d').drawImage(p.r.domElement, 0, 0, 96, 96);
+  p.scene.remove(m.group);
+  if (p.model) p.model.visible = prevVis;
+  return c.toDataURL();
+}
 function pickTeam(team) {
   currentTeam = team;
   const list = $('char-list');
   list.innerHTML = '';
   const chars = CHARACTERS.filter(c => c.team === team);
   let firstRow = null;
+  const imgs = [];
   chars.forEach((c, i) => {
     const row = document.createElement('button');
     row.className = 'char-row';
     row.innerHTML = `<img src="${pvThumb(c)}" alt="${c.name}"><span>${c.name}</span>`;
+    imgs.push(row.querySelector('img'));
     row.onclick = () => { sfx.uiClick(); selectChar(c, row); };
     list.appendChild(row);
     if (i === 0) firstRow = row;
@@ -500,6 +520,12 @@ function pickTeam(team) {
   // seleciona DEPOIS de gerar todos os thumbs — senão o preview fica com o último
   if (firstRow) selectChar(chars[0], firstRow);
   show('char-select');
+  // Upgrade the box placeholders to real GLB: preload all team models once, then swap
+  // each thumbnail and refresh the main preview (so the first load isn't stuck on box).
+  preloadCharacterAssets(chars.map(c => c.id)).then(() => {
+    chars.forEach((c, i) => { const url = glbThumb(c); if (url && imgs[i]) imgs[i].src = url; });
+    if (selChar) pvSetChar(selChar);
+  }).catch(() => {});
 }
 function selectChar(c, row) {
   selChar = c;

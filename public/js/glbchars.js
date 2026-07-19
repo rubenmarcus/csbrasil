@@ -65,9 +65,10 @@ const _v = new THREE.Vector3();
 // Build a bot mesh from a loaded GLB. Returns an object shaped like buildCharacter()'s
 // result ({ group, parts }) plus animation control (isGLB, mixer, ctrl). Returns null
 // if the character has no model loaded.
-export function buildCharacterModel(def) {
+export function buildCharacterModel(def, opts = {}) {
   const template = _base.get(def.id);
   if (!template || !_clips) return null;
+  const withWeapon = opts.weapon !== false; // menu showcase passes weapon:false
 
   const model = skeletonClone(template);
 
@@ -101,7 +102,7 @@ export function buildCharacterModel(def) {
   let handBone = null;
   model.traverse((o) => { if (o.isBone && !handBone && /right.?hand|hand.?r\b|rhand|r_hand/i.test(o.name)) handBone = o; });
   if (!handBone) model.traverse((o) => { if (o.isBone && !handBone && /hand/i.test(o.name)) handBone = o; });
-  if (handBone) {
+  if (handBone && withWeapon) {
     handBone.updateWorldMatrix(true, false);
     const bs = new THREE.Vector3();
     handBone.matrixWorld.decompose(new THREE.Vector3(), new THREE.Quaternion(), bs);
