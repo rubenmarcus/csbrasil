@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { MAPS, resolveMapId } from './maps.js';
 import { buildCharacter, poseCharacter, byId, CHARACTERS, buildRifle } from './characters.js';
 import { buildCharacterModel } from './glbchars.js';
-import { weaponModel } from './weapons.js';
+import { weaponModel, WEAPON_IDS } from './weapons.js';
 
 export const WEAPONS = {
   awp:    { name: 'AWP "DELIBERADOR"', short: 'AWP', dmg: 400, mag: 5, reserve: 25, rate: 1.7, reload: 3.1, spreadHip: 0.075, spreadScope: 0.0008, recoil: 0.055, scope: true },
@@ -14,6 +14,22 @@ export const WEAPONS = {
   deagle: { name: 'DEAGLE "MARTELO"', short: 'DE', dmg: 53, mag: 7, reserve: 35, rate: 0.28, reload: 2.0, spreadHip: 0.012, recoil: 0.03 },
   pistol: { name: 'PT-38 "APITO"', short: 'PT-38', dmg: 34, mag: 12, reserve: 48, rate: 0.24, reload: 1.6, spreadHip: 0.02, recoil: 0.014, scope: false },
   knife:  { name: 'FACA "CONVERSA FIADA"', short: 'FACA', dmg: 55, rate: 0.55, range: 2.4, reload: 0, recoil: 0.02, scope: false },
+  // arsenal 2 (BR)
+  t56:       { name: 'T-56 "XING-LING"', short: 'T-56', dmg: 32, mag: 30, reserve: 90, rate: 0.1, reload: 2.5, spreadHip: 0.026, recoil: 0.009, auto: true },
+  akm:       { name: 'AKM "KALASH DA VÉIA"', short: 'AKM', dmg: 35, mag: 30, reserve: 90, rate: 0.105, reload: 2.5, spreadHip: 0.025, recoil: 0.009, auto: true },
+  revolver38:{ name: 'REVÓLVER .38 "TROVÃO"', short: '.38', dmg: 46, mag: 6, reserve: 24, rate: 0.36, reload: 2.4, spreadHip: 0.016, recoil: 0.03 },
+  md97:      { name: 'MD97 "FUZIL DA PÁTRIA"', short: 'MD97', dmg: 38, mag: 20, reserve: 80, rate: 0.12, reload: 2.6, spreadHip: 0.022, recoil: 0.012, auto: true },
+  carbine:   { name: 'CARABINA "PAPO DE PEÃO"', short: 'CARB', dmg: 42, mag: 10, reserve: 40, rate: 0.5, reload: 2.8, spreadHip: 0.02, recoil: 0.02 },
+  m400:      { name: 'M400 "MIRA FINA"', short: 'M400', dmg: 40, mag: 20, reserve: 80, rate: 0.11, reload: 2.4, spreadHip: 0.018, spreadScope: 0.004, recoil: 0.011, auto: true, scope: true },
+  mosin:     { name: 'MOSIN "VOVÓ RUSSA"', short: 'MOSIN', dmg: 120, mag: 5, reserve: 25, rate: 1.5, reload: 3.4, spreadHip: 0.08, spreadScope: 0.001, recoil: 0.05, scope: true },
+  rem700:    { name: 'REM 700 "CAÇADOR"', short: 'REM', dmg: 130, mag: 5, reserve: 25, rate: 1.5, reload: 3.2, spreadHip: 0.08, spreadScope: 0.0009, recoil: 0.05, scope: true },
+  // arsenal 3 (militar)
+  lmg:       { name: 'METRALHA "TRETA PESADA"', short: 'LMG', dmg: 31, mag: 100, reserve: 200, rate: 0.085, reload: 5.0, spreadHip: 0.04, recoil: 0.011, auto: true },
+  scar:      { name: 'SCAR "PAGA-PAU"', short: 'SCAR', dmg: 37, mag: 20, reserve: 80, rate: 0.11, reload: 2.5, spreadHip: 0.02, recoil: 0.01, auto: true },
+  tavor:     { name: 'TAVOR "CURTINHO"', short: 'TAVOR', dmg: 32, mag: 30, reserve: 90, rate: 0.09, reload: 2.3, spreadHip: 0.024, recoil: 0.008, auto: true },
+  famas:     { name: 'FAMAS "BAGUETE"', short: 'FAMAS', dmg: 29, mag: 25, reserve: 90, rate: 0.06, reload: 2.4, spreadHip: 0.028, recoil: 0.006, auto: true },
+  uzi:       { name: 'UZI "RÁ-TÁ-TÁ"', short: 'UZI', dmg: 25, mag: 25, reserve: 100, rate: 0.07, reload: 2.1, spreadHip: 0.032, recoil: 0.006, auto: true },
+  p90:       { name: 'P90 "CHINELÃO"', short: 'P90', dmg: 23, mag: 50, reserve: 100, rate: 0.065, reload: 2.3, spreadHip: 0.03, recoil: 0.005, auto: true },
 };
 const ROUND_TIME = 99, ROUNDS_TO_WIN = 3, RESPAWN_DELAY = 2.5, PICKUP_RESPAWN = 8;
 const BOT_SPEED = 3.3, BOT_EYE = 1.5;
@@ -68,7 +84,7 @@ export class Game {
       pos: new THREE.Vector3(), vel: new THREE.Vector3(),
       yaw: 0, pitch: 0, hp: 100, alive: true, respawnAt: 0, crouchF: 0,
       weapon: 'awp', scoped: false, reloadUntil: 0, nextShotAt: 0, drawUntil: 0,
-      ammo: { awp: { mag: WEAPONS.awp.mag, res: WEAPONS.awp.reserve }, pistol: { mag: WEAPONS.pistol.mag, res: WEAPONS.pistol.reserve } },
+      ammo: Object.fromEntries(Object.keys(WEAPONS).filter(w => w !== 'knife').map(w => [w, { mag: WEAPONS[w].mag, res: WEAPONS[w].reserve }])),
       kills: 0, deaths: 0, headshots: 0, grounded: true, stepPhase: 0, revealedAt: -99,
     };
     this.combatants.push(this.player);
@@ -248,6 +264,17 @@ export class Game {
       rw.position.z += id === 'knife' ? 0.0 : 0.12; // pull the grip back toward the hand
       models[id].children.forEach((ch) => { if (ch.isMesh) ch.visible = false; });
       models[id].add(rw);
+    }
+    // Build first-person viewmodels for the extended arsenal (weapons without a box
+    // group): real GLB + a hand, positioned like the AWP viewmodel.
+    for (const id of WEAPON_IDS) {
+      if (models[id]) continue;
+      const g = new THREE.Group();
+      const rw = weaponModel(id);
+      if (rw) { rw.rotation.y = Math.PI; rw.scale.multiplyScalar(0.82); rw.position.z += id === 'knife' ? 0 : 0.12; g.add(rw); }
+      const hR = fpArm(); hR.position.set(0, -0.085, 0.02); g.add(hR);
+      g.position.copy(awp.position); g.rotation.copy(awp.rotation);
+      root.add(g); models[id] = g;
     }
     for (const k in models) models[k].visible = k === 'awp';
     return { root, models, awp, pistol, knife, kick: 0, bobPhase: 0, reloadDip: 0 };
@@ -956,7 +983,8 @@ export class Game {
     if (mode === 'awp') return 'awp';
     if (mode === 'knife') return 'knife';
     if (mode === 'pistols') return Math.random() < 0.5 ? 'pistol' : 'deagle';
-    const pool = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle'];
+    const pool = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle', 't56', 'akm', 'md97',
+      'carbine', 'm400', 'mosin', 'rem700', 'lmg', 'scar', 'tavor', 'famas', 'uzi', 'p90', 'revolver38'];
     return pool[(Math.random() * pool.length) | 0];
   }
   _pickupAllowed(w) {
