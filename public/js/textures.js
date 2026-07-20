@@ -91,15 +91,28 @@ export function initTextures() {
     noiseOver(x, 128, 128, 0.4, ['#4c682e', '#73924a', '#87a355']);
     T.grass = tex(c, 2, 2);
   }
-  { // crate wood + stencil
-    const c = canvas(128, 128), x = c.getContext('2d');
-    x.fillStyle = '#a97f4e'; x.fillRect(0, 0, 128, 128);
-    for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? '#9c7343' : '#b08657'; x.fillRect(0, i * 32, 128, 30); }
-    x.strokeStyle = '#6b4f2c'; x.lineWidth = 4; x.strokeRect(3, 3, 122, 122);
-    x.beginPath(); x.moveTo(4, 4); x.lineTo(124, 124); x.moveTo(124, 4); x.lineTo(4, 124); x.stroke();
-    x.fillStyle = 'rgba(40,25,10,0.8)'; x.font = 'bold 17px Arial Black,sans-serif';
-    x.textAlign = 'center'; x.fillText('FRÁGIL', 64, 60); x.fillText('TRETA®', 64, 82);
-    T.crate = tex(c);
+  { // Caixa dos Correios (SEDEX) — papelão com a faixa amarela e o "C" azul
+    const correiosBox = (label, sub) => {
+      const c = canvas(128, 128), x = c.getContext('2d');
+      x.fillStyle = '#b9905a'; x.fillRect(0, 0, 128, 128);
+      noiseOver(x, 128, 128, 0.25, ['#a37c48', '#c69e68', '#8f6f3f']);
+      // fita amarela dos Correios atravessando
+      x.fillStyle = '#ffcd00'; x.fillRect(0, 44, 128, 40);
+      // "C" azul estilizado (arco) + seta
+      x.strokeStyle = '#00416b'; x.lineWidth = 9; x.lineCap = 'round';
+      x.beginPath(); x.arc(30, 64, 13, Math.PI * 0.35, Math.PI * 1.65); x.stroke();
+      x.fillStyle = '#00416b';
+      x.beginPath(); x.moveTo(44, 64); x.lineTo(56, 56); x.lineTo(56, 72); x.closePath(); x.fill();
+      x.font = 'bold 16px Arial Black,sans-serif'; x.textAlign = 'left';
+      x.fillText(label, 56, 72);
+      x.font = 'bold 10px Arial,sans-serif'; x.fillStyle = 'rgba(30,20,8,0.75)'; x.textAlign = 'center';
+      x.fillText(sub, 64, 22);
+      x.strokeStyle = 'rgba(90,60,25,0.5)'; x.lineWidth = 3; x.strokeRect(3, 3, 122, 122);
+      stains(x, 128, 128, 2, 'rgba(0,0,0,0.18)');
+      return tex(c);
+    };
+    T.crate = correiosBox('SEDEX', 'ENCOMENDA · ENTREGA RÁPIDA');
+    T.crate2 = correiosBox('CORREIOS', 'SEDEX 10 · CUIDADO COM A TRETA');
   }
 
   // --- graffiti walls (3 variants) ---
@@ -154,6 +167,35 @@ export function initTextures() {
     poster('#1faa4d', '#ffd23f', ['DONA', 'MARIA', '77'], true),
     poster('#2b4d8f', '#fff', ['CANDIDATO', 'FICTÍCIO', 'PROMETO NADA']),
   ];
+
+  // --- real poster art (public/posters) — curated satirical posters for the map walls.
+  // [file, aspect w/h]. Priority first (DOLLYNHO + New Project), then the rest.
+  const POSTER_FILES = [
+    ['DOLLYNHO.png', 0.5625], ['New Project (1).png', 0.5625],
+    ['New Project (2).png', 0.5625], ['New Project (3).png', 0.5625],
+    ['25c9112229edfcfbb1eae4137ecc151a.jpg', 0.6],
+    ['26268061ca13b4dc4a871c1163cbeb6d.jpg', 1.0],
+    ['3300c39038dd97ad6a20342038c008b0.jpg', 1.0],
+    ['78c38b895431ac393f96036507060be1.jpg', 0.708],
+    ['51edbafcf2eebbb2dc157f66bb1a2d66.jpg', 0.72],
+    ['574381edb80801aaff5e9a1cdd88bc4b.jpg', 0.72],
+    ['6f2bbbe03a6c5a16af15fe12ebea0d6c.jpg', 0.72],
+    ['82f8dcbb0547719bfc4dbb27aed9f583.jpg', 0.72],
+    ['8445c0ca193d22b4d6a9af66409b0dda.jpg', 0.72],
+    ['dafac3c979a935aea80adb8b90f6ef1b.jpg', 0.72],
+    ['dc58fe69ac56037026f1bf6181b7f71c.jpg', 0.72],
+    ['eabfe479653f0e9c94a618858e8667bc.jpg', 0.72],
+    ['f0deec032dd1777bc681179fb74a29b0.jpg', 0.72],
+    ['images.png', 0.9],
+  ];
+  const _tl = new THREE.TextureLoader();
+  T.posterImgs = POSTER_FILES.map(([f]) => {
+    const t = _tl.load('posters/' + f);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    return t;
+  });
+  T.posterAspects = POSTER_FILES.map(([, a]) => a);
 
   // --- billboard: fictional social network ---
   {

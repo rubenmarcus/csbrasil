@@ -104,9 +104,10 @@ export function buildBrasilia(scene, T) {
     const o = placeProp('justica', { x: sx, z: sz, targetH: 3.6, ry: Math.PI / 2 });
     if (o) {
       root.add(o); occluders.push(o); col(sx - 1, sx + 1, 0, 3.6, sz - 1, sz + 1);
-      // small "PERDEU MANÉ" graffiti decal on the chest (statue front faces +X), clear of the sash
-      addPlane(0.52, 0.34, lam({ map: T.perdeuMane, transparent: true, side: THREE.DoubleSide }),
-        sx + 0.58, 2.42, sz + 0.26, Math.PI / 2);
+      // small "PERDEU MANÉ" graffiti decal on the chest (statue front faces +X, chest
+      // surface measured by raycast at x≈-11.1), clear of the sash
+      addPlane(0.6, 0.4, lam({ map: T.perdeuMane, transparent: true, side: THREE.DoubleSide }),
+        sx - 0.04, 2.35, sz + 0.05, Math.PI / 2);
     }
   }
   { // Os Guerreiros — procedural bronze monument (Mint mesher failed on it twice)
@@ -148,23 +149,25 @@ export function buildBrasilia(scene, T) {
 
   /* ---------------- protest posters / banners on the ministry facades ---------------- */
   {
-    const mats = [T.posters && T.posters[0], T.posters && T.posters[1], T.posters && T.posters[2],
-      T.graffiti && T.graffiti[0], T.graffiti && T.graffiti[1]].filter(Boolean)
-      .map((m) => lam({ map: m, side: THREE.DoubleSide }));
-    if (mats.length) {
-      let i = 0;
-      // Snap each poster FLUSH onto the lane-facing facade of its ministry, measured from
-      // the building's real placed bounds (the old fixed x=±17.3 floated off the wall).
-      for (const b of ministries) {
-        if (!b) continue;
-        const bb = new THREE.Box3().setFromObject(b);
-        const cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
-        const lane = cx > 0 ? -1 : 1;                       // which side faces the lane (x=0)
-        const fx = lane > 0 ? bb.max.x + 0.06 : bb.min.x - 0.06;
-        const fy = Math.min(bb.max.y - 2.2, 3.4);
-        addPlane(4.6, 3, mats[i++ % mats.length], fx, fy, cz, lane > 0 ? Math.PI / 2 : -Math.PI / 2);
-      }
-    }
+    const imgs = T.posterImgs || [], aspects = T.posterAspects || [];
+    const laneOrder = [1, 4, 0, 3, 2, 5];   // priority posters land on the most-visible lane faces first
+    const putPoster = (b, side, idx) => {
+      if (!b || !imgs.length) return;
+      const bb = new THREE.Box3().setFromObject(b);
+      const cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
+      const lane = cx > 0 ? -1 : 1;
+      const inner = side === 'lane';
+      const edge = lane > 0 ? (inner ? bb.max.x : bb.min.x) : (inner ? bb.min.x : bb.max.x);
+      const fx = edge + (lane > 0 ? (inner ? 0.06 : -0.06) : (inner ? -0.06 : 0.06));
+      const ti = idx % imgs.length;
+      const H = inner ? 4.6 : 5.4, A = aspects[ti] || 0.7;
+      const fy = Math.min(bb.max.y - H / 2 - 0.5, 3.4);
+      addPlane(H * A, H, lam({ map: imgs[ti], side: THREE.DoubleSide }), fx, fy, cz, lane > 0 ? Math.PI / 2 : -Math.PI / 2);
+    };
+    // lane faces: the priority posters (DOLLYNHO, ET, CHUPACABRA, SACI, +2)
+    ministries.forEach((b, i) => putPoster(b, 'lane', laneOrder[i] ?? i));
+    // outer sides ("laterais dos prédios"): the rest of the collection
+    ministries.forEach((b, i) => putPoster(b, 'outer', 6 + i));
   }
 
   /* ---------------- gameplay cover: props do 8 de janeiro ---------------- */
@@ -178,48 +181,18 @@ export function buildBrasilia(scene, T) {
   // Mini-acampamento de barracas (protest camp) junto aos ministérios oeste
   for (const [tx, tz, ry] of [[-15, -30, 0.2], [-17, -35, 1.1], [-13, -36, -0.5], [16, 33, 0.6]])
     putBuilding('tent', { x: tx, z: tz, targetH: 1.7, ry });
-  // a few "FRÁGIL TRETA" crates still around for variety
-  const crateMat = lam({ map: T.crate });
-  for (const [cx, cz, lv] of [[11, 2, 0], [-11, 0, 0], [11, 3.6, 1], [-5, 18, 0]])
-    addBox(1.6, 1.6, 1.6, crateMat, cx, lv * 1.6, cz, { ry: (cx * 7 % 10) / 22, pad: -0.05 });
+  // a few Correios/SEDEX parcels still around for variety (Brazilian postal boxes)
+  const crateMats = [lam({ map: T.crate }), lam({ map: T.crate2 || T.crate })];
+  for (const [i, [cx, cz, lv]] of [[11, 2, 0], [-11, 0, 0], [11, 3.6, 1], [-5, 18, 0]].entries())
+    addBox(1.6, 1.6, 1.6, crateMats[i % 2], cx, lv * 1.6, cz, { ry: (cx * 7 % 10) / 22, pad: -0.05 });
 
-  /* ---------------- ônibus quebrado do DF (cover grande mid-lane) ---------------- */
-  { // "Amarelinho" quebrado atravessado na esplanada: motor morreu, pneu murcho,
-    // levemente caído pro lado. Referência: ônibus urbano de Brasília (amarelo/branco).
-    const bx = 8.5, bz = -12, bry = 0.42;
-    const g = new THREE.Group(); g.position.set(bx, 0, bz); g.rotation.y = bry;
-    g.rotation.z = 0.035;                      // sagging on the flat tire
-    root.add(g); occluders.push(g);
-    const yellow = lam({ color: 0xf2c200 }), whiteB = lam({ color: 0xf4f2ea });
-    const dark = lam({ color: 0x22303a }), tire = lam({ color: 0x1c1c1e });
-    // lower yellow band + white window band + roof strip
-    const low = new THREE.Mesh(new THREE.BoxGeometry(9.6, 1.15, 2.5), yellow); low.position.y = 0.95; g.add(low);
-    const win = new THREE.Mesh(new THREE.BoxGeometry(9.6, 1.0, 2.5), dark); win.position.y = 2.02; g.add(win);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.42, 2.5), whiteB); roof.position.y = 2.73; g.add(roof);
-    // window pillars (white separators so the glass band reads as windows)
-    for (let i = -4; i <= 4; i++) {
-      const pil = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.0, 2.54), whiteB);
-      pil.position.set(i * 1.05, 2.02, 0); g.add(pil);
-    }
-    // front face: windshield + destination sign
-    const shield = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.5, 2.2), dark); shield.position.set(4.85, 1.9, 0); g.add(shield);
-    const sign = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.3, 1.6), lam({ color: 0x0c0c0c })); sign.position.set(4.9, 2.6, 0); g.add(sign);
-    // door (front right, slightly open = darker inset)
-    const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.9, 0.1), lam({ color: 0x2b3a44 })); door.position.set(3.6, 1.35, 1.28); g.add(door);
-    // wheels — rear-right flat (squashed) for the "quebrado" look
-    const wheelGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.4, 12);
-    for (const [wx, wz, flat] of [[-3.2, 1.15, 0], [3.2, 1.15, 0], [-3.2, -1.15, 0], [3.2, -1.15, 1]]) {
-      const w = new THREE.Mesh(wheelGeo, tire);
-      w.rotation.x = Math.PI / 2; w.position.set(wx, flat ? 0.32 : 0.48, wz);
-      if (flat) w.scale.set(1, 1, 0.62);
-      g.add(w);
-    }
-    g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    // AABB collider from the rotated footprint (L=9.6, W=2.5, ry=bry)
-    const c = Math.abs(Math.cos(bry)), s = Math.abs(Math.sin(bry));
-    const ex = 4.8 * c + 1.25 * s, ez = 4.8 * s + 1.25 * c;
-    col(bx - ex, bx + ex, 0, 3.0, bz - ez, bz + ez);
-  }
+  /* ---------------- ônibus quebrado do DF (Mint GLB — cover grande mid-lane) ---------------- */
+  // "Amarelinho" gerado no Mint, atravessado na esplanada (quebrado, encostado).
+  putBuilding('bus', { x: 8.5, z: -12, targetH: 3.1, ry: 0.42 });
+
+  /* ---------------- barraquinha de bebida (Mint GLB — mini-bar c/ guarda-sol) -------------- */
+  // Drink stand com cadeiras de plástico e guarda-sol grande, junto às barraquinhas.
+  putBuilding('drinkstand', { x: -14, z: -17, targetH: 3.2, ry: 0.5 });
 
   /* ---------------- barricada improvisada (bloco + chapa + tábuas) ---------------- */
   { // protest barricade near the west tents: concrete block, corrugated sheet, planks.

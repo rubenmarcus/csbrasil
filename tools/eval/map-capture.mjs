@@ -28,7 +28,9 @@ const shots = [
   ['palacio_base', [40, 1.2, 30],  [22, 2.5, 30]],      // ground-level side: floating gap?
   ['catedral',     [0, 7, -42],    [0, 7, -60]],        // glass
   ['props_area',   [0, 6, 4],      [-13, 1.5, -8]],     // tents/tires/stalls
+  ['posters_outer', [42, 6, 0],    [23, 3.5, 0]],       // real poster art on the outer sides
   ['bus',          [2, 3.5, -22],  [8.5, 1.5, -12]],    // broken city bus mid-lane
+  ['drinkstand',   [-8, 3.2, -23], [-14, 1.4, -17]],
   ['barricade',    [-14, 3, 16],   [-8, 1, 20]],
   ['overview',     [55, 40, 0],    [0, 4, 10]],
 ];
