@@ -3,6 +3,8 @@ public/audio/*
 !public/audio/cs/
 !public/audio/cs/LEIA-ME.txt
 !public/audio/manifest.example.json
+!public/audio/manifest.default.json
+!public/audio/cc0/
 audio-pack.zip
 .DS_Store
 # dev-only model/animation viewer (not part of the shipped game)

@@ -1,0 +1,32 @@
+{
+  "voice": { "P": [], "B": [] },
+  "round": { "P": [], "B": [] },
+  "general": {},
+  "cs": {
+    "reload": ["audio/cc0/reload-rifle.mp3"],
+    "bolt": ["audio/cc0/reload-sniper.mp3"]
+  },
+  "weapons": {
+    "awp": ["audio/cc0/sniper-fps.mp3"],
+    "m400": ["audio/cc0/sniper-fps-alt.mp3"],
+    "mosin": ["audio/cc0/sniper-field1.mp3"],
+    "rem700": ["audio/cc0/sniper-field2.mp3"],
+    "ak": ["audio/cc0/ak47.mp3"],
+    "akm": ["audio/cc0/ak47.mp3"],
+    "t56": ["audio/cc0/ak47.mp3"],
+    "m4": ["audio/cc0/m16.mp3"],
+    "md97": ["audio/cc0/m16.mp3"],
+    "carbine": ["audio/cc0/rifle-burst.mp3"],
+    "scar": ["audio/cc0/rifle-burst.mp3"],
+    "famas": ["audio/cc0/rifle-shooting.mp3"],
+    "tavor": ["audio/cc0/rifle-shooting.mp3"],
+    "lmg": ["audio/cc0/mg-burst.mp3"],
+    "mp5": ["audio/cc0/smg-burst.mp3"],
+    "uzi": ["audio/cc0/smg-burst.mp3"],
+    "p90": ["audio/cc0/smg-burst.mp3"],
+    "shotgun": ["audio/cc0/shotgun-fp.mp3"],
+    "pistol": ["audio/cc0/gunshot-pistol.mp3"],
+    "deagle": ["audio/cc0/gunshot-pistol.mp3"],
+    "revolver38": ["audio/cc0/gunshot-pistol.mp3"]
+  }
+}
