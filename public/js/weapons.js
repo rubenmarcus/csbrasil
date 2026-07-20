@@ -51,6 +51,11 @@ export async function preloadWeapons() {
 
 export function hasWeapon(id) { return _cache.has(id); }
 
+// Geometry facts for aligning hands/mounts: real length + grip point (fraction from muzzle).
+export function weaponCFG(id) { return CFG[id] || CFG.awp; }
+// One-handed weapons get no support hand on a handguard.
+export const ONE_HANDED = new Set(['pistol', 'deagle', 'revolver38', 'knife']);
+
 // Returns a THREE.Group holding the weapon, scaled to real size, barrel pointing +Z,
 // grip roughly at the group origin (so it sits in a hand placed at origin).
 export function weaponModel(id) {

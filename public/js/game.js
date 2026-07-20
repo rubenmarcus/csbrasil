@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { MAPS, resolveMapId } from './maps.js';
 import { buildCharacter, poseCharacter, byId, CHARACTERS, buildRifle } from './characters.js';
 import { buildCharacterModel } from './glbchars.js';
-import { weaponModel, WEAPON_IDS } from './weapons.js';
+import { weaponModel, weaponCFG, ONE_HANDED, WEAPON_IDS } from './weapons.js';
 
 export const WEAPONS = {
   awp:    { name: 'AWP "DELIBERADOR"', short: 'AWP', dmg: 400, mag: 5, reserve: 25, rate: 1.7, reload: 3.1, spreadHip: 0.075, spreadScope: 0.0008, recoil: 0.055, scope: true },
@@ -255,8 +255,8 @@ export class Game {
     scope.rotation.x = Math.PI / 2; scope.position.set(0, 0.085, -0.05); awp.add(scope);
     const stock = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.2), dark(0x3a2a1e)); stock.position.set(0, -0.05, 0.28); awp.add(stock);
     const bolt = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.03), dark(0x888888)); bolt.position.set(0.05, 0.03, 0.05); awp.add(bolt);
-    const handR = fpArm(); handR.position.set(0, -0.085, 0.02); awp.add(handR);
-    const handL = frontHand(0.95); handL.position.set(0.005, -0.04, -0.3); awp.add(handL);
+    const handR = fpArm(); handR.name = 'handR'; handR.position.set(0, -0.085, 0.02); awp.add(handR);
+    const handL = frontHand(0.95); handL.name = 'handL'; handL.position.set(0.005, -0.04, -0.3); awp.add(handL);
     awp.position.set(0.26, -0.23, -0.5); awp.rotation.y = 0.03;
     // rifles genéricos (ak / m4 / mp5 / shotgun / deagle)
     const mkRifle = (bodyC, woodC, len, magH) => {
@@ -267,8 +267,8 @@ export class Game {
       const stock = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.18), woodC); stock.position.set(0, -0.04, len / 2 - 0.05); g.add(stock);
       const mag = new THREE.Mesh(new THREE.BoxGeometry(0.045, magH, 0.07), dark(0x2a2a2a));
       mag.position.set(0, -0.06 - magH / 2, -0.05); g.add(mag);
-      const hR = fpArm(); hR.position.set(0, -0.085, 0.1); g.add(hR);
-      const hL = frontHand(0.95); hL.position.set(0.005, -0.04, -len / 3); g.add(hL);
+      const hR = fpArm(); hR.name = 'handR'; hR.position.set(0, -0.085, 0.1); g.add(hR);
+      const hL = frontHand(0.95); hL.name = 'handL'; hL.position.set(0.005, -0.04, -len / 3); g.add(hL);
       g.position.set(0.26, -0.23, -0.5); g.rotation.y = 0.03;
       return g;
     };
@@ -280,26 +280,40 @@ export class Game {
     deagle.add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.11, 0.26), dark(0x8a8a8a)));
     const dgrip = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.12, 0.07), dark(0xc9a227));
     dgrip.position.set(0, -0.1, 0.09); dgrip.rotation.x = 0.25; deagle.add(dgrip);
-    const handD = fpArm(0.075, 0.1, 0.08); handD.position.set(0, -0.1, 0.09); deagle.add(handD);
+    const handD = fpArm(0.075, 0.1, 0.08); handD.name = 'handR'; handD.position.set(0, -0.1, 0.09); deagle.add(handD);
     deagle.position.set(0.24, -0.2, -0.42);
     // pistol
     const pistol = new THREE.Group();
     pistol.add(new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.09, 0.22), dark(0x333333)));
     const pgrip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.06), dark(0x3a2a1e));
     pgrip.position.set(0, -0.09, 0.08); pgrip.rotation.x = 0.25; pistol.add(pgrip);
-    const handP = fpArm(0.075, 0.1, 0.08); handP.position.set(0, -0.1, 0.08); pistol.add(handP);
+    const handP = fpArm(0.075, 0.1, 0.08); handP.name = 'handR'; handP.position.set(0, -0.1, 0.08); pistol.add(handP);
     pistol.position.set(0.24, -0.2, -0.42);
     // knife
     const knife = new THREE.Group();
     const blade = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.05, 0.3), dark(0xb8c0c8)); blade.position.z = -0.2; knife.add(blade);
     knife.add(new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.12), dark(0x2a1e14)));
-    const handK = fpArm(0.07, 0.08, 0.08); handK.position.set(0, -0.02, 0.03); knife.add(handK);
+    const handK = fpArm(0.07, 0.08, 0.08); handK.name = 'handR'; handK.position.set(0, -0.02, 0.03); knife.add(handK);
     knife.position.set(0.28, -0.22, -0.4); knife.rotation.set(-0.2, 0.25, -0.15);
     root.add(awp, ak, m4, mp5, shotgun, deagle, pistol, knife);
     const models = { awp, ak, m4, mp5, shotgun, deagle, pistol, knife };
     // Swap the procedural box guns for the real weapon GLBs where available: add the
     // real model (barrel rotated to point into the screen) and hide the box meshes,
     // keeping the first-person hand. Falls back to the box gun if a model is missing.
+    // Align the hands to the REAL weapon: the GLB's grip point sits at the model-group
+    // origin (weapons.js), pulled GRIP_Z back toward the camera. The trigger hand wraps
+    // the grip; the support hand wraps the handguard ~55% of the way from grip to muzzle
+    // (two-handed weapons only). Derived from each weapon's CFG (len/gripZ), not guesses.
+    const alignHands = (g, id) => {
+      const cfg = weaponCFG(id);
+      const GRIP_Z = id === 'knife' ? 0 : 0.12;
+      const hR = g.getObjectByName('handR'), hL = g.getObjectByName('handL');
+      if (hR) hR.position.set(0, -0.03, GRIP_Z);
+      if (hL) {
+        if (ONE_HANDED.has(id)) hL.visible = false;
+        else hL.position.set(0.005, -0.045, GRIP_Z - 0.82 * cfg.len * (1 - cfg.gripZ) * 0.72);
+      }
+    };
     for (const id in models) {
       const rw = weaponModel(id);
       if (!rw) continue;
@@ -308,6 +322,7 @@ export class Game {
       rw.position.z += id === 'knife' ? 0.0 : 0.12; // pull the grip back toward the hand
       models[id].children.forEach((ch) => { if (ch.isMesh) ch.visible = false; });
       models[id].add(rw);
+      alignHands(models[id], id);
     }
     // Build first-person viewmodels for the extended arsenal (weapons without a box
     // group): real GLB + a hand, positioned like the AWP viewmodel.
@@ -316,7 +331,9 @@ export class Game {
       const g = new THREE.Group();
       const rw = weaponModel(id);
       if (rw) { rw.rotation.y = Math.PI; rw.scale.multiplyScalar(0.82); rw.position.z += id === 'knife' ? 0 : 0.12; g.add(rw); }
-      const hR = fpArm(); hR.position.set(0, -0.085, 0.02); g.add(hR);
+      const hR = fpArm(); hR.name = 'handR'; g.add(hR);
+      if (!ONE_HANDED.has(id)) { const hL = frontHand(0.95); hL.name = 'handL'; g.add(hL); }
+      alignHands(g, id);
       g.position.copy(awp.position); g.rotation.copy(awp.rotation);
       root.add(g); models[id] = g;
     }
