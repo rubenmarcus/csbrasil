@@ -26,5 +26,9 @@
     "sharp": "^0.35.3"
   },
   "private": true,
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@gltf-transform/core": "^4.4.1",
+    "@gltf-transform/functions": "^4.4.1"
+  }
 }

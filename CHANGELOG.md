@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.14.0] — 2026-07-20
+### Corrigido
+- **Bots empunham de verdade**: idle agora é pose de empunhadura (freeze do clipe de
+  andar com as duas mãos na arma) — no seletor e em jogo ninguém mais fica com a arma
+  pendurada na mão nem "olhando pra baixo"
+- **Bots não vão mais todos pelo mesmo caminho**: cada bot tem uma lane preferida
+  (esquerda/centro/direita) e escolhe rotas por ela — o time se espalha pelo mapa
+- **Strafe deslizante em combate**: juke lateral menor + bot fica em idle quando está
+  quase parado (sem "andar no lugar")
+- **Estátua A Justiça**: grafite "PERDEU, MANÉ" agora NO PEITO da estátua (medido por
+  raycast), não flutuando ao lado
+- **Viewmodel 1ª pessoa**: mãos com dedos de 2 segmentos e palma mais fina (adeus
+  bloco-salsicha)
+
+### Adicionado
+- **Ônibus do DF gerado no Mint** (amarelinho de verdade, não caixas) atravessado na
+  Esplanada como cover
+- **Barraquinha de bebida gerada no Mint**: quiosque + guarda-sol grande + cadeiras de
+  plástico + engradados (mini-bar de rua)
+- **Type 56 (AK chinês)**: modelo próprio gerado no Mint (madeira, coronha, baioneta)
+  + som próprio (outro take do mesmo registro PD do AK-47)
+- **Posters reais nas fachadas e laterais dos Ministérios**: DOLLYNHO, ET de Varginha,
+  Chupacabra, Vote Saci, "Aqui é Brasil com S", rapadura, gentileza, e os demais memes
+  da pasta public/posters
+- **Caixas Correios/SEDEX** no lugar das caixas "FRÁGIL TRETA" (que eram do outro mapa)
+
 ## [1.13.0] — 2026-07-20
 ### Corrigido
 - **Bots "de skate/moonwalk"**: cadência das pernas agora segue a velocidade real do

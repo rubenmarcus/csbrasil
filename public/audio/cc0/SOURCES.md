@@ -9,6 +9,7 @@ qualidade "preview" (128kbps) pelo CDN do Freesound.
 | arquivo | som | Freesound ID | página |
 |---|---|---|---|
 | ak47.mp3 | AK-47 em estande (corte 1 tiro) | 184750 | https://freesound.org/people/qubodup/sounds/184750/ |
+| t56.mp3 | AK-47 em estande (outro tiro do mesmo corte, p/ Type 56) | 184750 | https://freesound.org/people/qubodup/sounds/184750/ |
 | m16.mp3 | M16 (corte 1 tiro) | 187677 | https://freesound.org/people/qubodup/sounds/187677/ |
 | rifle-burst.mp3 | rajada de rifle | 482120 | https://freesound.org/people/qubodup/sounds/482120/ |
 | rifle-shooting.mp3 | tiro de rifle (corte) | 238916 | https://freesound.org/people/qubodup/sounds/238916/ |

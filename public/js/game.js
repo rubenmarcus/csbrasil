@@ -189,33 +189,32 @@ export class Game {
     const skinMat = dark(pal.skin);
     const sleeveMat = dark(pal.shirt);
     const skin = skinMat; // legacy alias
-    // A low-poly forearm+hand that recedes down toward the camera (screen bottom).
-    // wristZ ~ where the hand grips; the sleeve extends back (+Z) and tilts down.
-    // The viewmodel leaves almost no screen room below the gun, so a full forearm
-    // falls off-frame. What reads is the gripping hand (skin) plus a short sleeve
-    // cuff behind it — enough to carry the character's skin + sleeve colors.
-    // A curled gripping hand built from capsules (rounded) instead of a single box,
-    // so the first-person hand reads as fingers wrapping the grip rather than a brick.
-    // Trigger hand: palm + 4 curled fingers + thumb + a receding sleeve/cuff.
+    // A curled gripping hand built from two-segment fingers (proximal + distal phalanx),
+    // a slimmer palm and an angled thumb — reads as an actual gripping hand, not a brick.
     const fpArm = (w = 0.08) => {
       const g = new THREE.Group();
       const sc = w / 0.08; // callers pass a smaller w for pistols/knife → scale the whole hand
       const knuckle = new THREE.Group(); g.add(knuckle);
-      // palm — a flattened capsule laid across the grip (X axis)
-      const palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.042, 0.05, 4, 8), skinMat);
-      palm.rotation.z = Math.PI / 2; palm.scale.set(1, 1, 0.7);
+      // palm — flattened capsule laid across the grip (X axis), slimmer than before
+      const palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.036, 0.052, 4, 8), skinMat);
+      palm.rotation.z = Math.PI / 2; palm.scale.set(1, 1, 0.62);
       palm.castShadow = false; knuckle.add(palm);
-      // four fingers curling over the top of the grip, spaced along Z
-      const fingerGeo = new THREE.CapsuleGeometry(0.0115, 0.05, 3, 6);
+      // four two-segment fingers wrapping over the grip, spaced along Z
+      const proxGeo = new THREE.CapsuleGeometry(0.0085, 0.026, 3, 6);
+      const distGeo = new THREE.CapsuleGeometry(0.0075, 0.022, 3, 6);
       for (let i = 0; i < 4; i++) {
-        const f = new THREE.Mesh(fingerGeo, skinMat);
-        f.rotation.set(0.55, 0, Math.PI / 2);
-        f.position.set(0.006, 0.03, -0.03 + i * 0.026);
-        f.castShadow = false; knuckle.add(f);
+        const f = new THREE.Group();
+        const prox = new THREE.Mesh(proxGeo, skinMat);
+        prox.rotation.set(0.5, 0, Math.PI / 2); prox.position.set(0, 0.012, 0);
+        const dist = new THREE.Mesh(distGeo, skinMat);
+        dist.rotation.set(1.15, 0, Math.PI / 2); dist.position.set(-0.017, -0.006, 0);
+        f.add(prox, dist);
+        f.position.set(0.004, 0.026, -0.028 + i * 0.019);
+        knuckle.add(f);
       }
       // thumb on the near side, angled up along the grip
-      const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.013, 0.038, 3, 6), skinMat);
-      thumb.rotation.set(0.35, 0, 0.55); thumb.position.set(-0.032, 0.006, 0.028);
+      const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.011, 0.034, 3, 6), skinMat);
+      thumb.rotation.set(0.35, 0, 0.55); thumb.position.set(-0.03, 0.004, 0.026);
       thumb.castShadow = false; knuckle.add(thumb);
       knuckle.scale.setScalar(sc);
       // Forearm angled toward the screen's bottom corner, carrying the sleeve colour;
@@ -223,25 +222,31 @@ export class Game {
       const fore = new THREE.Group();
       fore.rotation.set(0.78, 0.62, 0);
       const L = 0.42 * sc;
-      const sleeve = new THREE.Mesh(new THREE.CapsuleGeometry(w * 0.62, L, 4, 10), sleeveMat);
+      const sleeve = new THREE.Mesh(new THREE.CapsuleGeometry(w * 0.55, L, 4, 10), sleeveMat);
       sleeve.rotation.x = Math.PI / 2; sleeve.position.set(0, 0, L * 0.5 + 0.04);
       sleeve.castShadow = false; fore.add(sleeve);
-      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.72, w * 0.66, 0.05, 12), skinMat);
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.66, w * 0.6, 0.05, 12), skinMat);
       cuff.rotation.x = Math.PI / 2; cuff.position.set(0, 0, 0.05);
       cuff.castShadow = false; fore.add(cuff);
       g.add(fore);
       return g;
     };
-    // Support (front) hand: palm + curled fingers only, no receding sleeve.
+    // Support (front) hand: palm + two-segment curled fingers only, no receding sleeve.
     const frontHand = (sc = 1) => {
       const g = new THREE.Group();
-      const palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.045, 4, 8), skinMat);
-      palm.rotation.z = Math.PI / 2; palm.scale.set(1, 1, 0.7); palm.castShadow = false; g.add(palm);
-      const fingerGeo = new THREE.CapsuleGeometry(0.011, 0.046, 3, 6);
+      const palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.034, 0.048, 4, 8), skinMat);
+      palm.rotation.z = Math.PI / 2; palm.scale.set(1, 1, 0.62); palm.castShadow = false; g.add(palm);
+      const proxGeo = new THREE.CapsuleGeometry(0.008, 0.024, 3, 6);
+      const distGeo = new THREE.CapsuleGeometry(0.007, 0.02, 3, 6);
       for (let i = 0; i < 4; i++) {
-        const f = new THREE.Mesh(fingerGeo, skinMat);
-        f.rotation.set(0.6, 0, Math.PI / 2);
-        f.position.set(0.006, 0.028, -0.028 + i * 0.024); f.castShadow = false; g.add(f);
+        const f = new THREE.Group();
+        const prox = new THREE.Mesh(proxGeo, skinMat);
+        prox.rotation.set(0.55, 0, Math.PI / 2); prox.position.set(0, 0.011, 0);
+        const dist = new THREE.Mesh(distGeo, skinMat);
+        dist.rotation.set(1.2, 0, Math.PI / 2); dist.position.set(-0.015, -0.006, 0);
+        f.add(prox, dist);
+        f.position.set(0.004, 0.024, -0.026 + i * 0.018);
+        g.add(f);
       }
       g.scale.setScalar(sc);
       return g;
@@ -1199,7 +1204,7 @@ export class Game {
       // like the bot was sliding/moonwalking across the map.
       const dist = Math.hypot(dx, dz);
       const approach = dist > 18 ? 1 : dist < 9 ? -1 : 0;
-      const strafe = Math.sin(b.strafeT * 1.1) * 0.35;
+      const strafe = Math.sin(b.strafeT * 1.1) * 0.22;   // small lateral juke — approach dominant, so the forward clip matches the motion (no sideways slide)
       const fdx = Math.sin(b.yaw), fdz = Math.cos(b.yaw);   // forward (mesh facing)
       const rdx = Math.cos(b.yaw), rdz = -Math.sin(b.yaw);  // right
       const spd = BOT_SPEED * 0.55;
@@ -1246,10 +1251,17 @@ export class Game {
         const from = W.nearestWaypoint(b.pos.x, b.pos.z);
         if (this.time > (b.roamUntil || 0) || b.roamIdx === undefined) {
           const sign = b.team === 'P' ? 1 : -1;
+          // Per-bot lane preference: the team spreads across left/center/right instead of
+          // every bot funnelling down the same corridor (persistent per bot).
+          if (b.lanePref === undefined) b.lanePref = [-12, -5, 5, 12][(Math.random() * 4) | 0] + (Math.random() * 4 - 2);
           const candidates = W.waypoints.nodes
             .map((n, i) => ({ n, i }))
             .filter(o => o.n.z * sign > 6 * sign && Math.abs(o.n.x) < 20);
-          const pick = candidates.length ? candidates[(Math.random() * candidates.length) | 0] : { i: from };
+          // rank by closeness to the bot's lane (plus jitter) and pick among the best few
+          const ranked = candidates
+            .map(o => ({ o, d: Math.abs(o.n.x - b.lanePref) + Math.random() * 7 }))
+            .sort((a, b2) => a.d - b2.d);
+          const pick = ranked.length ? ranked[(Math.random() * Math.min(3, ranked.length)) | 0].o : { i: from };
           b.roamIdx = pick.i; b.roamUntil = this.time + 9;
         }
         b.path = W.findPath(from, b.roamIdx); b.pathIdx = 1;
@@ -1303,7 +1315,10 @@ export class Game {
         const spd = Math.hypot(mx, mz) / dtSafe;
         const fwd = (mx * Math.sin(b.yaw) + mz * Math.cos(b.yaw)) / dtSafe;
         b._lp = { x: b.pos.x, z: b.pos.z };
-        b.mesh.ctrl.update(dt, moving, !!b.target, spd, fwd < -0.25);
+        // nearly stationary → idle instead of walking in place (strafe-oscillation
+        // otherwise plays the walk clip at min rate while the bot goes nowhere)
+        const mv = spd < 0.35 ? 0 : moving;
+        b.mesh.ctrl.update(dt, mv, !!b.target, spd, fwd < -0.25);
       } else {
         b._lp = { x: b.pos.x, z: b.pos.z };
         b.mesh.ctrl.update(dt, moving, !!b.target, 0, false);
