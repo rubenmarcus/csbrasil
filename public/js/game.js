@@ -542,7 +542,7 @@ export class Game {
           const inward = sz > 0 ? -1 : 1;              // just in front of the spawn line
           let i = 0;
           for (const gx of [-12, -8, -4, 4, 8, 12])
-            this._dropWeapon(gx, sz + inward * (2.5 + (i % 2)), rack[i++ % rack.length]);
+            this._dropWeapon(gx, sz + inward * (1.8 + (i % 2) * 0.9), rack[i++ % rack.length], true);
         }
       }
     }
@@ -1069,9 +1069,11 @@ export class Game {
         if (dx * dx + dz * dz <= 1.7 * 1.7) { this._grabPickup(pk, b, false); break; }
       }
     }
-    // drops: bots pegam andando (jogador só com E, acima)
+    // drops: bots pegam andando (jogador só com E, acima). Spawn-rack drops are for the
+    // PLAYER — bots leave them alone (otherwise they hoover the spawn line on round 1).
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const pk = this.drops[i];
+      if (pk.rack) continue;
       for (const b of this.bots) {
         if (!b.alive) continue;
         const dx = pk.x - b.pos.x, dz = pk.z - b.pos.z;
@@ -1113,15 +1115,16 @@ export class Game {
     return true;
   }
   // CS: morto larga a arma no chão
-  _dropWeapon(x, z, weapon) {
+  _dropWeapon(x, z, weapon, rack = false) {
     const mesh = weaponModel(weapon) || buildRifle();  // real GLB on the ground
     // lay it FLAT on its side (roll 90° about the barrel) so it rests on the ground
-    // instead of standing on its belly, with a random yaw. Low y so it sits on the floor.
+    // instead of standing on its belly. Rack drops (spawn weapon rows) get an aligned
+    // yaw so they read as a tidy line; death drops/scatter get a random yaw.
     mesh.position.set(x, 0.09, z);
-    mesh.rotation.set(0, Math.random() * Math.PI * 2, Math.PI / 2);
+    mesh.rotation.set(0, rack ? (Math.random() - 0.5) * 0.18 : Math.random() * Math.PI * 2, Math.PI / 2);
     mesh.traverse(o => { if (o.isMesh) o.castShadow = true; });
     this.scene.add(mesh);
-    this.drops.push({ x, z, weapon, readyAt: 0, mesh });
+    this.drops.push({ x, z, weapon, readyAt: 0, mesh, rack });
   }
   _respawnPlayer() {
     const p = this.player;
