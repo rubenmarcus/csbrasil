@@ -2,29 +2,32 @@
 
 ## [1.14.0] — 2026-07-20
 ### Corrigido
-- **Bots empunham de verdade**: idle agora é pose de empunhadura (freeze do clipe de
-  andar com as duas mãos na arma) — no seletor e em jogo ninguém mais fica com a arma
-  pendurada na mão nem "olhando pra baixo"
-- **Bots não vão mais todos pelo mesmo caminho**: cada bot tem uma lane preferida
-  (esquerda/centro/direita) e escolhe rotas por ela — o time se espalha pelo mapa
+- **Bots empunham de verdade**: idle agora é pose de empunhadura (frame de passagem do
+  clipe de andar, pés juntos no chão — sem perna levantada "flutuando") e a cabeça
+  sobe 2° em runtime (adeus "cabeça baixa")
+- **Bots exploram o mapa todo**: direção de roam derivada do layout dos spawns (a troca
+  P<->B tinha invertido o lado), 40% dos alvos são distantes, repick ao CHEGAR ao nó
+  (não por tempo), e lane preferida por bot — o time se espalha
 - **Strafe deslizante em combate**: juke lateral menor + bot fica em idle quando está
   quase parado (sem "andar no lugar")
 - **Estátua A Justiça**: grafite "PERDEU, MANÉ" agora NO PEITO da estátua (medido por
   raycast), não flutuando ao lado
-- **Viewmodel 1ª pessoa**: mãos com dedos de 2 segmentos e palma mais fina (adeus
-  bloco-salsicha)
+- **Palácio do Planalto**: assentado NO TOPO do plinto (antes afundava no chão)
+- **Posters**: nas pontas cinzas dos Ministérios, grandes (DOLLYNHO, ET, Chupacabra,
+  Saci e os demais memes da pasta public/posters)
+- **Armas só no respawn**: fileira alinhada de 8 por spawn (snipers primeiro), sem
+  scatter pelo mapa; bots não devoram a rack
+- **Viewmodel 1ª pessoa**: mãos com dedos de 2 segmentos e palma mais fina
+- **Cache de assets**: GLBs carregam com ?v=VERSION (sem versão velha presa no cache)
 
 ### Adicionado
-- **Ônibus do DF gerado no Mint** (amarelinho de verdade, não caixas) atravessado na
-  Esplanada como cover
+- **Ônibus do DF gerado no Mint** (amarelinho de verdade, não caixas) atravessado no
+  CENTRO da Esplanada como cover
 - **Barraquinha de bebida gerada no Mint**: quiosque + guarda-sol grande + cadeiras de
   plástico + engradados (mini-bar de rua)
 - **Zastava M92 e HK G3 gerados no Mint**: a M92 (AK curto iugoslavo, madeira +
   receiver preto) substitui a Type 56, e a G3 (battle rifle alemã, coronha oliva)
   entra no arsenal — ambas com sons próprios (takes PD do AK-47 e do 50 Cal)
-- **Posters reais nas fachadas e laterais dos Ministérios**: DOLLYNHO, ET de Varginha,
-  Chupacabra, Vote Saci, "Aqui é Brasil com S", rapadura, gentileza, e os demais memes
-  da pasta public/posters
 - **Caixas Correios/SEDEX** no lugar das caixas "FRÁGIL TRETA" (que eram do outro mapa)
 
 ## [1.13.0] — 2026-07-20
