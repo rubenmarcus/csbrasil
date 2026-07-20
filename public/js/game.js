@@ -15,8 +15,9 @@ export const WEAPONS = {
   pistol: { name: 'PT-38 "APITO"', short: 'PT-38', dmg: 34, mag: 12, reserve: 48, rate: 0.24, reload: 1.6, spreadHip: 0.02, recoil: 0.014, scope: false },
   knife:  { name: 'FACA "CONVERSA FIADA"', short: 'FACA', dmg: 55, rate: 0.55, range: 2.4, reload: 0, recoil: 0.02, scope: false },
   // arsenal 2 (BR)
-  t56:       { name: 'T-56 "XING-LING"', short: 'T-56', dmg: 32, mag: 30, reserve: 90, rate: 0.1, reload: 2.5, spreadHip: 0.026, recoil: 0.009, auto: true },
+  m92:       { name: 'ZASTAVA M92 "IOGUSLAVO"', short: 'M92', dmg: 32, mag: 30, reserve: 90, rate: 0.1, reload: 2.5, spreadHip: 0.026, recoil: 0.009, auto: true },
   akm:       { name: 'AKM "KALASH DA VÉIA"', short: 'AKM', dmg: 35, mag: 30, reserve: 90, rate: 0.105, reload: 2.5, spreadHip: 0.025, recoil: 0.009, auto: true },
+  g3:        { name: 'HK G3 "FRITZ"', short: 'G3', dmg: 37, mag: 20, reserve: 80, rate: 0.11, reload: 2.6, spreadHip: 0.022, recoil: 0.013, auto: true },
   revolver38:{ name: 'REVÓLVER .38 "TROVÃO"', short: '.38', dmg: 46, mag: 6, reserve: 24, rate: 0.36, reload: 2.4, spreadHip: 0.016, recoil: 0.03 },
   md97:      { name: 'MD97 "FUZIL DA PÁTRIA"', short: 'MD97', dmg: 38, mag: 20, reserve: 80, rate: 0.12, reload: 2.6, spreadHip: 0.022, recoil: 0.012, auto: true },
   carbine:   { name: 'CARABINA "PAPO DE PEÃO"', short: 'CARB', dmg: 42, mag: 10, reserve: 40, rate: 0.5, reload: 2.8, spreadHip: 0.02, recoil: 0.02 },
@@ -519,8 +520,8 @@ export class Game {
     // (map pickups are often AWP-only; bot drops only appear after kills)
     const wp = this.world.waypoints && this.world.waypoints.nodes;
     if (wp && wp.length) {
-      const scatterPool = ['ak', 'm4', 'mp5', 'shotgun', 'deagle', 't56', 'akm', 'md97', 'scar',
-        'tavor', 'famas', 'uzi', 'p90', 'mosin', 'rem700', 'm400', 'carbine', 'revolver38']
+      const scatterPool = ['ak', 'm4', 'mp5', 'shotgun', 'deagle', 'm92', 'akm', 'md97', 'scar',
+        'g3', 'tavor', 'famas', 'uzi', 'p90', 'mosin', 'rem700', 'm400', 'carbine', 'revolver38']
         .filter(w => this._pickupAllowed(w));
       // Lots of weapons of every type on the ground, clustered near waypoints (not flung
       // far). Guarantee one of each allowed type first, then top up to a healthy count.
@@ -706,7 +707,7 @@ export class Game {
   // Target FOV while aiming: strong for scoped snipers, light ADS for the rest.
   _zoomFov(w) {
     const Z = { awp: 22, mosin: 20, rem700: 22, m400: 38, m400scope: 38, md97: 44, carbine: 42,
-      ak: 52, t56: 52, akm: 52, m4: 52, mp5: 55, deagle: 50, pistol: 54, revolver38: 54 };
+      ak: 52, m92: 52, akm: 52, g3: 52, m4: 52, mp5: 55, deagle: 50, pistol: 54, revolver38: 54 };
     return Z[w] || 55;
   }
   _reloading() { return this.time < this.player.reloadUntil; }
@@ -1087,8 +1088,8 @@ export class Game {
     if (mode === 'awp') return 'awp';
     if (mode === 'knife') return 'knife';
     if (mode === 'pistols') return Math.random() < 0.5 ? 'pistol' : 'deagle';
-    const pool = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle', 't56', 'akm', 'md97',
-      'carbine', 'm400', 'mosin', 'rem700', 'lmg', 'scar', 'tavor', 'famas', 'uzi', 'p90', 'revolver38'];
+    const pool = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle', 'm92', 'akm', 'md97',
+      'carbine', 'm400', 'mosin', 'rem700', 'lmg', 'scar', 'g3', 'tavor', 'famas', 'uzi', 'p90', 'revolver38'];
     return pool[(Math.random() * pool.length) | 0];
   }
   _pickupAllowed(w) {

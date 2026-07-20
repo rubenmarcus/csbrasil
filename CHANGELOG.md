@@ -19,8 +19,9 @@
   Esplanada como cover
 - **Barraquinha de bebida gerada no Mint**: quiosque + guarda-sol grande + cadeiras de
   plástico + engradados (mini-bar de rua)
-- **Type 56 (AK chinês)**: modelo próprio gerado no Mint (madeira, coronha, baioneta)
-  + som próprio (outro take do mesmo registro PD do AK-47)
+- **Zastava M92 e HK G3 gerados no Mint**: a M92 (AK curto iugoslavo, madeira +
+  receiver preto) substitui a Type 56, e a G3 (battle rifle alemã, coronha oliva)
+  entra no arsenal — ambas com sons próprios (takes PD do AK-47 e do 50 Cal)
 - **Posters reais nas fachadas e laterais dos Ministérios**: DOLLYNHO, ET de Varginha,
   Chupacabra, Vote Saci, "Aqui é Brasil com S", rapadura, gentileza, e os demais memes
   da pasta public/posters

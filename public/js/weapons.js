@@ -7,7 +7,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const loader = new GLTFLoader();
 const _cache = new Map();
 export const WEAPON_IDS = ['awp', 'ak', 'm4', 'mp5', 'shotgun', 'deagle', 'pistol', 'knife',
-  't56', 'akm', 'revolver38', 'md97', 'carbine', 'm400', 'mosin', 'rem700',
+  'm92', 'akm', 'g3', 'revolver38', 'md97', 'carbine', 'm400', 'mosin', 'rem700',
   'lmg', 'scar', 'tavor', 'famas', 'uzi', 'p90'];
 
 // len = real length along the barrel (m); rot = degrees to point the barrel +Z;
@@ -22,7 +22,8 @@ const CFG = {
   pistol:  { len: 0.26, rot: [0, 90, 0], gripZ: 0.7 },
   knife:   { len: 0.30, rot: [0, 90, 0], gripZ: 0.6 },
   // arsenal-2 (Brazilian-flavored)
-  t56:       { len: 0.88, rot: [0, 90, 0], gripZ: 0.62 },
+  m92:       { len: 0.76, rot: [0, 90, 0], gripZ: 0.6 },   // Zastava M92 — compact AK carbine
+  g3:        { len: 1.10, rot: [0, 90, 0], gripZ: 0.58 },  // HK G3 battle rifle
   akm:       { len: 0.88, rot: [0, 90, 0], gripZ: 0.62 },
   revolver38:{ len: 0.24, rot: [0, 90, 0], gripZ: 0.68 },
   md97:      { len: 1.05, rot: [0, 90, 0], gripZ: 0.62 },
