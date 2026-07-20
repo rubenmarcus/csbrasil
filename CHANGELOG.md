@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.13.0] — 2026-07-20
+### Corrigido
+- **Bots "de skate/moonwalk"**: cadência das pernas agora segue a velocidade real do
+  chão por clipe (refs medidos no harness: walk 0.79, run 1.92, crouch 0.83 m/s),
+  escolha walk↔run por velocidade com histerese, e backpedal toca o clipe de andar
+  revertido (recuar não é mais moonwalk)
+- **Congresso invertido**: torres gêmeas agora atrás, cúpula do Senado à esquerda e
+  tigela da Câmara à direita (vista cartão-postal a partir da Esplanada)
+- **Palácio do Planalto "flutuando"**: plinto de pedra medido do footprint real do
+  prédio, aterrando os pilotis
+- **Vidros da Catedral**: vitral azul entre as costelas (perfil medido do modelo),
+  em vez do cilindro atravessado na coroa
+- **Posters flutuando**: colados na face real de cada Ministério (medida por bbox)
+- **Mãos em 1ª pessoa**: mão do gatilho no cabo real da arma e mão de apoio no
+  guarda-mão (derivado de len/gripZ de cada arma) — pistola não fica mais sem mão
+- **Pop-in no seletor**: não aparece mais o personagem em blocos antes do GLB —
+  o modelo anterior fica na tela até o novo chegar
+
+### Adicionado
+- **Ônibus quebrado do DF** ("amarelinho", pneu murcho, caído pro lado) como cover
+  grande no meio da Esplanada + **barricada improvisada** (bloco, chapa, tábuas)
+- **Estátua A Justiça v2**: bandeira do Brasil como faixa no peito (mesh) +
+  grafite "PERDEU, MANÉ" pequeno no peito, como na referência do 8/1
+- **Sons reais de armas em produção**: pack CC0/domínio público (gravações reais,
+  qubodup/Freesound) commitado — AWP/snipers, AK, M16, LMG, escopeta, pistola, SMG
+  e reload tocam de verdade no ar; o manifest local com sons do CS segue tendo
+  prioridade em dev
+- **Harness de eval** (tools/eval + public/*eval.html): captura headless de mapa,
+  personagem, viewmodel e gameplay com telemetria — verificação local antes de mostrar
+
 ## [1.12.3] — 2026-07-18
 ### Corrigido
 - **Modo de armas também filtra o mapa**: em SÓ PISTOLAS/FACA/AWP os pickups
