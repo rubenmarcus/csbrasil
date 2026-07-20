@@ -177,6 +177,32 @@ window.HARNESS = {
   setAnim(a){ anim = a; },
   setYaw(y){ yaw = y; },
   info(){ return { char:CHAR, weapon:curWeapon, anim, hasGun:!!gun, hasArm:!!(larm&&lfore&&lhand) }; },
+  // Find the walk-cycle frame where the feet are CLOSEST together and lowest (the
+  // "passing pose" — right for a neutral standing idle, no lifted trailing foot).
+  measurePassing(name){
+    if(!built||!built.ctrl) return { error:'no char' };
+    const act = built.ctrl.actions[name]; if(!act) return { error:'no action' };
+    const clip = act.getClip ? act.getClip() : act._clip; const dur = clip.duration;
+    built.mixer.stopAllAction();
+    act.reset(); act.enabled=true; act.setEffectiveTimeScale(1); act.setEffectiveWeight(1);
+    act.setLoop(THREE.LoopRepeat, Infinity); act.play();
+    const L = findBone(built.group, /lefttoe|toebase/i) || findBone(built.group, /left.?foot|l_foot/i) || findBone(built.group, /foot/i);
+    const R = findBone(built.group, /righttoe|toebase/i) || findBone(built.group, /right.?foot|r_foot/i) || findBone(built.group, /foot/i);
+    if(!L||!R) return { error:'no foot bones' };
+    const N=120, dt=dur/N, pl=new THREE.Vector3(), pr=new THREE.Vector3();
+    let best=null;
+    built.mixer.update(0);
+    for(let i=0;i<=N;i++){
+      built.group.updateWorldMatrix(true,true);
+      L.getWorldPosition(pl); R.getWorldPosition(pr);
+      const sep = Math.hypot(pl.x-pr.x, pl.z-pr.z);
+      const lift = Math.max(pl.y, pr.y);      // both feet low = grounded passing pose
+      const score = sep + lift*2;
+      if(!best || score < best.score) best = { t:+(i*dt).toFixed(3), sep:+sep.toFixed(3), lift:+lift.toFixed(3), score:+score.toFixed(3) };
+      built.mixer.update(dt);
+    }
+    return best;
+  },
   // Measure a locomotion clip's real stride: how far a foot bone travels (peak-to-peak)
   // along the facing axis per clip loop, and the natural ground speed that plants it.
   measureStride(name){

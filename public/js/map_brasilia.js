@@ -80,15 +80,27 @@ export function buildBrasilia(scene, T) {
     const glass = new THREE.Mesh(glassGeo, glassMat);
     glass.position.set(0, 0, -60); root.add(glass);
   }
-  // Palácio do Planalto (east) + STF (west) framing the Praça, facing inward. A stone
-  // plinth sized from each building's REAL placed footprint grounds the pilotis (the
-  // old fixed 16×15 plinth was smaller than the roof overhang → building read floating).
+  // Palácio do Planalto (east) + STF (west) framing the Praça, facing inward. Each
+  // building sits ON TOP of its stone plinth (not sunk into it): plinth first, then the
+  // model placed at plinth-top height, with the collider from its real bounds.
   for (const px of [22, -22]) {
-    const b = putBuilding('palacio', { x: px, z: 30, targetH: 6, ry: px > 0 ? -Math.PI / 2 : Math.PI / 2 });
-    if (b) {
-      const bb = new THREE.Box3().setFromObject(b);
+    const ry = px > 0 ? -Math.PI / 2 : Math.PI / 2;
+    const PL = 0.35;
+    // measure once to size the plinth, then re-place on top of it
+    const probe = placeProp('palacio', { x: px, z: 30, targetH: 6, ry });
+    if (probe) {
+      probe.updateMatrixWorld(true);
+      const bb = new THREE.Box3().setFromObject(probe);
+      root.remove(probe);
       const pw = (bb.max.x - bb.min.x) + 1.2, pd = (bb.max.z - bb.min.z) + 1.2;
-      addBox(pw, 0.4, pd, lam({ color: 0xcfd2cb }), (bb.min.x + bb.max.x) / 2, 0, (bb.min.z + bb.max.z) / 2, { collide: false });
+      addBox(pw, PL, pd, lam({ color: 0xcfd2cb }), (bb.min.x + bb.max.x) / 2, 0, (bb.min.z + bb.max.z) / 2, { collide: false });
+      const b = placeProp('palacio', { x: px, z: 30, targetH: 6, ry, y: PL });
+      if (b) {
+        root.add(b); occluders.push(b);
+        b.updateMatrixWorld(true);
+        const bb2 = new THREE.Box3().setFromObject(b);
+        col(bb2.min.x, bb2.max.x, 0, Math.max(1, bb2.max.y), bb2.min.z, bb2.max.z);
+      }
     }
   }
   // Ministérios lining the esplanade (reuse the one slab, long axis along Z = lane walls).
@@ -147,27 +159,21 @@ export function buildBrasilia(scene, T) {
     for (const gx of [-22, 22]) addPlane(10, 12, lam({ map: tiled(T.grass, 3, 4) }), gx, 0.04, 50, 0, -Math.PI / 2);
   }
 
-  /* ---------------- protest posters / banners on the ministry facades ---------------- */
+  /* ---------------- protest posters / banners on the GRAY end walls ---------------- */
   {
     const imgs = T.posterImgs || [], aspects = T.posterAspects || [];
-    const laneOrder = [1, 4, 0, 3, 2, 5];   // priority posters land on the most-visible lane faces first
-    const putPoster = (b, side, idx) => {
+    const putPoster = (b, endSign, idx) => {
       if (!b || !imgs.length) return;
       const bb = new THREE.Box3().setFromObject(b);
-      const cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
-      const lane = cx > 0 ? -1 : 1;
-      const inner = side === 'lane';
-      const edge = lane > 0 ? (inner ? bb.max.x : bb.min.x) : (inner ? bb.min.x : bb.max.x);
-      const fx = edge + (lane > 0 ? (inner ? 0.06 : -0.06) : (inner ? -0.06 : 0.06));
+      const cx = (bb.min.x + bb.max.x) / 2;
+      const fz = (endSign > 0 ? bb.max.z : bb.min.z) + endSign * 0.06;
       const ti = idx % imgs.length;
-      const H = inner ? 4.6 : 5.4, A = aspects[ti] || 0.7;
-      const fy = Math.min(bb.max.y - H / 2 - 0.5, 3.4);
-      addPlane(H * A, H, lam({ map: imgs[ti], side: THREE.DoubleSide }), fx, fy, cz, lane > 0 ? Math.PI / 2 : -Math.PI / 2);
+      const H = 6.0, A = aspects[ti] || 0.7;             // BIG posters on the gray end walls
+      const fy = Math.min(bb.max.y - H / 2 - 0.3, 3.8);
+      const m = addPlane(H * A, H, lam({ map: imgs[ti], side: THREE.DoubleSide }), cx, fy, fz, 0);
     };
-    // lane faces: the priority posters (DOLLYNHO, ET, CHUPACABRA, SACI, +2)
-    ministries.forEach((b, i) => putPoster(b, 'lane', laneOrder[i] ?? i));
-    // outer sides ("laterais dos prédios"): the rest of the collection
-    ministries.forEach((b, i) => putPoster(b, 'outer', 6 + i));
+    // priority posters (DOLLYNHO, ET, Chupacabra, Saci) on the mid buildings' end walls
+    ministries.forEach((b, i) => { putPoster(b, 1, i * 2); putPoster(b, -1, i * 2 + 1); });
   }
 
   /* ---------------- gameplay cover: props do 8 de janeiro ---------------- */
@@ -186,9 +192,9 @@ export function buildBrasilia(scene, T) {
   for (const [i, [cx, cz, lv]] of [[11, 2, 0], [-11, 0, 0], [11, 3.6, 1], [-5, 18, 0]].entries())
     addBox(1.6, 1.6, 1.6, crateMats[i % 2], cx, lv * 1.6, cz, { ry: (cx * 7 % 10) / 22, pad: -0.05 });
 
-  /* ---------------- ônibus quebrado do DF (Mint GLB — cover grande mid-lane) ---------------- */
-  // "Amarelinho" gerado no Mint, atravessado na esplanada (quebrado, encostado).
-  putBuilding('bus', { x: 8.5, z: -12, targetH: 3.1, ry: 0.42 });
+  /* ---------------- ônibus quebrado do DF (Mint GLB — cover grande, CENTRAL) ---------------- */
+  // "Amarelinho" gerado no Mint, atravessado no meio da Esplanada (quebrado, encostado).
+  putBuilding('bus', { x: 2.5, z: -4, targetH: 3.1, ry: 0.55 });
 
   /* ---------------- barraquinha de bebida (Mint GLB — mini-bar c/ guarda-sol) -------------- */
   // Drink stand com cadeiras de plástico e guarda-sol grande, junto às barraquinhas.

@@ -8,6 +8,7 @@
 // Only bots use these models (the player is first-person). Characters without a GLB
 // fall back to the procedural box meshes in characters.js.
 import * as THREE from 'three';
+import { VERSION } from './version.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js';
 import { buildRifle } from './characters.js';
@@ -31,6 +32,9 @@ const WALK_REF   = parseFloat(qp.get('wref')) || 0.79;
 const RUN_REF    = parseFloat(qp.get('rref')) || 1.92;
 const CROUCH_REF = parseFloat(qp.get('cref')) || 0.83;
 const FACING_OFFSET = (parseFloat(qp.get('charface')) || 0) * Math.PI / 180; // yaw fix if model faces -Z
+// The rifle-hold clips bake in a strong forward head tilt ("cabeça baixa"). Lift the
+// head slightly at runtime — arm/grip poses untouched. Tunable via ?headup=deg.
+const HEAD_UP = (parseFloat(qp.get('headup')) || 2) * Math.PI / 180;
 
 // Rifle mounted in the right hand (bone-local meters via a scale-compensated mount).
 // Tunable live with ?gunpos=x,y,z ?gunrot=xdeg,ydeg,zdeg ?guns=scale.
@@ -57,7 +61,7 @@ export async function preloadCharacterAssets(ids) {
       preloadWeapons(), // real weapon GLBs (mounts fall back to box if missing)
       ...STATES.map(async (s) => {
         try {
-          const g = await loadGLB(`models/anims/${s}.glb`);
+          const g = await loadGLB(`models/anims/${s}.glb?v=${VERSION}`);
           if (g.animations[0]) { g.animations[0].name = s; _clips[s] = g.animations[0]; }
         } catch (e) { console.warn('anim load failed', s, e); }
       }),
@@ -66,13 +70,15 @@ export async function preloadCharacterAssets(ids) {
   const wanted = [...new Set(ids)].filter((id) => GLB_CHARS.has(id) && !_base.has(id));
   await Promise.all(wanted.map(async (id) => {
     try {
-      const g = await loadGLB(`models/characters/${id}.glb`);
+      const g = await loadGLB(`models/characters/${id}.glb?v=${VERSION}`);
       _base.set(id, g.scene);
     } catch (e) { console.warn('model load failed', id, e); }
   }));
 }
 
 const _v = new THREE.Vector3();
+const _gq = new THREE.Quaternion(), _wq = new THREE.Quaternion(), _pq = new THREE.Quaternion(), _headUpQ = new THREE.Quaternion();
+const _right = new THREE.Vector3();
 
 // Build a bot mesh from a loaded GLB. Returns an object shaped like buildCharacter()'s
 // result ({ group, parts }) plus animation control (isGLB, mixer, ctrl). Returns null
@@ -243,6 +249,17 @@ class CharController {
       if (this.actions.crouchwalk) this.actions.crouchwalk.timeScale = rate(CROUCH_REF);
     }
     this.mixer.update(dt);
+    // Counter the baked-in forward head tilt of the hold clips ("cabeça baixa"): rotate
+    // the head bone up a touch around the character's right axis, after the mixer writes.
+    if (this.headBone && HEAD_UP && !this.dead) {
+      this.group.getWorldQuaternion(_gq);
+      _right.set(1, 0, 0).applyQuaternion(_gq);
+      _headUpQ.setFromAxisAngle(_right, -HEAD_UP);
+      this.headBone.getWorldQuaternion(_wq);
+      this.headBone.parent.getWorldQuaternion(_pq);
+      this.headBone.quaternion.copy(_pq.invert().multiply(_headUpQ).multiply(_wq));
+      this.headBone.updateWorldMatrix(false, true);
+    }
     if (this.headBone) {
       this.group.updateMatrixWorld(true);
       this.head.position.copy(this.group.worldToLocal(this.headBone.getWorldPosition(_v)));

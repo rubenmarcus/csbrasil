@@ -3,6 +3,7 @@
 // Props are OPTIONAL — placeProp returns null if the GLB isn't loaded, so a map
 // renders fine before (or without) the Mint-generated assets exist.
 import * as THREE from 'three';
+import { VERSION } from './version.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
@@ -11,7 +12,7 @@ const _base = new Map(); // id -> template scene
 
 export async function preloadMapProps(ids) {
   await Promise.all([...new Set(ids)].filter((id) => !_base.has(id)).map(async (id) => {
-    try { const g = await loadGLB(`models/props/${id}.glb`); _base.set(id, g.scene); }
+    try { const g = await loadGLB(`models/props/${id}.glb?v=${VERSION}`); _base.set(id, g.scene); }
     catch (e) { console.warn('map prop load failed', id, e); }
   }));
 }

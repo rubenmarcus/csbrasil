@@ -2,6 +2,7 @@
 // Each source model is normalized to ~1 unit on its longest axis, so we scale each
 // to a real-world length and rotate so the barrel points +Z (game forward).
 import * as THREE from 'three';
+import { VERSION } from './version.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
@@ -45,7 +46,7 @@ const loadGLB = (url) => new Promise((res, rej) => loader.load(url, res, undefin
 export async function preloadWeapons() {
   await Promise.all(WEAPON_IDS.map(async (id) => {
     if (_cache.has(id)) return;
-    try { const g = await loadGLB(`models/weapons/${id}.glb`); _cache.set(id, g.scene); }
+    try { const g = await loadGLB(`models/weapons/${id}.glb?v=${VERSION}`); _cache.set(id, g.scene); }
     catch (e) { console.warn('weapon load failed', id, e); }
   }));
 }

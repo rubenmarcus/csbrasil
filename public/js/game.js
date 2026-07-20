@@ -520,21 +520,9 @@ export class Game {
     // (map pickups are often AWP-only; bot drops only appear after kills)
     const wp = this.world.waypoints && this.world.waypoints.nodes;
     if (wp && wp.length) {
-      const scatterPool = ['ak', 'm4', 'mp5', 'shotgun', 'deagle', 'm92', 'akm', 'md97', 'scar',
-        'g3', 'tavor', 'famas', 'uzi', 'p90', 'mosin', 'rem700', 'm400', 'carbine', 'revolver38']
-        .filter(w => this._pickupAllowed(w));
-      // Lots of weapons of every type on the ground, clustered near waypoints (not flung
-      // far). Guarantee one of each allowed type first, then top up to a healthy count.
-      if (scatterPool.length) {
-        const near = () => wp[(Math.random() * wp.length) | 0];
-        const put = (w) => { const n = near(); if (n) this._dropWeapon(n.x + (Math.random() - 0.5) * 1.4, n.z + (Math.random() - 0.5) * 1.4, w); };
-        for (const w of scatterPool) put(w);                       // at least one of each type
-        const extra = Math.max(0, 30 - scatterPool.length);        // ~30 guns on the map total
-        for (let i = 0; i < extra; i++) put(scatterPool[(Math.random() * scatterPool.length) | 0]);
-      }
-      // Weapons RIGHT AT each spawn so players arm up on respawn (not just scattered on
-      // the map). Snipers first (the user wants plenty, especially snipers).
-      const rack = ['awp', 'mosin', 'rem700', 'm400', 'ak', 'm4', 'scar', 'shotgun', 'mp5', 'deagle', 'lmg', 'famas']
+      // Weapons RIGHT AT each spawn — lined up like the CS spawn racks (fy_pool_day).
+      // No map-wide scatter: guns live at the respawn, snipers first.
+      const rack = ['awp', 'mosin', 'rem700', 'm400', 'ak', 'm4', 'g3', 'm92', 'scar', 'shotgun', 'mp5', 'lmg']
         .filter(w => this._pickupAllowed(w));
       if (rack.length) {
         for (const team of ['P', 'B']) {
@@ -542,7 +530,7 @@ export class Game {
           const sz = spawns.length ? spawns[0].z : 0;
           const inward = sz > 0 ? -1 : 1;              // just in front of the spawn line
           let i = 0;
-          for (const gx of [-12, -8, -4, 4, 8, 12])
+          for (const gx of [-13, -10, -6, -2, 2, 6, 10, 13])
             this._dropWeapon(gx, sz + inward * (1.8 + (i % 2) * 0.9), rack[i++ % rack.length], true);
         }
       }
@@ -1254,19 +1242,27 @@ export class Game {
         const W = this.world;
         const from = W.nearestWaypoint(b.pos.x, b.pos.z);
         if (this.time > (b.roamUntil || 0) || b.roamIdx === undefined) {
-          const sign = b.team === 'P' ? 1 : -1;
+          // Enemy direction derived from the spawn LAYOUT (not hardcoded — the spawn
+          // swap P<->B would otherwise silently flip the roam side and keep bots home).
+          const sP = this.world.spawns.P[0], sB = this.world.spawns.B[0];
+          const enemyDir = sB && sP ? Math.sign(sB.z - sP.z) || 1 : 1;
+          const sign = b.team === 'P' ? enemyDir : -enemyDir;
           // Per-bot lane preference: the team spreads across left/center/right instead of
           // every bot funnelling down the same corridor (persistent per bot).
           if (b.lanePref === undefined) b.lanePref = [-12, -5, 5, 12][(Math.random() * 4) | 0] + (Math.random() * 4 - 2);
           const candidates = W.waypoints.nodes
             .map((n, i) => ({ n, i }))
-            .filter(o => o.n.z * sign > 6 * sign && Math.abs(o.n.x) < 20);
+            .filter(o => o.n.z * sign > 4 * sign && Math.abs(o.n.x) < 24);
+          // 40% of the time pick a FAR node (explore the whole enemy half); otherwise
           // rank by closeness to the bot's lane (plus jitter) and pick among the best few
+          const far = Math.random() < 0.4;
           const ranked = candidates
-            .map(o => ({ o, d: Math.abs(o.n.x - b.lanePref) + Math.random() * 7 }))
+            .map(o => ({ o, d: far
+              ? -Math.hypot(o.n.x - b.pos.x, o.n.z - b.pos.z) + Math.random() * 14
+              : Math.abs(o.n.x - b.lanePref) + Math.random() * 7 }))
             .sort((a, b2) => a.d - b2.d);
           const pick = ranked.length ? ranked[(Math.random() * Math.min(3, ranked.length)) | 0].o : { i: from };
-          b.roamIdx = pick.i; b.roamUntil = this.time + 9;
+          b.roamIdx = pick.i; b.roamUntil = this.time + 18;   // long enough to actually cross the map
         }
         b.path = W.findPath(from, b.roamIdx); b.pathIdx = 1;
       }
@@ -1274,7 +1270,7 @@ export class Game {
       if (node) {
         const dx = node.x - b.pos.x, dz = node.z - b.pos.z;
         const d = Math.hypot(dx, dz);
-        if (d < 0.7) b.pathIdx++;
+        if (d < 0.7) { b.pathIdx++; if (b.pathIdx >= b.path.length) b.roamUntil = 0; }
         else {
           const wantYaw = Math.atan2(dx, dz);
           let dy = wantYaw - b.yaw;
