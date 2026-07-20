@@ -28,6 +28,8 @@ const shots = [
   ['palacio_base', [40, 1.2, 30],  [22, 2.5, 30]],      // ground-level side: floating gap?
   ['catedral',     [0, 7, -42],    [0, 7, -60]],        // glass
   ['props_area',   [0, 6, 4],      [-13, 1.5, -8]],     // tents/tires/stalls
+  ['bus',          [2, 3.5, -22],  [8.5, 1.5, -12]],    // broken city bus mid-lane
+  ['barricade',    [-14, 3, 16],   [-8, 1, 20]],
   ['overview',     [55, 40, 0],    [0, 4, 10]],
 ];
 for (const [label, from, look] of shots){

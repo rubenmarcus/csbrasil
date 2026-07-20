@@ -50,6 +50,7 @@ window.MAPEVAL = {
     window.MAPEVAL.setCongressoRY = (r)=>{ if(window.__congresso){ window.__congresso.rotation.y = r; renderer.render(scene,cam); } return !!window.__congresso; };
     setCam([40,30,10],[0,4,20]); renderer.render(scene,cam);
     window.__world = { spawns: world && world.spawns, bounds: world && world.bounds };
+    window.__scene = scene;
     hud.textContent = 'map loaded';
     window.MAPEVAL.ready = true;
     console.log('STEP ready set');

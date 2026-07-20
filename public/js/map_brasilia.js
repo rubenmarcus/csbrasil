@@ -60,28 +60,41 @@ export function buildBrasilia(scene, T) {
 
   /* ---------------- LANDMARKS (Mint building models) ---------------- */
   // Congresso Nacional at the NORTH end (towers + Senate dome + Chamber bowl).
-  // ry chosen so the dome/bowl/pilotis facade faces the esplanade (-Z); tuned on screen.
-  putBuilding('congresso', { x: 0, z: 62, targetH: 22, ry: 0 });
-  // Catedral (crown) at the SOUTH end + a translucent glass nave inside the crown
-  // (the Mint model has no glass, so we add the stained-glass drum ourselves).
+  // ry = π: towers BEHIND the tray, Senate dome (convex) left, Chamber bowl right —
+  // the postcard view from the esplanade (verified in mapeval).
+  putBuilding('congresso', { x: 0, z: 62, targetH: 22, ry: Math.PI });
+  // Catedral (crown) at the SOUTH end + stained glass BETWEEN the ribs (the Mint model
+  // has no glass). The glass profile is fitted 0.3–0.5m INSIDE the measured rib envelope
+  // (ribs run r≈10.3 @ base → r≈3.4 @ rim y≈9.5, see tools: measure-catedral) so the
+  // white ribs stay visible outside the glass, like the real Niemeyer crown.
   putBuilding('catedral', { x: 0, z: -60, targetH: 13, ry: 0 });
   {
-    const glass = new THREE.Mesh(new THREE.CylinderGeometry(5, 6.2, 9.5, 24, 1, true),
-      lam({ color: 0x8fbfe6, transparent: true, opacity: 0.42, side: THREE.DoubleSide }));
-    glass.position.set(0, 4.8, -60); root.add(glass);
-    const cap = new THREE.Mesh(new THREE.ConeGeometry(5.2, 4, 24, 1, true),
-      lam({ color: 0xa9d2f0, transparent: true, opacity: 0.5, side: THREE.DoubleSide }));
-    cap.position.set(0, 10.5, -60); root.add(cap);
+    const profile = [[9.6, 0.3], [9.35, 1], [8.35, 2], [7.3, 3], [6.3, 4], [4.6, 5],
+      [4.1, 6], [3.5, 7], [3.35, 8], [3.2, 9.2]]
+      .map(([r, y]) => new THREE.Vector2(r, y));
+    const glassGeo = new THREE.LatheGeometry(profile, 28);
+    const glassMat = new THREE.MeshLambertMaterial({
+      color: 0x2e6f9e, emissive: 0x0a2440, transparent: true, opacity: 0.55,
+      side: THREE.DoubleSide, depthWrite: false,
+    });
+    const glass = new THREE.Mesh(glassGeo, glassMat);
+    glass.position.set(0, 0, -60); root.add(glass);
   }
-  // Palácio do Planalto (east) + STF (west) framing the Praça, facing inward. A thin
-  // stone plinth under each grounds the pilotis so they don't read as "floating".
+  // Palácio do Planalto (east) + STF (west) framing the Praça, facing inward. A stone
+  // plinth sized from each building's REAL placed footprint grounds the pilotis (the
+  // old fixed 16×15 plinth was smaller than the roof overhang → building read floating).
   for (const px of [22, -22]) {
-    putBuilding('palacio', { x: px, z: 30, targetH: 6, ry: px > 0 ? -Math.PI / 2 : Math.PI / 2 });
-    addBox(16, 0.5, 15, lam({ color: 0xcfd2cb }), px, 0, 30, { collide: false });
+    const b = putBuilding('palacio', { x: px, z: 30, targetH: 6, ry: px > 0 ? -Math.PI / 2 : Math.PI / 2 });
+    if (b) {
+      const bb = new THREE.Box3().setFromObject(b);
+      const pw = (bb.max.x - bb.min.x) + 1.2, pd = (bb.max.z - bb.min.z) + 1.2;
+      addBox(pw, 0.4, pd, lam({ color: 0xcfd2cb }), (bb.min.x + bb.max.x) / 2, 0, (bb.min.z + bb.max.z) / 2, { collide: false });
+    }
   }
   // Ministérios lining the esplanade (reuse the one slab, long axis along Z = lane walls).
+  const ministries = [];
   for (const sx of [-1, 1]) for (const mz of [-26, 0, 26])
-    putBuilding('ministerio', { x: sx * 23, z: mz, targetH: 7, ry: Math.PI / 2 });
+    ministries.push(putBuilding('ministerio', { x: sx * 23, z: mz, targetH: 7, ry: Math.PI / 2 }));
 
   /* ---------------- statues ---------------- */
   { // A Justiça — Mint GLB v2 (blindfolded, sword across the lap, Brazil flag draped as a
@@ -140,8 +153,17 @@ export function buildBrasilia(scene, T) {
       .map((m) => lam({ map: m, side: THREE.DoubleSide }));
     if (mats.length) {
       let i = 0;
-      for (const sx of [-1, 1]) for (const pz of [-24, 2, 28])
-        addPlane(4.6, 3, mats[i++ % mats.length], sx * 17.3, 3.4, pz, sx > 0 ? -Math.PI / 2 : Math.PI / 2);
+      // Snap each poster FLUSH onto the lane-facing facade of its ministry, measured from
+      // the building's real placed bounds (the old fixed x=±17.3 floated off the wall).
+      for (const b of ministries) {
+        if (!b) continue;
+        const bb = new THREE.Box3().setFromObject(b);
+        const cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
+        const lane = cx > 0 ? -1 : 1;                       // which side faces the lane (x=0)
+        const fx = lane > 0 ? bb.max.x + 0.06 : bb.min.x - 0.06;
+        const fy = Math.min(bb.max.y - 2.2, 3.4);
+        addPlane(4.6, 3, mats[i++ % mats.length], fx, fy, cz, lane > 0 ? Math.PI / 2 : -Math.PI / 2);
+      }
     }
   }
 
@@ -160,6 +182,63 @@ export function buildBrasilia(scene, T) {
   const crateMat = lam({ map: T.crate });
   for (const [cx, cz, lv] of [[11, 2, 0], [-11, 0, 0], [11, 3.6, 1], [-5, 18, 0]])
     addBox(1.6, 1.6, 1.6, crateMat, cx, lv * 1.6, cz, { ry: (cx * 7 % 10) / 22, pad: -0.05 });
+
+  /* ---------------- ônibus quebrado do DF (cover grande mid-lane) ---------------- */
+  { // "Amarelinho" quebrado atravessado na esplanada: motor morreu, pneu murcho,
+    // levemente caído pro lado. Referência: ônibus urbano de Brasília (amarelo/branco).
+    const bx = 8.5, bz = -12, bry = 0.42;
+    const g = new THREE.Group(); g.position.set(bx, 0, bz); g.rotation.y = bry;
+    g.rotation.z = 0.035;                      // sagging on the flat tire
+    root.add(g); occluders.push(g);
+    const yellow = lam({ color: 0xf2c200 }), whiteB = lam({ color: 0xf4f2ea });
+    const dark = lam({ color: 0x22303a }), tire = lam({ color: 0x1c1c1e });
+    // lower yellow band + white window band + roof strip
+    const low = new THREE.Mesh(new THREE.BoxGeometry(9.6, 1.15, 2.5), yellow); low.position.y = 0.95; g.add(low);
+    const win = new THREE.Mesh(new THREE.BoxGeometry(9.6, 1.0, 2.5), dark); win.position.y = 2.02; g.add(win);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.42, 2.5), whiteB); roof.position.y = 2.73; g.add(roof);
+    // window pillars (white separators so the glass band reads as windows)
+    for (let i = -4; i <= 4; i++) {
+      const pil = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.0, 2.54), whiteB);
+      pil.position.set(i * 1.05, 2.02, 0); g.add(pil);
+    }
+    // front face: windshield + destination sign
+    const shield = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.5, 2.2), dark); shield.position.set(4.85, 1.9, 0); g.add(shield);
+    const sign = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.3, 1.6), lam({ color: 0x0c0c0c })); sign.position.set(4.9, 2.6, 0); g.add(sign);
+    // door (front right, slightly open = darker inset)
+    const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.9, 0.1), lam({ color: 0x2b3a44 })); door.position.set(3.6, 1.35, 1.28); g.add(door);
+    // wheels — rear-right flat (squashed) for the "quebrado" look
+    const wheelGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.4, 12);
+    for (const [wx, wz, flat] of [[-3.2, 1.15, 0], [3.2, 1.15, 0], [-3.2, -1.15, 0], [3.2, -1.15, 1]]) {
+      const w = new THREE.Mesh(wheelGeo, tire);
+      w.rotation.x = Math.PI / 2; w.position.set(wx, flat ? 0.32 : 0.48, wz);
+      if (flat) w.scale.set(1, 1, 0.62);
+      g.add(w);
+    }
+    g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    // AABB collider from the rotated footprint (L=9.6, W=2.5, ry=bry)
+    const c = Math.abs(Math.cos(bry)), s = Math.abs(Math.sin(bry));
+    const ex = 4.8 * c + 1.25 * s, ez = 4.8 * s + 1.25 * c;
+    col(bx - ex, bx + ex, 0, 3.0, bz - ez, bz + ez);
+  }
+
+  /* ---------------- barricada improvisada (bloco + chapa + tábuas) ---------------- */
+  { // protest barricade near the west tents: concrete block, corrugated sheet, planks.
+    const bx = -8, bz = 20, bry = -0.3;
+    const g = new THREE.Group(); g.position.set(bx, 0, bz); g.rotation.y = bry; root.add(g); occluders.push(g);
+    const conc = lam({ color: 0xb8bab2 }), rust = lam({ color: 0x8a5a3a }), wood = lam({ color: 0x9a7b4f });
+    const base = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.7, 0.8), conc); base.position.y = 0.35; g.add(base);
+    const sheet = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.1, 0.08), rust);
+    sheet.position.set(0.2, 1.15, 0.1); sheet.rotation.x = -0.12; g.add(sheet);
+    for (const [py, pr] of [[0.95, 0.18], [1.25, -0.14]]) {
+      const plank = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.16, 0.06), wood);
+      plank.position.set(0, py, 0.28); plank.rotation.z = pr; g.add(plank);
+    }
+    g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    const c = Math.abs(Math.cos(bry)), s = Math.abs(Math.sin(bry));
+    const ex = 1.7 * c + 0.45 * s, ez = 1.7 * s + 0.45 * c;
+    col(bx - ex, bx + ex, 0, 1.6, bz - ez, bz + ez);
+  }
+
   // concrete planters with greenery
   for (const [px, pz] of [[-9, 8], [9, -8], [0, -20], [0, 16]]) {
     addBox(3.4, 0.9, 1.3, lam({ color: 0xd9dbd4 }), px, 0, pz);
