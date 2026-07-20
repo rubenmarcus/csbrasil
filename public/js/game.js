@@ -1277,10 +1277,20 @@ export class Game {
         b._nextJump = this.time + 5 + Math.random() * 8;
       }
       // true ground speed (accounts for collisions / wading / being stuck) drives the
-      // leg-cycle rate so the feet plant instead of sliding.
-      const spd = b._lp ? Math.hypot(b.pos.x - b._lp.x, b.pos.z - b._lp.z) / Math.max(dt, 1e-3) : 0;
-      b._lp = { x: b.pos.x, z: b.pos.z };
-      b.mesh.ctrl.update(dt, moving, !!b.target, spd);
+      // leg-cycle rate so the feet plant instead of sliding. The FORWARD-signed component
+      // tells the controller when the bot is retreating, so it plays the walk clip in
+      // reverse (backpedal) instead of moonwalking forward while moving backward.
+      if (b._lp) {
+        const dtSafe = Math.max(dt, 1e-3);
+        const mx = b.pos.x - b._lp.x, mz = b.pos.z - b._lp.z;
+        const spd = Math.hypot(mx, mz) / dtSafe;
+        const fwd = (mx * Math.sin(b.yaw) + mz * Math.cos(b.yaw)) / dtSafe;
+        b._lp = { x: b.pos.x, z: b.pos.z };
+        b.mesh.ctrl.update(dt, moving, !!b.target, spd, fwd < -0.25);
+      } else {
+        b._lp = { x: b.pos.x, z: b.pos.z };
+        b.mesh.ctrl.update(dt, moving, !!b.target, 0, false);
+      }
     } else {
       b.phase += dt * (moving ? 9 : 0);
       poseCharacter(b.mesh.parts, b.phase, moving, this.time);

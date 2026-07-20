@@ -150,6 +150,7 @@ class CharController {
     this.mixer = mixer; this.actions = actions;
     this.group = group; this.headBone = headBone; this.head = head;
     this.cur = null; this.dead = false; this.shooting = false; this.crouch = false; this.jumping = false;
+    this._loco = 'idle'; // current locomotion state (hysteresis memory for walk/run choice)
     mixer.addEventListener('finished', (e) => {
       if (e.action === actions.shoot) this.shooting = false;
       if (e.action === actions.jump) this.jumping = false;
@@ -209,22 +210,36 @@ class CharController {
     this._to('idle');
   }
 
-  // moving: 0..1, hasTarget: bool, speed: real ground speed (m/s). Advances the mixer,
+  // moving: 0..1, hasTarget: bool, speed: real ground speed (m/s), back: true when the
+  // body is moving BACKWARD relative to its facing (combat retreat). Advances the mixer,
   // picks the locomotion state, and scales the leg-cycle rate to the actual ground speed
   // so the feet plant instead of ice-skating (root-motion-free clips have no built-in
   // stride, so we drive the cycle rate from how fast the body is really moving).
-  update(dt, moving, hasTarget, speed = 0) {
+  update(dt, moving, hasTarget, speed = 0, back = false) {
     if (!this.dead) {
       if (this.crouch) {
         this._to(moving > 0.05 ? 'crouchwalk' : 'crouch');
       } else if (!this.shooting && !this.jumping) {
-        this._to(moving > 0.05 ? (hasTarget ? 'walk' : 'run') : 'idle');
+        if (moving <= 0.05) { this._to('idle'); this._loco = 'idle'; }
+        else if (back) {
+          // Backpedal: walk clip REVERSED (negative timeScale below) so the feet step
+          // backward — a forward clip while retreating is the classic moonwalk.
+          this._to('walk'); this._loco = 'walk';
+        } else {
+          // Pick the clip by SPEED with hysteresis (not by hasTarget): fast movement with
+          // the slow walk clip needs a frantic ~2.4x cycle; slow movement with the run
+          // clip looks like gliding. run > 1.45 m/s, walk < 1.15, keep current in between.
+          if (this._loco !== 'run' && speed > 1.45) this._loco = 'run';
+          else if (this._loco !== 'walk' && speed < 1.15) this._loco = 'walk';
+          else if (this._loco !== 'walk' && this._loco !== 'run') this._loco = hasTarget && speed < 1.7 ? 'walk' : 'run';
+          this._to(this._loco);
+        }
       }
       // Per-clip cycle rate = ground speed / that clip's measured natural speed, so the
       // feet plant instead of ice-skating. clamp keeps it from looking frantic/frozen.
       const rate = (ref) => Math.max(0.45, Math.min(3.0, speed / ref));
       if (this.actions.run) this.actions.run.timeScale = rate(RUN_REF);
-      if (this.actions.walk) this.actions.walk.timeScale = rate(WALK_REF);
+      if (this.actions.walk) this.actions.walk.timeScale = back ? -rate(WALK_REF) : rate(WALK_REF);
       if (this.actions.crouchwalk) this.actions.crouchwalk.timeScale = rate(CROUCH_REF);
     }
     this.mixer.update(dt);
