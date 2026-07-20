@@ -91,24 +91,29 @@ const charWeapon = (id) => CHAR_WEAPON[id] || 'ak';
 let pvToken = 0;
 function pvSetChar(def) {
   const p = ensurePreview();
-  if (p.model) p.scene.remove(p.model);
-  p.mixer = null;
-  // Instant procedural fallback while the real model streams in.
-  p.model = buildCharacter(def).group;
-  p.model.rotation.y = 0.4;
-  p.scene.add(p.model);
   // Swap to the real rigged GLB (idle) once loaded, if this is still the selection.
   const my = ++pvToken;
+  const showBox = () => {   // procedural fallback (only when there's no GLB at all)
+    if (p.model) p.scene.remove(p.model);
+    p.mixer = null;
+    p.model = buildCharacter(def).group;
+    p.model.rotation.y = 0.4;
+    p.scene.add(p.model);
+  };
   if (GLB_CHARS.has(def.id)) {
+    // Keep the PREVIOUS model visible while the real GLB streams in — never flash the
+    // blocky placeholder for a character that has a real model (the pop-in bug).
     preloadCharacterAssets([def.id]).then(() => {
-      if (my !== pvToken || !hasModel(def.id)) return;
-      const m = buildCharacterModel(def, { weaponId: charWeapon(def.id) }); // fitting weapon per character
-      if (!m) return;
+      if (my !== pvToken) return;
+      const m = hasModel(def.id) ? buildCharacterModel(def, { weaponId: charWeapon(def.id) }) : null;
+      if (!m) { showBox(); return; }
       if (p.model) p.scene.remove(p.model);
       m.group.rotation.y = 0.4;
       p.model = m.group; p.mixer = m.mixer;
       p.scene.add(m.group);
-    }).catch(() => {});
+    }).catch(() => { if (my === pvToken) showBox(); });
+  } else {
+    showBox();
   }
 }
 function pvThumb(def) {
