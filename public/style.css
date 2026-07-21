@@ -96,6 +96,9 @@ body{font-family:"Arial Black",Impact,Haettenschweiler,"Segoe UI",sans-serif;col
 #hud-actions button{width:34px;height:34px;border-radius:6px;border:1px solid #4a5a2a;cursor:pointer;
   background:rgba(8,10,6,.8);color:var(--cs);font-size:16px;pointer-events:auto}
 #hud-actions button:hover{border-color:var(--cs)}
+#hud-stats{position:absolute;top:56px;right:14px;z-index:25;font-family:Consolas,monospace;font-size:12px;
+  color:var(--hud);text-shadow:0 1px 0 #000;text-align:right;line-height:1.5;pointer-events:none;
+  background:rgba(8,10,6,.6);border:1px solid #4a5a2a;border-radius:6px;padding:4px 8px}
 .set-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--yellow)}
 .rank-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 26px;font-family:Consolas,monospace;font-size:14px;color:#c9bfa4}
 .rank-stats b{color:var(--yellow);font-size:26px;display:block;text-align:center}

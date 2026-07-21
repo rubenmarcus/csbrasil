@@ -9,7 +9,7 @@ import { VERSION } from './version.js';
 
 /* ---------------- settings & nickname ---------------- */
 const SETTINGS_KEY = 'awpbr_settings';
-const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP, wpnMode: 'all' },
+const settings = Object.assign({ sens: 1, vol: 0.7, quality: 'med', speech: true, map: DEFAULT_MAP, wpnMode: 'all', stats: false },
   JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 const saveSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 const NICK_KEY = 'awpbr_nick';
@@ -504,6 +504,9 @@ speechEl.onchange = () => {
   saveSettings();
   if (game?.el?.hudSpeech) game.el.hudSpeech.textContent = settings.speech ? '🔊' : '🔇';
 };
+const statsEl = $('set-stats');
+statsEl.checked = settings.stats === true;
+statsEl.onchange = () => { settings.stats = statsEl.checked; saveSettings(); };
 updLabels();
 
 /* ---------------- logo ---------------- */
@@ -573,6 +576,29 @@ updLabels();
   x.fillStyle = sg; x.fillText('TRETA SUPREMA', W / 2, 338);
 })();
 
+/* ---------------- hud stats (FPS / ping) ---------------- */
+const hudStats = $('hud-stats');
+let fpsEma = 0, statsTextAt = 0, pingMs = null, pingAt = 0;
+// ping = RTT de um GET leve no servidor (vale até 404); sem rede mostra "—"
+function measurePing() {
+  const t0 = performance.now();
+  fetch('/api/config', { cache: 'no-store' })
+    .then(() => { pingMs = Math.round(performance.now() - t0); })
+    .catch(() => { pingMs = null; });
+}
+function updHudStats(dt) {
+  const on = settings.stats && game;
+  hudStats.classList.toggle('hidden', !on);
+  if (!on) return;
+  if (dt > 0) fpsEma = fpsEma ? fpsEma * 0.9 + (1 / dt) * 0.1 : 1 / dt;
+  const now = performance.now();
+  if (now - pingAt > 5000) { pingAt = now; measurePing(); }
+  if (now - statsTextAt > 500) {
+    statsTextAt = now;
+    hudStats.textContent = `${Math.round(fpsEma)} FPS · ${pingMs == null ? '—' : pingMs + ' ms'}`;
+  }
+}
+
 /* ---------------- loop ---------------- */
 addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
@@ -583,7 +609,9 @@ const clock = new THREE.Clock();
 let menuAngle = 0;
 function loop() {
   requestAnimationFrame(loop);
-  const dt = Math.min(0.05, clock.getDelta());
+  const rawDt = clock.getDelta();
+  const dt = Math.min(0.05, rawDt);
+  updHudStats(rawDt);
   if (game) {
     game.update(dt);
   } else {
